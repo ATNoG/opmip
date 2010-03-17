@@ -33,6 +33,8 @@ int main()
 	try {
 		tpm0.name(name);
 		tpm0.local_address(sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"));
+		tpm0.flags(sys::tunnel_service::ip6_parameters::ignore_encapsulation_limit
+		           | sys::tunnel_service::ip6_parameters::use_original_traffic_class);
 		ts.add(tpm0);
 		std::cout << "tpm0: " << tpm0 << std::endl;
 

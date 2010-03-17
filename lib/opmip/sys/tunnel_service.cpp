@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/sys/tunnel_service.hpp>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace sys {
@@ -70,10 +71,20 @@ void tunnel_service::io_control(const char* name, int opcode, void* data, boost:
 ///////////////////////////////////////////////////////////////////////////////
 tunnel_service::ip6_parameters::ip6_parameters()
 {
-	std::memset(this, 0, sizeof(*this));
-	_proto = IPPROTO_IPV6;
+	clear();
+}
+
+void tunnel_service::ip6_parameters::clear()
+{
+	std::fill(_name, _name + sizeof(_name), '\0');
+	_link = 0;
+	_proto = default_protocol;
 	_encap_limit = default_encapsulation_limit;
-	_hop_limit = 64;
+	_hop_limit = default_hop_limit;
+	_flowinfo = 0;
+	_flags = 0;
+	std::fill(_local_addr.begin(), _local_addr.end(), 0);
+	std::fill(_remote_addr.begin(), _remote_addr.end(), 0);
 }
 
 bool operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service::ip6_parameters& lhr)
@@ -96,45 +107,49 @@ bool operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service:
 
 std::ostream& operator<<(std::ostream& os, const tunnel_service::ip6_parameters& lhr)
 {
-	os << "{ name = "        << lhr.name()
-	   << ", device = "      << lhr.device()
-	   << ", protocol = "    << uint(lhr._proto)
-	   << ", encap_limit = " << uint(lhr._encap_limit)
-	   << ", hop_limit = "   << uint(lhr.hop_limit())
-	   << ", flowinfo = "    << std::hex << lhr._flowinfo << std::dec
-	   << ", flags = "       << lhr._flags;
+	os << "{ name = "                << lhr.name()
+	   << ", device = "              << lhr.device()
+	   << ", protocol = "            << uint(lhr.protocol())
+	   << ", encapsulation_limit = " << uint(lhr.encapsulation_limit())
+	   << ", hop_limit = "           << uint(lhr.hop_limit())
+	   << ", flowinfo = "            << std::hex << lhr.flowinfo() << std::dec
+	   << ", flags = "               << std::hex << lhr.flags() << std::dec;
 
-	if (lhr._flags) {
-		bool prefix = false;
-		os << "(";
+	if (lhr.flags() & (tunnel_service::ip6_parameters::ignore_encapsulation_limit
+	                   | tunnel_service::ip6_parameters::use_original_traffic_class
+	                   | tunnel_service::ip6_parameters::use_original_flowlabel
+	                   | tunnel_service::ip6_parameters::use_original_dscp)) {
+		static const char scope_str[] = " ()";
+		static const char flag0_str[] = "ignore_encapsulation_limit | ";
+		static const char flag1_str[] = "use_original_traffic_class | ";
+		static const char flag2_str[] = "use_original_flowlabel | ";
+		static const char flag3_str[] = "use_original_dscp";
+		static const std::size_t slen = sizeof(scope_str)
+		                                + sizeof(flag0_str)
+		                                + sizeof(flag1_str)
+		                                + sizeof(flag2_str)
+		                                + sizeof(flag3_str)
+		                                - 4;
+		boost::array<char, slen>::iterator pos;
+		boost::array<char, slen> tmp;
 
-		if (lhr._flags & tunnel_service::ip6_parameters::ignore_encapsulation_limit) {
-			os << "ignore_encapsulation_limit";
-			prefix = true;
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_traffic_class) {
-			if (prefix)
-				os << "| ";
-			else
-				prefix = true;
-			os << "use_original_traffic_class";
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_flowlabel) {
-			if (prefix)
-				os << "| ";
-			else
-				prefix = true;
-			os << "use_original_flowlabel";
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_dscp) {
-			if (prefix)
-				os << "| ";
-//			else
-//				prefix = true;
-			os << "use_original_dscp";
-		}
 
-		os << ")";
+		pos = std::copy(scope_str, scope_str + 2, tmp.begin());
+
+		if (lhr.flags() & tunnel_service::ip6_parameters::ignore_encapsulation_limit)
+			pos = std::copy(flag0_str, flag0_str + sizeof(flag0_str) - 1, pos);
+
+		if (lhr.flags() & tunnel_service::ip6_parameters::use_original_traffic_class)
+			pos = std::copy(flag1_str, flag1_str + sizeof(flag1_str) - 1, pos);
+
+		if (lhr.flags() & tunnel_service::ip6_parameters::use_original_flowlabel)
+			pos = std::copy(flag2_str, flag2_str + sizeof(flag2_str) - 1, pos);
+
+		if (lhr.flags() & tunnel_service::ip6_parameters::use_original_dscp)
+			pos = std::copy(flag3_str, flag3_str + sizeof(flag3_str) - 1, pos) + 3;
+
+		pos = std::copy(scope_str + 2, scope_str + sizeof(scope_str), pos - 3);
+		os << tmp.elems;
 	}
 
 	os << ", local_address = "  << lhr.local_address()

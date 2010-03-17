@@ -131,11 +131,14 @@ private:
 	int _fd;
 };
 
+///////////////////////////////////////////////////////////////////////////////
 class tunnel_service::ip6_parameters {
-	typedef ip::address_v6::bytes_type ip6_address;
+	typedef ip::address_v6::bytes_type raw_address;
 
 public:
-	static const uint default_encapsulation_limit = 4;
+	static const uint8 default_protocol            = IPPROTO_IPV6;
+	static const uint8 default_encapsulation_limit = 4;
+	static const uint8 default_hop_limit           = 64;
 
 	enum flags {
 		ignore_encapsulation_limit = 0x01, ///Don't add encapsulation limit if one isn't present in inner packet
@@ -144,31 +147,35 @@ public:
 		use_original_dscp          = 0x10, ///Copy DSCP from the outer packet
 	};
 
-	friend bool operator!=(const ip6_parameters& rhr, const ip6_parameters& lhr);
+	friend bool          operator!=(const ip6_parameters& rhr, const ip6_parameters& lhr);
 	friend std::ostream& operator<<(std::ostream& os, const ip6_parameters& lhr);
 
 public:
-	ip6_parameters()
-	{
-		std::memset(this, 0, sizeof(*this));
-		_proto = IPPROTO_IPV6;
-		_encap_limit = default_encapsulation_limit;
-		_hop_limit = 64;
-	}
+	ip6_parameters();
 
-	void name(const char* str)                      { std::strncpy(_name, str, if_name_size); }
+	void name(const char* str)                      { std::strncpy(_name, str, sizeof(_name)); }
 	void device(int index)                          { _link = index; }
+	void protocol(uint8 val)                        { _proto = val; }
+	void encapsulation_limit(uint8 val)             { _encap_limit = val; }
 	void hop_limit(uint8 val)                       { _hop_limit = val; }
+	void flowinfo(uint32 val)                       { _flowinfo = val; }
+	void flags(uint32 val)                          { _flags = val; }
 	void local_address(const ip::address_v6& addr)  { _local_addr = addr.to_bytes(); }
 	void remote_address(const ip::address_v6& addr) { _remote_addr = addr.to_bytes(); }
 
-	const char*    name() const           { return _name; }
-	int            device() const         { return _link; }
-	uint8          hop_limit() const      { return _hop_limit; }
-	ip::address_v6 local_address() const  { return ip::address_v6(_local_addr); }
-	ip::address_v6 remote_address() const { return ip::address_v6(_remote_addr); }
+	const char*    name() const                { return _name; }
+	int            device() const              { return _link; }
+	uint8          protocol() const            { return _proto; }
+	uint8          encapsulation_limit() const { return _encap_limit; }
+	uint8          hop_limit() const           { return _hop_limit; }
+	uint32         flowinfo() const            { return _flowinfo; }
+	uint32         flags() const               { return _flags; }
+	ip::address_v6 local_address() const       { return ip::address_v6(_local_addr); }
+	ip::address_v6 remote_address() const      { return ip::address_v6(_remote_addr); }
 
 	void* data() { return this; }
+
+	void clear();
 
 private:
 	char        _name[if_name_size];
@@ -178,8 +185,8 @@ private:
 	uint8       _hop_limit;
 	uint32      _flowinfo;
 	uint32      _flags;
-	ip6_address _local_addr;
-	ip6_address _remote_addr;
+	raw_address _local_addr;
+	raw_address _remote_addr;
 };
 
 bool          operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service::ip6_parameters& lhr);
