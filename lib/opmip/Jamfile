@@ -21,6 +21,7 @@ project opmip
 
 SOURCES =
 	dummy.cpp
+	sys/tunnel_service.cpp
 	;
 
 lib opmip

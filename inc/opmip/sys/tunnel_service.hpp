@@ -55,27 +55,9 @@ class tunnel_service {
 public:
 	class ip6_parameters;
 
-	tunnel_service()
-	{
-		boost::system::error_code ec;
-
-		init(ec);
-		if (ec)
-			detail::throw_on_error(ec, "opmip::sys::tunnel_service::tunnel_service()");
-	}
-
-	tunnel_service(boost::system::error_code& ec)
-	{
-		init(ec);
-	}
-
-	~tunnel_service()
-	{
-		int close_fd_result;
-
-		close_fd_result = ::close(_fd);
-		BOOST_ASSERT(close_fd_result == 0);
-	}
+	tunnel_service();
+	tunnel_service(boost::system::error_code& ec);
+	~tunnel_service();
 
 	template<class Parameters>
 	void get(Parameters& op, boost::system::error_code& ec)
@@ -143,30 +125,8 @@ public:
 	}
 
 private:
-	void init(boost::system::error_code& ec)
-	{
-		_fd = ::socket(AF_INET6, SOCK_DGRAM, 0);
-		if (_fd < 0)
-			ec = boost::system::error_code(errno,
-			                               boost::system::get_system_category());
-	}
-
-	void io_control(const char* name, int opcode, void* data, boost::system::error_code& ec)
-	{
-		struct if_req {
-			char  name[if_name_size];
-			void* data;
-		} req;
-		int res;
-
-		std::strncpy(req.name, name, sizeof(req.name));
-		req.data = data;
-		res = ::ioctl(_fd, opcode, &req);
-		if (res < 0)
-			ec = boost::system::error_code(errno,
-			                               boost::system::get_system_category());
-	}
-
+	void init(boost::system::error_code& ec);
+	void io_control(const char* name, int opcode, void* data, boost::system::error_code& ec);
 
 	int _fd;
 };
@@ -222,73 +182,8 @@ private:
 	ip6_address _remote_addr;
 };
 
-inline bool operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service::ip6_parameters& lhr)
-{
-	if (std::strncmp(rhr._name, lhr._name, sizeof(rhr._name)) != 0)
-		return true;
-	if (rhr._link != lhr._link)
-		return true;
-	if (rhr._proto != lhr._proto)
-		return true;
-	if (rhr._encap_limit != lhr._encap_limit)
-		return true;
-	if (rhr._hop_limit != lhr._hop_limit)
-		return true;
-	if (rhr._flags != lhr._flags)
-		return true;
-
-	return false;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const tunnel_service::ip6_parameters& lhr)
-{
-	os << "{ name = "        << lhr.name()
-	   << ", device = "      << lhr.device()
-	   << ", protocol = "    << uint(lhr._proto)
-	   << ", encap_limit = " << uint(lhr._encap_limit)
-	   << ", hop_limit = "   << uint(lhr.hop_limit())
-	   << ", flowinfo = "    << std::hex << lhr._flowinfo << std::dec
-	   << ", flags = "       << lhr._flags;
-
-	if (lhr._flags) {
-		bool prefix = false;
-		os << "(";
-
-		if (lhr._flags & tunnel_service::ip6_parameters::ignore_encapsulation_limit) {
-			os << "ignore_encapsulation_limit";
-			prefix = true;
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_traffic_class) {
-			if (prefix)
-				os << "| ";
-			else
-				prefix = true;
-			os << "use_original_traffic_class";
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_flowlabel) {
-			if (prefix)
-				os << "| ";
-			else
-				prefix = true;
-			os << "use_original_flowlabel";
-		}
-		if (lhr._flags & tunnel_service::ip6_parameters::use_original_dscp) {
-			if (prefix)
-				os << "| ";
-//			else
-//				prefix = true;
-			os << "use_original_dscp";
-		}
-
-		os << ")";
-	}
-
-	os << ", local_address = "  << lhr.local_address()
-	   << ", remote_address = " << lhr.remote_address()
-	   << " }";
-
-	return os;
-}
+bool          operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service::ip6_parameters& lhr);
+std::ostream& operator<<(std::ostream& os, const tunnel_service::ip6_parameters& lhr);
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace sys */ } /* namespace opmip */
