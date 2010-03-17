@@ -27,8 +27,7 @@ tunnel_service::tunnel_service()
 	boost::system::error_code ec;
 
 	init(ec);
-	if (ec)
-		detail::throw_on_error(ec, "opmip::sys::tunnel_service::tunnel_service()");
+	detail::throw_on_error(ec, "opmip::sys::tunnel_service::tunnel_service()");
 }
 
 tunnel_service::tunnel_service(boost::system::error_code& ec)

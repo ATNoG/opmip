@@ -55,6 +55,7 @@ class tunnel_service {
 public:
 	class ip6_parameters;
 
+public:
 	tunnel_service();
 	tunnel_service(boost::system::error_code& ec);
 	~tunnel_service();
@@ -128,6 +129,7 @@ private:
 	void init(boost::system::error_code& ec);
 	void io_control(const char* name, int opcode, void* data, boost::system::error_code& ec);
 
+private:
 	int _fd;
 };
 
