@@ -19,11 +19,6 @@
 #define OPMIP_SYS_TUNNEL_SERVICE__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <linux/ip.h>
-#include <linux/if_tunnel.h>
 #include <opmip/base.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/asio/ip/address_v6.hpp>
