@@ -34,6 +34,15 @@
 #	define OPMIP_STATIC_ASSERT(exp, reason) BOOST_STATIC_ASSERT(exp)
 #endif
 
+#define OPMIP_UNDEFINED_BOOL                           \
+	struct undefined_bool_t {                          \
+		void true_() {}                                \
+	};                                                 \
+	typedef void (undefined_bool_t::*undefined_bool)()
+
+#define OPMIP_UNDEFINED_BOOL_TRUE  &undefined_bool_t::true_
+#define OPMIP_UNDEFINED_BOOL_FALSE 0
+
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip {
 
