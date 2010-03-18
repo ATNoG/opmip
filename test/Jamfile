@@ -15,9 +15,17 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+project
+	: requirements <library>/odtone-config//boost_system
+	;
+
 exe tunnel
 	: tunnel.cpp
 	  ../lib/opmip//opmip
-	: <library>/odtone-config//boost_system
+	;
+
+exe t0001
+	: t0001.cpp
+	  ../lib/opmip//opmip
 	;
 
