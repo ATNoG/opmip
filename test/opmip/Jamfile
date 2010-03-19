@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : Unit Test Build
+# Brief   : OPMIP Library Unit Test Build
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -19,13 +19,13 @@ project
 	: requirements <library>/odtone-config//boost_system
 	;
 
-exe tunnel
-	: tunnel.cpp
-	  ../lib/opmip//opmip
+exe t0000
+	: t0000.cpp
+	  ../../lib/opmip//opmip
 	;
 
 exe t0001
 	: t0001.cpp
-	  ../lib/opmip//opmip
+	  ../../lib/opmip//opmip
 	;
 
