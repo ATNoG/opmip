@@ -106,7 +106,7 @@ inline const char* exception::what() const throw()
 
 	try {
 		if (_what.empty()) {
-			_what.append("\nException  : ")
+			_what.append(  "Exception  : ")
 			         .append(typeid(*this).name())
 			     .append("\nError      : ")
 			         .append(lexical_cast<std::string>(_ec.value()))
