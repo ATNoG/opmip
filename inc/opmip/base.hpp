@@ -99,6 +99,17 @@ inline ParentT* parent_of(MemberT* member, MemberT ParentT::* Member)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+template<size_t Alignment, class Integral>
+inline Integral align_to(Integral value)
+{
+	//FIXME/TODO:
+	// - add concept check for Integral and Alignment
+	// - add specializations for pointers
+
+	return (value + Alignment - 1) & ~(Alignment - 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
