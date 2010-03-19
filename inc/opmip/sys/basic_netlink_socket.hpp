@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/sys/io_service.hpp>
 #include <boost/assert.hpp>
 #include <boost/asio/basic_raw_socket.hpp>
 #include <sys/socket.h>
