@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : RT Netlink Messages
+// Brief   : RT Netlink Message
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_SYS_RTNETLINK_MESSAGES__HPP_
-#define OPMIP_SYS_RTNETLINK_MESSAGES__HPP_
+#ifndef OPMIP_SYS_RTNETLINK_MESSAGE__HPP_
+#define OPMIP_SYS_RTNETLINK_MESSAGE__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
@@ -25,25 +25,27 @@
 namespace opmip { namespace sys { namespace rtnetlink {
 
 ///////////////////////////////////////////////////////////////////////////////
-enum msg {
-	msg_new_link          = 16,
-	msg_del_link,
-	msg_get_link,
-	msg_set_link,
+struct message {
+	enum type {
+		new_link      = 16,
+		del_link,
+		get_link,
+		set_link,
 
-	msg_new_address       = 20,
-	msg_del_address,
-	msg_get_address,
-	msg_set_address,
+		new_address   = 20,
+		del_address,
+		get_address,
+		set_address,
 
-	msg_new_route         = 24,
-	msg_del_route,
-	msg_get_route,
-	msg_set_route,
+		new_route     = 24,
+		del_route,
+		get_route,
+		set_route,
+	};
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace rtnetlink */ } /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_RTNETLINK_MESSAGES__HPP_ */
+#endif /* OPMIP_SYS_RTNETLINK_MESSAGE__HPP_ */
