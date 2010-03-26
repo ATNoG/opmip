@@ -38,6 +38,23 @@ public:
 		permanent    = 0x80,
 	};
 
+	enum attr {
+		attr_address = 1,
+		attr_local,
+		attr_label,
+		attr_broadcast,
+		attr_anycast,
+		attr_cacheinfo,
+		attr_multicast,
+	};
+
+	struct cacheinfo {
+		uint32 prefered;
+		uint32 valid;
+		uint32 cstamp; ///Created timestamp, hundredths of seconds
+		uint32 ustamp; ///Updated timestamp, hundredths of seconds
+	};
+
 private:
 	uint8  _family;
 	uint8  _prefixlen;
