@@ -44,7 +44,7 @@ inline void throw_on_error(boost::system::error_code& ec, const char* what)
 } /* namespace detail */
 
 ///////////////////////////////////////////////////////////////////////////////
-class tunnel_service {
+class ip6_tunnel_service {
 	static const std::size_t if_name_size = 16;
 	static const int         ioctl_begin  = 0x89F0;
 	static const int         ioctl_get    = ioctl_begin + 0;
@@ -53,77 +53,17 @@ class tunnel_service {
 	static const int         ioctl_change = ioctl_begin + 3;
 
 public:
-	class ip6_parameters;
+	class parameters;
 
 public:
-	tunnel_service();
-	tunnel_service(boost::system::error_code& ec);
-	~tunnel_service();
+	ip6_tunnel_service();
+	ip6_tunnel_service(boost::system::error_code& ec);
+	~ip6_tunnel_service();
 
-	template<class Parameters>
-	void get(Parameters& op, boost::system::error_code& ec)
-	{
-		io_control(op.name(), ioctl_get, op.data(), ec);
-	}
-
-	template<class Parameters>
-	void get(Parameters& op)
-	{
-		boost::system::error_code ec;
-
-		get(op, ec);
-		detail::throw_on_error(ec, "opmip::sys::tunnel_service::get()");
-	}
-
-	template<class Parameters>
-	void add(Parameters& op, boost::system::error_code& ec)
-	{
-		Parameters tmp = op;
-
-		io_control("ip6tnl0", ioctl_add, op.data(), ec);
-		if (!ec && (op != tmp))
-			ec = boost::system::error_code(boost::system::errc::invalid_argument,
-			                               boost::system::get_system_category());
-	}
-
-	template<class Parameters>
-	void add(Parameters& op)
-	{
-		boost::system::error_code ec;
-
-		add(op, ec);
-		detail::throw_on_error(ec, "opmip::sys::tunnel_service::add()");
-	}
-
-	template<class Parameters>
-	void remove(Parameters& op, boost::system::error_code& ec)
-	{
-		io_control(op.name(), ioctl_remove, op.data(), ec);
-	}
-
-	template<class Parameters>
-	void remove(Parameters& op)
-	{
-		boost::system::error_code ec;
-
-		remove(op, ec);
-		detail::throw_on_error(ec, "opmip::sys::tunnel_service::remove()");
-	}
-
-	template<class Parameters>
-	void change(Parameters& op, boost::system::error_code& ec)
-	{
-		io_control(op.name(), ioctl_change, op.data(), ec);
-	}
-
-	template<class Parameters>
-	void change(Parameters& op)
-	{
-		boost::system::error_code ec;
-
-		change(op, ec);
-		detail::throw_on_error(ec, "opmip::sys::tunnel_service::change()");
-	}
+	void get(parameters& op, boost::system::error_code& ec);
+	void add(parameters& op, boost::system::error_code& ec);
+	void remove(parameters& op, boost::system::error_code& ec);
+	void change(parameters& op, boost::system::error_code& ec);
 
 private:
 	void init(boost::system::error_code& ec);
@@ -134,7 +74,7 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class tunnel_service::ip6_parameters {
+class ip6_tunnel_service::parameters {
 	typedef ip::address_v6::bytes_type raw_address;
 
 public:
@@ -149,11 +89,13 @@ public:
 		use_original_dscp          = 0x10, ///Copy DSCP from the outer packet
 	};
 
-	friend bool          operator!=(const ip6_parameters& rhr, const ip6_parameters& lhr);
-	friend std::ostream& operator<<(std::ostream& os, const ip6_parameters& lhr);
+	friend bool          operator!=(const parameters& rhr, const parameters& lhr);
+	friend std::ostream& operator<<(std::ostream& os, const parameters& lhr);
 
 public:
-	ip6_parameters();
+	parameters();
+
+	void clear();
 
 	void name(const char* str)                      { std::strncpy(_name, str, sizeof(_name)); }
 	void device(int index)                          { _link = index; }
@@ -175,9 +117,10 @@ public:
 	ip::address_v6 local_address() const       { return ip::address_v6(_local_addr); }
 	ip::address_v6 remote_address() const      { return ip::address_v6(_remote_addr); }
 
-	void* data() { return this; }
+	const char* clone() { return "ip6tnl0"; }
+	static int  proto() { return AF_INET6; }
 
-	void clear();
+	void* data() { return this; }
 
 private:
 	char        _name[if_name_size];
@@ -191,8 +134,8 @@ private:
 	raw_address _remote_addr;
 };
 
-bool          operator!=(const tunnel_service::ip6_parameters& rhr, const tunnel_service::ip6_parameters& lhr);
-std::ostream& operator<<(std::ostream& os, const tunnel_service::ip6_parameters& lhr);
+bool          operator!=(const ip6_tunnel_service::parameters& rhr, const ip6_tunnel_service::parameters& lhr);
+std::ostream& operator<<(std::ostream& os, const ip6_tunnel_service::parameters& lhr);
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace sys */ } /* namespace opmip */

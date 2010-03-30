@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : OPMIP Library Project Build
+# Brief   : opmio::sys::tunnel_service_base Unit Test Build
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,29 +15,8 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project opmip
-	;
-
-lib pthread
-	:
-	: <name>pthread
-	  <link>shared
-	;
-
-explicit pthread ;
-
-alias source-list
-	: pthread
-	: <target-os>linux
-	;
-
-explicit source-list ;
-
-lib opmip
-	: source-list
-	  dummy.cpp
-	  ip/prefix.cpp
-	  sys/tunnel_service.cpp
-	  /boost//system
+exe t0000
+	: t0000.cpp
+	  ../../../lib/opmip//opmip
 	;
 
