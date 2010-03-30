@@ -16,23 +16,40 @@
 //=============================================================================
 
 #include <opmip/sys/tunnel_service.hpp>
+#include <boost/throw_exception.hpp>
 #include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace sys {
 
 ///////////////////////////////////////////////////////////////////////////////
-ip6_tunnel_service::ip6_tunnel_service()
+namespace detail {
+
+///////////////////////////////////////////////////////////////////////////////
+inline void throw_on_error(boost::system::error_code& ec, const char* what)
+{
+	if (ec)
+		boost::throw_exception(boost::system::system_error(ec, what));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+} /* namespace detail */
+
+///////////////////////////////////////////////////////////////////////////////
+boost::asio::io_service::id ip6_tunnel_service::id;
+
+ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
+	: boost::asio::io_service::service(ios)
 {
 	boost::system::error_code ec;
 
-	init(ec);
-	detail::throw_on_error(ec, "opmip::sys::ip6_tunnel_service::ip6_tunnel_service()");
-}
-
-ip6_tunnel_service::ip6_tunnel_service(boost::system::error_code& ec)
-{
-	init(ec);
+	_fd = ::socket(parameters::proto(), SOCK_DGRAM, 0);
+	if (_fd < 0) {
+		boost::throw_exception(
+			boost::system::system_error(errno,
+			                            boost::system::get_system_category(),
+			                            "::socket"));
+	}
 }
 
 ip6_tunnel_service::~ip6_tunnel_service()
@@ -41,6 +58,10 @@ ip6_tunnel_service::~ip6_tunnel_service()
 
 	close_fd_result = ::close(_fd);
 	BOOST_ASSERT(close_fd_result == 0);
+}
+
+void ip6_tunnel_service::shutdown_service()
+{
 }
 
 void ip6_tunnel_service::get(parameters& op, boost::system::error_code& ec)
@@ -66,14 +87,6 @@ void ip6_tunnel_service::remove(parameters& op, boost::system::error_code& ec)
 void ip6_tunnel_service::change(parameters& op, boost::system::error_code& ec)
 {
 	io_control(op.name(), ioctl_change, op.data(), ec);
-}
-
-void ip6_tunnel_service::init(boost::system::error_code& ec)
-{
-	_fd = ::socket(parameters::proto(), SOCK_DGRAM, 0);
-	if (_fd < 0)
-		ec = boost::system::error_code(errno,
-		                               boost::system::get_system_category());
 }
 
 void ip6_tunnel_service::io_control(const char* name, int opcode, void* data, boost::system::error_code& ec)

@@ -29,8 +29,8 @@ int main()
 	sys::ip6_tunnel_service::parameters tpm1;
 	sys::ip6_tunnel_service::parameters tpm2;
 	sys::ip6_tunnel_service::parameters tpm3;
-	//sys::io_service ios;
-	sys::ip6_tunnel_service ts;//(ios);
+	boost::asio::io_service ios;
+	sys::ip6_tunnel_service ts(ios);
 
 	try {
 		tpm0.name(name);

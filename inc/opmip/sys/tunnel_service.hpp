@@ -20,7 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <boost/throw_exception.hpp>
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address_v6.hpp>
 #include <cstring>
 #include <ostream>
@@ -31,20 +31,7 @@ namespace opmip { namespace sys {
 namespace ip = boost::asio::ip;
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace detail {
-
-///////////////////////////////////////////////////////////////////////////////
-inline void throw_on_error(boost::system::error_code& ec, const char* what)
-{
-	if (ec)
-		boost::throw_exception(boost::system::system_error(ec, what));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-} /* namespace detail */
-
-///////////////////////////////////////////////////////////////////////////////
-class ip6_tunnel_service {
+class ip6_tunnel_service : public boost::asio::io_service::service {
 	static const std::size_t if_name_size = 16;
 	static const int         ioctl_begin  = 0x89F0;
 	static const int         ioctl_get    = ioctl_begin + 0;
@@ -53,13 +40,19 @@ class ip6_tunnel_service {
 	static const int         ioctl_change = ioctl_begin + 3;
 
 public:
+	static boost::asio::io_service::id id;
+
 	class parameters;
+	struct implementation_type;
 
 public:
-	ip6_tunnel_service();
-	ip6_tunnel_service(boost::system::error_code& ec);
+	explicit ip6_tunnel_service(boost::asio::io_service& ios);
 	~ip6_tunnel_service();
 
+	void construct(implementation_type& impl);
+	void destroy(implementation_type& impl);
+
+	void shutdown_service();
 	void get(parameters& op, boost::system::error_code& ec);
 	void add(parameters& op, boost::system::error_code& ec);
 	void remove(parameters& op, boost::system::error_code& ec);
