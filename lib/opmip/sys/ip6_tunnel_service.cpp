@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : Tunnel Service for Linux
+// Brief   : IPv6 Tunnel Service for Linux
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,7 +15,7 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/sys/tunnel_service.hpp>
+#include <opmip/sys/ip6_tunnel_service.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 

@@ -37,7 +37,7 @@ lib opmip
 	: source-list
 	  dummy.cpp
 	  ip/prefix.cpp
-	  sys/tunnel_service.cpp
+	  sys/ip6_tunnel_service.cpp
 	  /boost//system
 	;
 

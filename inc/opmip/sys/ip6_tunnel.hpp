@@ -20,7 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/sys/tunnel_service.hpp>
+#include <opmip/sys/ip6_tunnel_service.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/basic_io_object.hpp>
 
