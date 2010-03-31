@@ -20,6 +20,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/list_hook.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address_v6.hpp>
 #include <cstring>
@@ -52,18 +54,30 @@ public:
 	void construct(implementation_type& impl);
 	void destroy(implementation_type& impl);
 
-	void shutdown_service();
+	void open(implementation_type& impl, const char* name,
+	                                     boost::system::error_code& ec);
+	void open(implementation_type& impl, const char* name,
+	                                     int device,
+	                                     const ip::address_v6& local_address,
+	                                     const ip::address_v6& remote_address,
+	                                     boost::system::error_code& ec);
+	bool is_open(const implementation_type& impl) const;
+	void close(implementation_type& impl, boost::system::error_code& ec);
+
+
 	void get(parameters& op, boost::system::error_code& ec);
 	void add(parameters& op, boost::system::error_code& ec);
 	void remove(parameters& op, boost::system::error_code& ec);
 	void change(parameters& op, boost::system::error_code& ec);
 
 private:
-	void init(boost::system::error_code& ec);
+	void shutdown_service();
 	void io_control(const char* name, int opcode, void* data, boost::system::error_code& ec);
 
 private:
-	int _fd;
+	int          _fd;
+	boost::mutex _mutex;
+	list_hook    _tunnels;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -129,6 +143,12 @@ private:
 
 bool          operator!=(const ip6_tunnel_service::parameters& rhr, const ip6_tunnel_service::parameters& lhr);
 std::ostream& operator<<(std::ostream& os, const ip6_tunnel_service::parameters& lhr);
+
+///////////////////////////////////////////////////////////////////////////////
+struct ip6_tunnel_service::implementation_type {
+	parameters data;
+	list_hook  node;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace sys */ } /* namespace opmip */

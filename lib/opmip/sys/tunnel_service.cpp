@@ -50,6 +50,7 @@ ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
 			                            boost::system::get_system_category(),
 			                            "::socket"));
 	}
+	_tunnels.init();
 }
 
 ip6_tunnel_service::~ip6_tunnel_service()
@@ -60,8 +61,80 @@ ip6_tunnel_service::~ip6_tunnel_service()
 	BOOST_ASSERT(close_fd_result == 0);
 }
 
+void ip6_tunnel_service::construct(implementation_type& impl)
+{
+	boost::mutex::scoped_lock(_mutex);
+	_tunnels.push_back(&impl.node);
+}
+
+void ip6_tunnel_service::destroy(implementation_type& impl)
+{
+	boost::mutex::scoped_lock(_mutex);
+	boost::system::error_code ignore;
+	close(impl, ignore);
+	impl.node.remove();
+}
+
+void ip6_tunnel_service::open(implementation_type& impl, const char* name,
+                                                         boost::system::error_code& ec)
+{
+	if (is_open(impl))
+		close(impl, ec);
+
+	if (!ec) {
+		impl.data.name(name);
+		get(impl.data, ec);
+	}
+
+	if (ec)
+		impl.data.clear();
+}
+
+void ip6_tunnel_service::open(implementation_type& impl, const char* name,
+                                                         int device,
+                                                         const ip::address_v6& local_address,
+                                                         const ip::address_v6& remote_address,
+                                                         boost::system::error_code& ec)
+{
+	if (is_open(impl))
+		close(impl, ec);
+
+	if (!ec) {
+		impl.data.name(name);
+		impl.data.device(device);
+		impl.data.local_address(local_address);
+		impl.data.remote_address(remote_address);
+		add(impl.data, ec);
+	}
+
+	if (ec)
+		impl.data.clear();
+}
+
+bool ip6_tunnel_service::is_open(const implementation_type& impl) const
+{
+	return impl.data.name()[0] != '\0';
+}
+
+void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_code& ec)
+{
+	if (is_open(impl)) {
+		remove(impl.data, ec);
+		impl.data.clear();
+	}
+}
+
 void ip6_tunnel_service::shutdown_service()
 {
+	boost::mutex::scoped_lock(_mutex);
+	boost::system::error_code ignore;
+	implementation_type* impl;
+
+	for (list_hook* i = _tunnels.next; !_tunnels.empty(); i = i->next) {
+		impl = parent_of<implementation_type>(i, &implementation_type::node);
+		close(*impl, ignore);
+		i->remove();
+	}
 }
 
 void ip6_tunnel_service::get(parameters& op, boost::system::error_code& ec)
@@ -113,7 +186,7 @@ ip6_tunnel_service::parameters::parameters()
 
 void ip6_tunnel_service::parameters::clear()
 {
-	std::fill(_name, _name + sizeof(_name), '\0');
+	_name[0] = '\0';
 	_link = 0;
 	_proto = default_protocol;
 	_encap_limit = default_encapsulation_limit;
