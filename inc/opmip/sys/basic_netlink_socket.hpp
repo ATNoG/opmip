@@ -20,7 +20,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/sys/io_service.hpp>
 #include <boost/assert.hpp>
 #include <boost/asio/basic_raw_socket.hpp>
 #include <sys/socket.h>
@@ -79,7 +78,7 @@ class basic_netlink_socket
 	            > base;
 
 public:
-	explicit basic_netlink_socket(io_service& ios)
+	explicit basic_netlink_socket(boost::asio::io_service& ios)
 		: base(ios)
 	{ }
 
