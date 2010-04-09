@@ -20,7 +20,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/sys/error.hpp>
 #include <opmip/ip/address.hpp>
+#include <boost/asio/basic_socket.hpp>
+#include <boost/asio/raw_socket_service.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
@@ -102,6 +105,187 @@ inline void mproto::endpoint::address(const address_v6& addr)
 	tmp = addr.to_bytes();
 	_addr.sin6_scope_id = addr.scope_id();
 }
+
+///////////////////////////////////////////////////////////////////////////////
+class mproto::socket
+	: public boost::asio::basic_socket<mproto,
+	                                   boost::asio::raw_socket_service<mproto> > {
+
+	typedef boost::asio::basic_socket<mproto,
+		                              boost::asio::raw_socket_service<mproto> > base;
+
+	typedef boost::asio::socket_base ocket_base;
+
+public:
+	typedef base::native_type native_type;
+	typedef mproto            protocol_type;
+	typedef mproto::endpoint  endpoint_type;
+
+public:
+	socket(boost::asio::io_service& ios)
+		: base(ios)
+	{ }
+	socket(boost::asio::io_service& ios, const endpoint_type& ep)
+		: base(ios, ep)
+	{ }
+	socket(boost::asio::io_service& ios, const native_type& sock)
+		: base(ios, mproto(), sock)
+	{ }
+
+	template<class ConstBufferSequence>
+	size_t send(const ConstBufferSequence& buffers)
+	{
+		boost::system::error_code ec;
+
+		std::size_t s = this->service.send(this->implementation, buffers, 0, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class ConstBufferSequence>
+	size_t send(const ConstBufferSequence& buffers, socket_base::message_flags flags)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.send(this->implementation, buffers, flags, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class ConstBufferSequence>
+	size_t send(const ConstBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
+	{
+		return this->service.send(this->implementation, buffers, flags, ec);
+	}
+
+	template<class ConstBufferSequence, class WriteHandler>
+	void async_send(const ConstBufferSequence& buffers, WriteHandler handler)
+	{
+		this->service.async_send(this->implementation, buffers, 0, handler);
+	}
+
+	template<class ConstBufferSequence, class WriteHandler>
+	void async_send(const ConstBufferSequence& buffers, socket_base::message_flags flags, WriteHandler handler)
+	{
+		this->service.async_send(this->implementation, buffers, flags, handler);
+	}
+
+	template<class ConstBufferSequence>
+	size_t send_to(const ConstBufferSequence& buffers, const endpoint_type& destination)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.send_to(this->implementation, buffers, destination, 0, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class ConstBufferSequence>
+	size_t send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, socket_base::message_flags flags)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.send_to(this->implementation, buffers, destination, flags, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class ConstBufferSequence>
+	size_t send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, socket_base::message_flags flags, boost::system::error_code& ec)
+	{
+		return this->service.send_to(this->implementation, buffers, destination, flags, ec);
+	}
+
+	template<class ConstBufferSequence, class WriteHandler>
+	void async_send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, WriteHandler handler)
+	{
+		this->service.async_send_to(this->implementation, buffers, destination, 0, handler);
+	}
+
+	template<class ConstBufferSequence, class WriteHandler>
+	void async_send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, socket_base::message_flags flags, WriteHandler handler)
+	{
+		this->service.async_send_to(this->implementation, buffers, destination, flags, handler);
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive(const MutableBufferSequence& buffers)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.receive(this->implementation, buffers, 0, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive(const MutableBufferSequence& buffers, socket_base::message_flags flags)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.receive(
+		this->implementation, buffers, flags, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
+	{
+		return this->service.receive(this->implementation, buffers, flags, ec);
+	}
+
+	template<class MutableBufferSequence, class ReadHandler>
+	void async_receive(const MutableBufferSequence& buffers, ReadHandler handler)
+	{
+		this->service.async_receive(this->implementation, buffers, 0, handler);
+	}
+
+	template<class MutableBufferSequence, class ReadHandler>
+	void async_receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, ReadHandler handler)
+	{
+		this->service.async_receive(this->implementation, buffers, flags, handler);
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.receive_from(
+		this->implementation, buffers, sender_endpoint, 0, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags)
+	{
+		boost::system::error_code ec;
+
+		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
+		sys::throw_on_error(ec);
+		return s;
+	}
+
+	template<class MutableBufferSequence>
+	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, boost::system::error_code& ec)
+	{
+		return this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
+	}
+
+	template<class MutableBufferSequence, class ReadHandler>
+	void async_receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, ReadHandler handler)
+	{
+		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, 0, handler);
+	}
+
+	template<class MutableBufferSequence, class ReadHandler>
+	void async_receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, ReadHandler handler)
+	{
+		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, flags, handler);
+	}
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ip */ } /* namespace opmip */
