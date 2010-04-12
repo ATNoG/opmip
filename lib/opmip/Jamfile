@@ -16,16 +16,12 @@
 #==============================================================================
 
 project opmip
-	: requirements <link>static
-	;
-
-SOURCES =
-	dummy.cpp
-	ip/prefix.cpp
-	sys/tunnel_service.cpp
 	;
 
 lib opmip
-	: $(SOURCES)
+	: dummy.cpp
+	  ip/prefix.cpp
+	  sys/tunnel_service.cpp
+	  /boost//system
 	;
 
