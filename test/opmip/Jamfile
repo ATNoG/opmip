@@ -15,10 +15,6 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project
-	: requirements <library>/odtone-config//boost_system
-	;
-
 exe t0000
 	: t0000.cpp
 	  ../../lib/opmip//opmip

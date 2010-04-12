@@ -15,10 +15,16 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+import boost ;
+
 project opmip
-	: requirements <include>inc
-	: build-dir build
+	: requirements
+		<include>inc
+		<link>static
+	: build-dir bin.v2
 	;
+
+boost.use-project 1.42 ;
 
 build-project lib/opmip//opmip ;
 
