@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/ip/mproto.hpp>
+#include <opmip/ip/mproto_buffer.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 int main()
@@ -36,8 +37,8 @@ int main()
 	msg2.p(true);
 	msg2.lifetime(2143);
 
-	sock.send_to(boost::asio::buffer(msg1.data(), msg1.length()), ep);
-	sock.send_to(boost::asio::buffer(msg2.data(), msg2.length()), ep);
+	sock.send_to(opmip::ip::mproto_cbuffer(msg1), ep);
+	sock.send_to(opmip::ip::mproto_cbuffer(msg2), ep);
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

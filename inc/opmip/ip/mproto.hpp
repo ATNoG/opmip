@@ -103,25 +103,31 @@ inline void mproto::endpoint::address(const address_v6& addr)
 
 ///////////////////////////////////////////////////////////////////////////////
 struct mproto::header {
-	static const size_t size = 6;
+	static const size_t mh_size = 6;
 
 	void init(uint8 type, size_t len)
 	{
-		BOOST_ASSERT(!(len % 8));
+		len += mh_size;
 
 		next = 59;
-		length = (len / 8) - 1;
+		length = (align_to<8>(len) / 8) - 1;
 		mh_type = type;
 		reserved = 0;
 		checksum = 0;
+		plen = len % 8;
+		pad.assign(0);
+
+		update(this, mh_size);
 	}
 
-	void update(const uint16* data, size_t len)
+	void update(const void* data, size_t len)
 	{
+		BOOST_ASSERT(len == align_to<2>(len));
+		const size_t cnt = len / 2;
 		uint sum = checksum;
 
-		for (size_t i = 0; i < len; ++i)
-			sum += data[i];
+		for (size_t i = 0; i < cnt; ++i)
+			sum += reinterpret_cast<const uint16*>(data)[i];
 
 		sum += (sum >> 16) & 0xffff;
 		sum += (sum >> 16);
@@ -133,23 +139,31 @@ struct mproto::header {
 		checksum = ~checksum;
 	}
 
+	boost::asio::const_buffer pad_buffer() const
+	{
+		return boost::asio::const_buffer(pad.elems, plen);
+	}
+
 
 	uint8  next;
 	uint8  length;
 	uint8  mh_type;
 	uint8  reserved;
 	uint16 checksum;
+
+	uint8                  plen;
+	boost::array<uint8, 7> pad;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 class mproto::pbu {
 public:
 	static const size_t mh_type = 5;
-	static const size_t size    = 6;
+	static const size_t mh_size = 6;
 
 public:
 	pbu()
-		: _sequence(0), _flags1(0), _flags2(0), _lifetime(0), _pad(0)
+		: _sequence(0), _flags1(0), _flags2(0), _lifetime(0)
 	{ }
 
 	uint16 sequence() const { return ::ntohs(_sequence); }
@@ -172,28 +186,16 @@ public:
 	void p(bool value);
 	void lifetime(uint16 value) { _lifetime = ::ntohs(value); }
 
-
 	const void* data() const
 	{
-		_header.init(mh_type, length());
-		_header.update(reinterpret_cast<const uint16*>(this), length() / 2);
-		_header.finalize();
-
 		return this;
 	}
 
-	size_t length() const
-	{
-		return header::size + pbu::size + 4;
-	}
-
 private:
-	mutable mproto::header _header;
-	uint16                 _sequence;
-	uint8                  _flags1;
-	uint8                  _flags2;
-	uint16                 _lifetime;
-	uint32                 _pad;
+	uint16 _sequence;
+	uint8  _flags1;
+	uint8  _flags2;
+	uint16 _lifetime;
 };
 
 bool mproto::pbu::a() const
@@ -319,7 +321,7 @@ void mproto::pbu::p(bool value)
 class mproto::pba {
 public:
 	static const size_t mh_type = 6;
-	static const size_t size    = 6;
+	static const size_t mh_size = 6;
 
 	enum status_type {
 		status_ok                     = 0,   ///Accepted
@@ -340,7 +342,7 @@ public:
 
 public:
 	pba()
-		: _status(0), _flags(0), _sequence(0), _lifetime(0), _pad(0)
+		: _status(0), _flags(0), _sequence(0), _lifetime(0)
 	{ }
 
 	status_type status() const   { return status_type(_status); }
@@ -359,25 +361,14 @@ public:
 
 	const void* data() const
 	{
-		_header.init(mh_type, length());
-		_header.update(reinterpret_cast<const uint16*>(this), length() / 2);
-		_header.finalize();
-
 		return this;
 	}
 
-	size_t length() const
-	{
-		return header::size + pbu::size + 4;
-	}
-
 private:
-	mutable mproto::header _header;
-	uint8                  _status;
-	uint8                  _flags;
-	uint16                 _sequence;
-	uint16                 _lifetime;
-	uint32                 _pad;
+	uint8  _status;
+	uint8  _flags;
+	uint16 _sequence;
+	uint16 _lifetime;
 };
 
 bool mproto::pba::k() const
