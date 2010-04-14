@@ -196,9 +196,9 @@ public:
 	bool   m() const;
 	bool   r() const;
 	bool   p() const;
-	uint16 lifetime() const { return ::ntohs(_sequence); }
+	uint16 lifetime() const { return ::ntohs(_lifetime); }
 
-	void sequence(uint16 value) { _sequence = ::ntohs(value); }
+	void sequence(uint16 value) { _sequence = ::htons(value); }
 	void a(bool value);
 	void h(bool value);
 	void l(bool value);
@@ -206,7 +206,7 @@ public:
 	void m(bool value);
 	void r(bool value);
 	void p(bool value);
-	void lifetime(uint16 value) { _lifetime = ::ntohs(value); }
+	void lifetime(uint16 value) { _lifetime = ::htons(value); }
 
 	const void* data() const
 	{
@@ -389,14 +389,14 @@ public:
 	bool        r() const;
 	bool        p() const;
 	uint16      sequence() const { return ::ntohs(_sequence); }
-	uint16      lifetime() const { return ::ntohs(_sequence); }
+	uint16      lifetime() const { return ::ntohs(_lifetime); }
 
 	void status(status_type value) { _status = value; }
 	void k(bool value);
 	void r(bool value);
 	void p(bool value);
-	void sequence(uint16 value)  { _sequence = ::ntohs(value); }
-	void lifetime(uint16 value)  { _lifetime = ::ntohs(value); }
+	void sequence(uint16 value)  { _sequence = ::htons(value); }
+	void lifetime(uint16 value)  { _lifetime = ::htons(value); }
 
 	const void* data() const
 	{
