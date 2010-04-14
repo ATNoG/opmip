@@ -17,6 +17,7 @@
 
 #include <opmip/ip/mproto.hpp>
 #include <opmip/ip/mproto_buffer.hpp>
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 int main()
@@ -26,6 +27,8 @@ int main()
 	opmip::ip::mproto::socket sock(ios, opmip::ip::mproto::endpoint());
 	opmip::ip::mproto::pbu msg1;
 	opmip::ip::mproto::pba msg2;
+	char buff[512];
+	std::size_t rb;
 
 	msg1.sequence(1234);
 	msg1.a(true);
@@ -39,6 +42,8 @@ int main()
 
 	sock.send_to(opmip::ip::mproto_cbuffer(msg1), ep);
 	sock.send_to(opmip::ip::mproto_cbuffer(msg2), ep);
+	rb = sock.receive_from(opmip::ip::mproto_mbuffer(buff, sizeof(buff)), ep);
+	std::cout << "Received " << rb << " bytes\n";
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

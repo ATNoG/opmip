@@ -35,7 +35,7 @@ public:
 
 public:
 	template<class MPacket>
-	mproto_const_buffers_1(const MPacket& mp)
+	explicit mproto_const_buffers_1(const MPacket& mp)
 		: _header(boost::make_shared<mproto::header>())
 	{
 		_header->init(MPacket::mh_type, MPacket::mh_size);
@@ -103,6 +103,58 @@ template<class MPacket>
 mproto_const_buffers_2 mproto_cbuffer(const MPacket& mp, const std::pair<const void*, size_t>& buff)
 {
 	return mproto_const_buffers_2(mp, boost::asio::const_buffer(buff.first, buff.second));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+class mproto_mutable_buffers_1 {
+public:
+	typedef boost::asio::mutable_buffer        value_type;
+	typedef const boost::asio::mutable_buffer* const_iterator;
+
+public:
+	explicit mproto_mutable_buffers_1(const value_type& buff)
+		: _header(boost::make_shared<mproto::header>())
+	{
+		_buffs[0] = value_type(_header.get(), mproto::header::mh_size);
+		_buffs[1] = buff;
+	}
+
+	const_iterator begin() const { return &_buffs[0]; }
+	const_iterator end() const   { return &_buffs[2]; }
+
+	bool checksum(size_t len)
+	{
+		const size_t clen = (_header->length + 1) * 8;
+
+		if ((clen != len)
+		    || (_header->next != 59)
+		    || (_header->reserved != 0))
+			return false;
+
+		uint16 sum = _header->checksum;
+
+		_header->update(_header.get(), mproto::header::mh_size);
+		_header->update(boost::asio::buffer_cast<void*>(_buffs[1]), boost::asio::buffer_size(_buffs[1]));
+		_header->finalize();
+		std::swap(sum, _header->checksum);
+
+		return sum == 0xffff;
+	}
+
+private:
+	value_type                        _buffs[2];
+	boost::shared_ptr<mproto::header> _header;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+mproto_mutable_buffers_1 mproto_mbuffer(void* buff, size_t len)
+{
+	return mproto_mutable_buffers_1(boost::asio::mutable_buffer(buff, len));
+}
+
+mproto_mutable_buffers_1 mproto_mbuffer(const std::pair<void*, size_t>& buff)
+{
+	return mproto_mutable_buffers_1(boost::asio::mutable_buffer(buff.first, buff.second));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
