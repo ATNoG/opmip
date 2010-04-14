@@ -17,7 +17,6 @@
 
 #include <opmip/ip/mproto.hpp>
 #include <opmip/ip/mproto_buffer.hpp>
-#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 int main()
@@ -27,8 +26,8 @@ int main()
 	opmip::ip::mproto::socket sock(ios, opmip::ip::mproto::endpoint());
 	opmip::ip::mproto::pbu msg1;
 	opmip::ip::mproto::pba msg2;
+	opmip::ip::mproto::socket::receive_type rb;
 	char buff[512];
-	std::size_t rb;
 
 	msg1.sequence(1234);
 	msg1.a(true);
@@ -41,9 +40,14 @@ int main()
 	msg2.lifetime(2143);
 
 	sock.send_to(opmip::ip::mproto_cbuffer(msg1), ep);
+	rb = sock.receive_from(opmip::ip::mproto_mbuffer(buff, sizeof(buff)), ep);
+	BOOST_ASSERT(rb.first >= opmip::ip::mproto::pbu::mh_size);
+	BOOST_ASSERT(rb.second == opmip::ip::mproto::mh_pbu);
+
 	sock.send_to(opmip::ip::mproto_cbuffer(msg2), ep);
 	rb = sock.receive_from(opmip::ip::mproto_mbuffer(buff, sizeof(buff)), ep);
-	std::cout << "Received " << rb << " bytes\n";
+	BOOST_ASSERT(rb.first >= opmip::ip::mproto::pba::mh_size);
+	BOOST_ASSERT(rb.second == opmip::ip::mproto::mh_pba);
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

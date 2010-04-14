@@ -37,6 +37,11 @@ public:
 	class pbu;
 	class pba;
 
+	enum mh_types {
+		mh_pbu = 5,
+		mh_pba = 6,
+	};
+
 public:
 	int family() const   { return AF_INET6; }
 	int type() const     { return SOCK_RAW; }
@@ -432,10 +437,45 @@ class mproto::socket
 
 	typedef boost::asio::socket_base ocket_base;
 
+	template<class WriteHandler>
+	struct write_handler_impl {
+		write_handler_impl(WriteHandler handler)
+			: _handler(handler)
+		{ }
+
+		void operator()(const boost::system::error_code& ec, size_t bwritten) const
+		{
+			_handler(ec, (bwritten < mproto::header::mh_size) ? 0 : (bwritten - mproto::header::mh_size));
+		}
+
+		WriteHandler _handler;
+	};
+
+	template<class MutableBufferSequence, class ReadHandler>
+	struct read_handler_impl {
+		read_handler_impl(const MutableBufferSequence& buffers, ReadHandler handler)
+			: _buffers(buffers), _handler(handler)
+		{ }
+
+		void operator()(const boost::system::error_code& ec, size_t bread) const
+		{
+			if (!ec && !_buffers.checksum(bread))
+				_handler(boost::system::error_code(boost::system::errc::bad_message,
+				                                   boost::system::get_generic_category()),
+				         static_cast<size_t>(0), static_cast<mproto::mh_types>(-1));
+			else
+				_handler(ec, (bread < mproto::header::mh_size) ? 0 : (bread - mproto::header::mh_size), _buffers.mh_type());
+		}
+
+		MutableBufferSequence _buffers;
+		ReadHandler           _handler;
+	};
+
 public:
-	typedef base::native_type native_type;
-	typedef mproto            protocol_type;
-	typedef mproto::endpoint  endpoint_type;
+	typedef base::native_type           native_type;
+	typedef mproto                      protocol_type;
+	typedef mproto::endpoint            endpoint_type;
+	typedef std::pair<size_t, mh_types> receive_type;
 
 public:
 	socket(boost::asio::io_service& ios)
@@ -453,9 +493,16 @@ public:
 	{
 		boost::system::error_code ec;
 
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		std::size_t s = this->service.send(this->implementation, buffers, 0, ec);
 		sys::throw_on_error(ec);
-		return s;
+		return (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 	}
 
 	template<class ConstBufferSequence>
@@ -463,27 +510,56 @@ public:
 	{
 		boost::system::error_code ec;
 
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		size_t s = this->service.send(this->implementation, buffers, flags, ec);
 		sys::throw_on_error(ec);
-		return s;
+		return (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 	}
 
 	template<class ConstBufferSequence>
 	size_t send(const ConstBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
-		return this->service.send(this->implementation, buffers, flags, ec);
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
+		size_t s = this->service.send(this->implementation, buffers, flags, ec);
+		return (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 	}
 
 	template<class ConstBufferSequence, class WriteHandler>
 	void async_send(const ConstBufferSequence& buffers, WriteHandler handler)
 	{
-		this->service.async_send(this->implementation, buffers, 0, handler);
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
+		this->service.async_send(this->implementation, buffers, 0, write_handler_impl<WriteHandler>(handler));
 	}
 
 	template<class ConstBufferSequence, class WriteHandler>
 	void async_send(const ConstBufferSequence& buffers, socket_base::message_flags flags, WriteHandler handler)
 	{
-		this->service.async_send(this->implementation, buffers, flags, handler);
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
+		this->service.async_send(this->implementation, buffers, flags, write_handler_impl<WriteHandler>(handler));
 	}
 
 	template<class ConstBufferSequence>
@@ -491,9 +567,16 @@ public:
 	{
 		boost::system::error_code ec;
 
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		size_t s = this->service.send_to(this->implementation, buffers, destination, 0, ec);
 		sys::throw_on_error(ec);
-		return s;
+		return (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 	}
 
 	template<class ConstBufferSequence>
@@ -501,105 +584,151 @@ public:
 	{
 		boost::system::error_code ec;
 
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		size_t s = this->service.send_to(this->implementation, buffers, destination, flags, ec);
 		sys::throw_on_error(ec);
-		return s;
+		return (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 	}
 
 	template<class ConstBufferSequence>
 	size_t send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		return this->service.send_to(this->implementation, buffers, destination, flags, ec);
 	}
 
 	template<class ConstBufferSequence, class WriteHandler>
 	void async_send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, WriteHandler handler)
 	{
-		this->service.async_send_to(this->implementation, buffers, destination, 0, handler);
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
+		this->service.async_send_to(this->implementation, buffers, destination, 0, write_handler_impl<WriteHandler>(handler));
 	}
 
 	template<class ConstBufferSequence, class WriteHandler>
 	void async_send_to(const ConstBufferSequence& buffers, const endpoint_type& destination, socket_base::message_flags flags, WriteHandler handler)
 	{
+	#ifndef NDEBUG
+		typename ConstBufferSequence::const_iterator i = buffers.begin();
+		const mproto::header* hdr = boost::asio::buffer_cast<const mproto::header*>(*i);
+		assert(boost::asio::buffer_size(*i) == mproto::header::mh_size);
+		assert(hdr->reserved == 0 && hdr->next == 59);
+	#endif
+
 		this->service.async_send_to(this->implementation, buffers, destination, flags, handler);
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive(const MutableBufferSequence& buffers)
+	receive_type receive(const MutableBufferSequence& buffers)
 	{
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive(this->implementation, buffers, 0, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
-		return s;
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive(const MutableBufferSequence& buffers, socket_base::message_flags flags)
+	receive_type receive(const MutableBufferSequence& buffers, socket_base::message_flags flags)
 	{
 		boost::system::error_code ec;
 
-		size_t s = this->service.receive(
-		this->implementation, buffers, flags, ec);
+		size_t s = this->service.receive(this->implementation, buffers, flags, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
-		return s;
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
+	receive_type receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
-		return this->service.receive(this->implementation, buffers, flags, ec);
+		size_t s = this->service.receive(this->implementation, buffers, flags, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence, class ReadHandler>
 	void async_receive(const MutableBufferSequence& buffers, ReadHandler handler)
 	{
-		this->service.async_receive(this->implementation, buffers, 0, handler);
+		this->service.async_receive(this->implementation, buffers, 0, read_handler_impl<MutableBufferSequence, ReadHandler>(buffers, handler));
 	}
 
 	template<class MutableBufferSequence, class ReadHandler>
 	void async_receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, ReadHandler handler)
 	{
-		this->service.async_receive(this->implementation, buffers, flags, handler);
+		this->service.async_receive(this->implementation, buffers, flags, read_handler_impl<MutableBufferSequence, ReadHandler>(buffers, handler));
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint)
+	receive_type receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint)
 	{
 		boost::system::error_code ec;
 
-		size_t s = this->service.receive_from(
-		this->implementation, buffers, sender_endpoint, 0, ec);
+		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, 0, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
-		return s;
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags)
+	receive_type receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags)
 	{
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
-		return s;
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence>
-	size_t receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, boost::system::error_code& ec)
+	receive_type receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
-		return this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
+		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
+		if (!ec && !buffers.checksum(s))
+			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
+		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
+		return receive_type(s, buffers.mh_type());
 	}
 
 	template<class MutableBufferSequence, class ReadHandler>
 	void async_receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, ReadHandler handler)
 	{
-		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, 0, handler);
+		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, 0, read_handler_impl<MutableBufferSequence, ReadHandler>(buffers, handler));
 	}
 
 	template<class MutableBufferSequence, class ReadHandler>
 	void async_receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, ReadHandler handler)
 	{
-		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, flags, handler);
+		this->service.async_receive_from(this->implementation, buffers, sender_endpoint, flags, read_handler_impl<MutableBufferSequence, ReadHandler>(buffers, handler));
 	}
 };
 

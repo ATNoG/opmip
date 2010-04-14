@@ -22,7 +22,6 @@
 #include <opmip/base.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <boost/make_shared.hpp>
-#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
@@ -122,7 +121,7 @@ public:
 	const_iterator begin() const { return &_buffs[0]; }
 	const_iterator end() const   { return &_buffs[2]; }
 
-	bool checksum(size_t len)
+	bool checksum(size_t len) const
 	{
 		const size_t clen = (_header->length + 1) * 8;
 
@@ -131,14 +130,20 @@ public:
 		    || (_header->reserved != 0))
 			return false;
 
-		uint16 sum = _header->checksum;
-
+/*		FIXME:
 		_header->update(_header.get(), mproto::header::mh_size);
-		_header->update(boost::asio::buffer_cast<void*>(_buffs[1]), boost::asio::buffer_size(_buffs[1]));
+		_header->update(boost::asio::buffer_cast<const void*>(_buffs[1]),
+		                std::min(boost::asio::buffer_size(_buffs[1]), len - mproto::header::mh_size));
 		_header->finalize();
-		std::swap(sum, _header->checksum);
 
-		return sum == 0xffff;
+		return !_header->checksum;
+*/
+		return true;
+	}
+
+	mproto::mh_types mh_type() const
+	{
+		return static_cast<mproto::mh_types>(_header->mh_type);
 	}
 
 private:
