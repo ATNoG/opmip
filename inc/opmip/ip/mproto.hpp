@@ -121,27 +121,6 @@ struct mproto::header {
 		checksum = 0;
 		plen = len % 8;
 		pad.assign(0);
-
-		update(this, mh_size);
-	}
-
-	void update(const void* data, size_t len)
-	{
-		BOOST_ASSERT(len == align_to<2>(len));
-		const size_t cnt = len / 2;
-		uint sum = checksum;
-
-		for (size_t i = 0; i < cnt; ++i)
-			sum += reinterpret_cast<const uint16*>(data)[i];
-
-		sum += (sum >> 16) & 0xffff;
-		sum += (sum >> 16);
-		checksum = sum;
-	}
-
-	void finalize()
-	{
-		checksum = ~checksum;
 	}
 
 	boost::asio::const_buffer pad_buffer() const
@@ -493,7 +472,7 @@ class mproto::socket
 
 		void operator()(const boost::system::error_code& ec, size_t bread) const
 		{
-			if (!ec && !_buffers.checksum(bread))
+			if (!ec && !_buffers.validate(bread))
 				_handler(boost::system::error_code(boost::system::errc::bad_message,
 				                                   boost::system::get_generic_category()),
 				         static_cast<size_t>(0), static_cast<mproto::mh_types>(-1));
@@ -675,7 +654,7 @@ public:
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive(this->implementation, buffers, 0, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
@@ -688,7 +667,7 @@ public:
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive(this->implementation, buffers, flags, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
@@ -699,7 +678,7 @@ public:
 	receive_type receive(const MutableBufferSequence& buffers, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
 		size_t s = this->service.receive(this->implementation, buffers, flags, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 		return receive_type(s, buffers.mh_type());
@@ -723,7 +702,7 @@ public:
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, 0, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
@@ -736,7 +715,7 @@ public:
 		boost::system::error_code ec;
 
 		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		sys::throw_on_error(ec);
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
@@ -747,7 +726,7 @@ public:
 	receive_type receive_from(const MutableBufferSequence& buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, boost::system::error_code& ec)
 	{
 		size_t s = this->service.receive_from(this->implementation, buffers, sender_endpoint, flags, ec);
-		if (!ec && !buffers.checksum(s))
+		if (!ec && !buffers.validate(s))
 			ec = boost::system::error_code(boost::system::errc::bad_message, boost::system::get_generic_category());
 		s = (s < mproto::header::mh_size) ? 0 : (s - mproto::header::mh_size);
 		return receive_type(s, buffers.mh_type());

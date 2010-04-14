@@ -37,9 +37,9 @@ public:
 	explicit mproto_const_buffers_1(const MPacket& mp)
 		: _header(boost::make_shared<mproto::header>())
 	{
+		OPMIP_STATIC_ASSERT(!(MPacket::mh_size % 2), "MPacket::mh_size must be a multiple of 2 octets");
+
 		_header->init(MPacket::mh_type, MPacket::mh_size);
-		_header->update(mp.data(), MPacket::mh_size);
-		_header->finalize();
 
 		_buffs[0] = value_type(_header.get(), mproto::header::mh_size);
 		_buffs[1] = value_type(mp.data(), MPacket::mh_size);
@@ -64,13 +64,10 @@ public:
 	mproto_const_buffers_2(const MPacket& mp, const value_type& payload)
 		: _header(boost::make_shared<mproto::header>())
 	{
+		OPMIP_STATIC_ASSERT(!(MPacket::mh_size % 2), "MPacket::mh_size must be a multiple of 2 octets");
 		const size_t len = MPacket::mh_size + boost::asio::buffer_size(payload);
 
 		_header->init(MPacket::mh_type, len);
-		_header->update(mp.data(), MPacket::mh_size);
-		_header->update(boost::asio::buffer_cast<const void*>(payload), boost::asio::buffer_size(payload));
-		_header->finalize();
-
 		_buffs[0] = value_type(_header.get(), mproto::header::mh_size);
 		_buffs[1] = value_type(mp.data(), MPacket::mh_size);
 		_buffs[2] = payload;
@@ -121,29 +118,18 @@ public:
 	const_iterator begin() const { return &_buffs[0]; }
 	const_iterator end() const   { return &_buffs[2]; }
 
-	bool checksum(size_t len) const
-	{
-		const size_t clen = (_header->length + 1) * 8;
-
-		if ((clen != len)
-		    || (_header->next != 59)
-		    || (_header->reserved != 0))
-			return false;
-
-/*		FIXME:
-		_header->update(_header.get(), mproto::header::mh_size);
-		_header->update(boost::asio::buffer_cast<const void*>(_buffs[1]),
-		                std::min(boost::asio::buffer_size(_buffs[1]), len - mproto::header::mh_size));
-		_header->finalize();
-
-		return !_header->checksum;
-*/
-		return true;
-	}
-
 	mproto::mh_types mh_type() const
 	{
 		return static_cast<mproto::mh_types>(_header->mh_type);
+	}
+
+	bool validate(size_t len) const
+	{
+		size_t clen = uint(_header->length + 1) * 8;
+
+		return (clen == len)
+		        && (_header->next == 59)
+		        && (_header->reserved == 0);
 	}
 
 private:
