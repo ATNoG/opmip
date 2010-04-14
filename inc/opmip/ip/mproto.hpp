@@ -167,6 +167,23 @@ public:
 	static const size_t mh_size = 6;
 
 public:
+	static pbu* cast(void* buff, size_t len)
+	{
+		if (len < sizeof(pbu))
+			return nullptr;
+
+		return reinterpret_cast<pbu*>(buff);
+	}
+
+	static const pbu* cast(const void* buff, size_t len)
+	{
+		if (len < sizeof(pbu))
+			return nullptr;
+
+		return reinterpret_cast<const pbu*>(buff);
+	}
+
+public:
 	pbu()
 		: _sequence(0), _flags1(0), _flags2(0), _lifetime(0)
 	{ }
@@ -344,6 +361,23 @@ public:
 		status_expired                = 138, ///Expired nonces
 		status_invalid_registration   = 139, ///Registration type change disallowed
 	};
+
+public:
+	static pba* cast(void* buff, size_t len)
+	{
+		if (len < mh_size)
+			return nullptr;
+
+		return reinterpret_cast<pba*>(buff);
+	}
+
+	static const pba* cast(const void* buff, size_t len)
+	{
+		if (len < mh_size)
+			return nullptr;
+
+		return reinterpret_cast<const pba*>(buff);
+	}
 
 public:
 	pba()
