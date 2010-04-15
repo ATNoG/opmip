@@ -34,6 +34,9 @@ namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class bulist_entry {
+
+	friend class bulist;
+
 public:
 	typedef ip::address_v6        net_address;
 	typedef ip::prefix_v6         net_prefix;
@@ -49,7 +52,7 @@ public:
 	{ }
 
 private:
-//	list_node _bulist_entry_hook;
+	boost::intrusive::set_member_hook<> _hook;
 
 protected:
 	net_address     _mn_addr;             ///MN Address
@@ -72,6 +75,47 @@ protected:
 		uint64    	timeout;
 	}             _retry_state;           ///Retransmission state
 	bool          _is_send_enable;        ///Flag indicating if future binding updates should be sent
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class bulist {
+	struct compare {
+		bool operator()(const bulist_entry& rhs, const bulist_entry& lhs) const
+		{
+			return rhs._mn_id < lhs._mn_id;
+		}
+
+		bool operator()(const bulist_entry& rhs, const bulist_entry::net_access_id& key) const
+		{
+			return rhs._mn_id < key;
+		}
+
+		bool operator()(const bulist_entry::net_access_id& key, const bulist_entry& lhs) const
+		{
+			return key < lhs._mn_id;
+		}
+	};
+
+	typedef boost::intrusive::compare<compare> compare_option;
+
+	typedef boost::intrusive::member_hook<bulist_entry,
+	                                      boost::intrusive::set_member_hook<>,
+	                                      &bulist_entry::_hook> member_hook_option;
+
+public:
+	typedef boost::intrusive::rbtree<bulist_entry,
+	                                 member_hook_option,
+	                                 compare_option> type;
+
+	typedef bulist_entry                  entry_type;
+	typedef bulist_entry::net_address     net_address;
+	typedef bulist_entry::net_prefix      net_prefix;
+	typedef bulist_entry::net_prefix_list net_prefix_list;
+	typedef bulist_entry::net_access_id   net_access_id;
+	typedef bulist_entry::link_id         link_id;
+	typedef bulist_entry::link_address    link_address;
+	typedef bulist_entry::tunnel_id       tunnel_id;
+	typedef bulist_entry::nic_id          nic_id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
