@@ -15,36 +15,21 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_BCACHE__HPP_
-#define OPMIP_BCACHE__HPP_
+#ifndef OPMIP_PMIP_BCACHE__HPP_
+#define OPMIP_PMIP_BCACHE__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <netinet/in.h>
+#include <opmip/ip/address.hpp>
+#include <opmip/ip/prefix.hpp>
+#include <opmip/ll/technology.hpp>
+#include <opmip/ll/mac_address.hpp>
 #include <string>
 #include <vector>
 #include <list>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip {
-
-enum link_type {
-	link_unknown = 0, ///Unknown Link Layer
-	link_802_11  = 1, ///WiFi 802.11 Link Layer
-};
-
-struct ip6_address : ::in6_addr {
-};
-
-struct ip6_prefix {
-	uint8 prefix[16];
-	uint8 length;
-};
-
-struct mac_address {
-	uint8 address[16];
-	uint8 length;
-};
+namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class bcache {
@@ -57,12 +42,13 @@ class bcache::value {
 	friend class bcache;
 
 public:
-	typedef ip6_address           net_address;
-	typedef ip6_prefix            net_prefix;
+	typedef ip::address_v6        net_address;
+	typedef ip::prefix_v6         net_prefix;
 	typedef std::list<net_prefix> net_prefix_list;
 	typedef std::string           net_access_id;
 	typedef std::vector<uint8>    link_id;
-	typedef mac_address           link_address;
+	typedef ll::technology        link_type;
+	typedef ll::mac_address       link_address;
 	typedef uint                  tunnel_id;
 
 	value()
@@ -89,7 +75,7 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace opmip */
+} /* namespace pmip */ } /* namespace opmip */
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_BCACHE__HPP_ */
+#endif /* OPMIP_PMIP_BCACHE__HPP_ */
