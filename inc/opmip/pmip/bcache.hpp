@@ -24,6 +24,7 @@
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/technology.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <boost/intrusive/rbtree.hpp>
 #include <string>
 #include <vector>
 #include <list>
@@ -32,13 +33,7 @@
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class bcache {
-	class value;
-
-public:
-};
-
-class bcache::value {
+class bcache_entry {
 	friend class bcache;
 
 public:
@@ -51,12 +46,12 @@ public:
 	typedef ll::mac_address       link_address;
 	typedef uint                  tunnel_id;
 
-	value()
+public:
+	bcache_entry()
 	{ }
 
 private:
-//	rbtree_node _bcache_entry_hook;
-//	list_node   _cache_policy_hook;
+	boost::intrusive::set_member_hook<> _hook;
 
 protected:
 	net_address      _mn_home_addr;     ///MN Home Address
@@ -72,6 +67,47 @@ protected:
 	tunnel_id        _tunnel;           ///Tunnel Identifier
 	link_type        _mn_link_type;     ///MN Link-Layer Technology
 	uint64           _bu_timestamp;     ///Last BU Timestamp
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class bcache {
+	struct compare {
+		bool operator()(const bcache_entry& rhs, const bcache_entry& lhs) const
+		{
+			return rhs._mn_id < lhs._mn_id;
+		}
+
+		bool operator()(const bcache_entry& rhs, const bcache_entry::net_access_id& key) const
+		{
+			return rhs._mn_id < key;
+		}
+
+		bool operator()(const bcache_entry::net_access_id& key, const bcache_entry& lhs) const
+		{
+			return key < lhs._mn_id;
+		}
+	};
+
+	typedef boost::intrusive::compare<compare> compare_option;
+
+	typedef boost::intrusive::member_hook<bcache_entry,
+	                                      boost::intrusive::set_member_hook<>,
+	                                      &bcache_entry::_hook> member_hook_option;
+
+public:
+	typedef boost::intrusive::rbtree<bcache_entry,
+	                                 member_hook_option,
+	                                 compare_option> type;
+
+	typedef bcache_entry                  entry_type;
+	typedef bcache_entry::net_address     net_address;
+	typedef bcache_entry::net_prefix      net_prefix;
+	typedef bcache_entry::net_prefix_list net_prefix_list;
+	typedef bcache_entry::net_access_id   net_access_id;
+	typedef bcache_entry::link_id         link_id;
+	typedef bcache_entry::link_type       link_type;
+	typedef bcache_entry::link_address    link_address;
+	typedef bcache_entry::tunnel_id       tunnel_id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
