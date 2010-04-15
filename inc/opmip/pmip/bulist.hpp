@@ -15,37 +15,37 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_BULIST__HPP_
-#define OPMIP_BULIST__HPP_
+#ifndef OPMIP_PMIP_BULIST__HPP_
+#define OPMIP_PMIP_BULIST__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/bcache.hpp>
+#include <opmip/ip/address.hpp>
+#include <opmip/ip/prefix.hpp>
+#include <opmip/ll/technology.hpp>
+#include <opmip/ll/mac_address.hpp>
+#include <boost/intrusive/rbtree.hpp>
+#include <string>
+#include <vector>
+#include <list>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip {
+namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class bulist {
-	class value;
-
+class bulist_entry {
 public:
-};
-
-class bulist::value {
-	friend class bulist;
-
-public:
-	typedef ip6_address           net_address;
-	typedef ip6_prefix            net_prefix;
+	typedef ip::address_v6        net_address;
+	typedef ip::prefix_v6         net_prefix;
 	typedef std::list<net_prefix> net_prefix_list;
 	typedef std::string           net_access_id;
 	typedef std::vector<uint8>    link_id;
-	typedef mac_address           link_address;
+	typedef ll::mac_address       link_address;
 	typedef uint                  tunnel_id;
 	typedef uint                  nic_id;
 
-	value()
+public:
+	bulist_entry()
 	{ }
 
 private:
@@ -75,7 +75,7 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace opmip */
+} /* namespace pmip */ } /* namespace opmip */
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_BULIST__HPP_ */
+#endif /* OPMIP_PMIP_BULIST__HPP_ */
