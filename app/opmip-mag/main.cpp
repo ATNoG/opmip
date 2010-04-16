@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/base.hpp>
+#include <opmip/pmip/mag.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -27,7 +28,10 @@ int main()
 {
 	size_t concurrency = boost::thread::hardware_concurrency();
 	boost::asio::io_service ios(concurrency);
+	opmip::pmip::mag mag(ios);
 	boost::thread_group tg;
+
+	mag.start();
 
 	for (size_t i = 1; i < concurrency; ++i)
 		tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));

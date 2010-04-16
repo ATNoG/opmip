@@ -17,6 +17,6 @@
 
 exe opmip-lma
 	: main.cpp
+	  ../../lib/opmip
 	  /boost//thread
-	  /boost//system
 	;
