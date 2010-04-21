@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP Address Prefix
+// Brief   : Utilities for System Errors
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,55 +15,38 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
+#ifndef OPMIP_SYS_ERROR__HPP_
+#define OPMIP_SYS_ERROR__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ip {
+#include <opmip/base.hpp>
+#include <opmip/exception.hpp>
+#include <boost/system/system_error.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-prefix_v6::prefix_v6()
+namespace opmip { namespace sys {
+
+///////////////////////////////////////////////////////////////////////////////
+void throw_on_error(error_code& ec)
 {
-	_prefix.assign(0);
-	_length = 0;
+	if (ec)
+		throw_exception(boost::system::system_error(ec));
 }
 
-prefix_v6::prefix_v6(const bytes_type& addr, uint length)
+void throw_on_error(error_code& ec, const char* what)
 {
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr;
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
-	}
+	if (ec)
+		throw_exception(boost::system::system_error(ec, what));
 }
 
-prefix_v6::prefix_v6(const address_v6& addr, uint length)
+void throw_on_error(error_code& ec, const std::string& what)
 {
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr.to_bytes();
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
-	}
+	if (ec)
+		throw_exception(boost::system::system_error(ec, what));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ip */ } /* namespace opmip */
+} /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_SYS_ERROR__HPP_ */
