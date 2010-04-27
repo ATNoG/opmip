@@ -28,11 +28,17 @@ int main()
 	sys::ip6_tunnel tn0(ios);
 
 	tn0.open("pmip0",
-	         1,
+	         2,
 	         sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"),
 	         sys::ip::address_v6::any(), ec);
 	if (ec)
 		std::cerr << "failed to create tunnel: " << ec.message() << std::endl;
+
+	tn0.delete_on_close(false);
+
+	tn0.set_address(sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"), 64, ec);
+	if (ec)
+		std::cerr << "failed to set tunnel address: " << ec.message() << std::endl;
 
 	tn0.set_enable(true, ec);
 	if (ec)
