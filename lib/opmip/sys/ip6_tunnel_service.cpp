@@ -131,6 +131,27 @@ void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_c
 	}
 }
 
+void ip6_tunnel_service::get_index(implementation_type& impl, uint& index, boost::system::error_code& ec)
+{
+	if (!is_open(impl)) {
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
+		return;
+	}
+
+	struct if_req {
+		char  name[if_name_size];
+		int   index;
+	} req;
+
+	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
+	io_control(ioctl_get_index, &req, ec);
+	if (ec)
+		return;
+
+	index = req.index;
+}
+
 void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
                                                                boost::system::error_code& ec)
 {

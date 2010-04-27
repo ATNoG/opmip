@@ -68,6 +68,8 @@ public:
 	bool is_open(const implementation_type& impl) const;
 	void close(implementation_type& impl, boost::system::error_code& ec);
 
+	void get_index(implementation_type& impl, uint& index, boost::system::error_code& ec);
+
 	void get_enable(implementation_type& impl, bool& value, boost::system::error_code& ec);
 	void set_enable(implementation_type& impl, bool value, boost::system::error_code& ec);
 
