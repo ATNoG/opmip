@@ -43,10 +43,82 @@ class message : boost::noncopyable {
 	struct attr_header {
 		uint16 length;
 		uint16 type;
+
+		attr_header* cast(void* buffer, std::size_t length)
+		{
+			attr_header* tmp = reinterpret_cast<attr_header*>(buffer);
+
+			if ((length < align_to_<4, sizeof(attr_header)>::value) || (length < tmp->length))
+				return nullptr;
+
+			return tmp;
+		}
 	};
 
 public:
 	typedef Message message_type;
+
+	class attr_iterator {
+	public:
+		attr_iterator()
+			: _header(0)
+		{ }
+
+		attr_iterator(void* buffer, size_t length)
+			: _header(header::cast(buffer, length)), _length(length)
+		{ }
+
+		const attr_header& operator*()  const { return *_header; }
+		const attr_header* operator->() const { return _header; }
+
+		template<class T>
+		T* get()
+		{
+			uchar* data = reinterpret_cast<uchar*>(_header) + align_to_<4, sizeof(attr_header)>::value;
+
+			return reinterpret_cast<T*>(data);
+		}
+
+		size_t length() const
+		{
+			return _header->length - align_to_<4, sizeof(attr_header)>::value;
+		}
+
+		attr_iterator& operator++()
+		{
+			uchar* next = reinterpret_cast<uchar*>(_header) + align_to<4>(_header->length);
+			size_t len  = _length - (std::min)(align_to<4, size_t>(_header->length), _length);
+
+			BOOST_ASSERT(_header);
+
+			_header = header::cast(next, len);
+			_length = len;
+
+			return *this;
+		}
+
+		attr_iterator operator++(int)
+		{
+			attr_iterator tmp(*this);
+
+			this->operator++();
+			return tmp;
+		}
+
+		friend bool operator==(const attr_iterator& rhs, const attr_iterator& lhs)
+		{
+			return rhs._header == lhs._header;
+		}
+
+		friend bool operator!=(const attr_iterator& rhs, const attr_iterator& lhs)
+		{
+			return rhs._header != lhs._header;
+		}
+
+	private:
+		attr_header* _header;
+		size_t       _length;
+	};
 
 public:
 	message()
@@ -100,6 +172,14 @@ public:
 		hdr->length = len;
 		hdr->type = type;
 		std::copy(src, src + length, dst);
+	}
+
+	attr_iterator abegin()
+	{
+		void* buff = reinterpret_cast<uchar*>(_frame) + align_to_<4, sizeof(frame)>::value;
+		size_t len = _length - align_to_<4, sizeof(frame)>::value;
+
+		return attr_iterator(buff, len);
 	}
 
 	boost::asio::const_buffers_1 cbuffer() const { return boost::asio::const_buffers_1(_frame, _length); }
