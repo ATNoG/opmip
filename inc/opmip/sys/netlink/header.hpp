@@ -22,7 +22,7 @@
 #include <opmip/base.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys { namespace netlink {
+namespace opmip { namespace sys { namespace nl {
 
 ///////////////////////////////////////////////////////////////////////////////
 class header {
@@ -87,7 +87,7 @@ inline const header* header::cast(const void* buffer, std::size_t length)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace netlink */ } /* namespace sys */ } /* namespace opmip */
+} /* namespace nl */ } /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
 #endif /* OPMIP_SYS_NETLINK_HEADER__HPP_ */
