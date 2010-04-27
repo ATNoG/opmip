@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP Address Prefix
+// Brief   : IP One's Complemente Checksum
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,55 +15,59 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
+#ifndef OPMIP_IP_CHECKSUM__HPP_
+#define OPMIP_IP_CHECKSUM__HPP_
+
+///////////////////////////////////////////////////////////////////////////////
+#include <opmip/base.hpp>
+#include <opmip/exception.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
-prefix_v6::prefix_v6()
-{
-	_prefix.assign(0);
-	_length = 0;
-}
+class checksum {
+public:
+	checksum()
+		: _sum(0)
+	{ }
 
-prefix_v6::prefix_v6(const bytes_type& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
+	void update(const void* data, size_t len)
+	{
+		if (len % 2)
+			OPMIP_THROW_EXCEPTION(exception(boost::system::errc::invalid_argument,
+			                                boost::system::get_generic_category(),
+			                                __func__));
 
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr;
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
+		update(reinterpret_cast<const uint16*>(data), len / 2);
 	}
-}
 
-prefix_v6::prefix_v6(const address_v6& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
+	void update(const uint16* data, size_t len)
+	{
+		uint sum = _sum;
 
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
+		for (size_t i = 0; i < len; ++i)
+			sum += data[i];
 
-		_prefix = addr.to_bytes();
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
+		sum += (sum >> 16) & 0xffff;
+		sum += (sum >> 16);
+
+		BOOST_ASSERT(!((sum >> 16) & ~static_cast<uint>(0xffff)) && "BUG: unprocessed carry bits");
+
+		_sum = static_cast<uint16>(sum);
 	}
-}
+
+	uint16 final()
+	{
+		return ~_sum;
+	}
+
+private:
+	uint16 _sum;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ip */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_IP_CHECKSUM__HPP_ */

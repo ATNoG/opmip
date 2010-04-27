@@ -15,62 +15,43 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_BCACHE__HPP_
-#define OPMIP_BCACHE__HPP_
+#ifndef OPMIP_PMIP_BCACHE__HPP_
+#define OPMIP_PMIP_BCACHE__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <netinet/in.h>
+#include <opmip/ip/address.hpp>
+#include <opmip/ip/prefix.hpp>
+#include <opmip/ll/technology.hpp>
+#include <opmip/ll/mac_address.hpp>
+#include <boost/intrusive/rbtree.hpp>
 #include <string>
 #include <vector>
 #include <list>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip {
-
-enum link_type {
-	link_unknown = 0, ///Unknown Link Layer
-	link_802_11  = 1, ///WiFi 802.11 Link Layer
-};
-
-struct ip6_address : ::in6_addr {
-};
-
-struct ip6_prefix {
-	uint8 prefix[16];
-	uint8 length;
-};
-
-struct mac_address {
-	uint8 address[16];
-	uint8 length;
-};
+namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class bcache {
-	class value;
-
-public:
-};
-
-class bcache::value {
+class bcache_entry {
 	friend class bcache;
 
 public:
-	typedef ip6_address           net_address;
-	typedef ip6_prefix            net_prefix;
+	typedef ip::address_v6        net_address;
+	typedef ip::prefix_v6         net_prefix;
 	typedef std::list<net_prefix> net_prefix_list;
 	typedef std::string           net_access_id;
 	typedef std::vector<uint8>    link_id;
-	typedef mac_address           link_address;
+	typedef ll::technology        link_type;
+	typedef ll::mac_address       link_address;
 	typedef uint                  tunnel_id;
 
-	value()
+public:
+	bcache_entry()
 	{ }
 
 private:
-//	rbtree_node _bcache_entry_hook;
-//	list_node   _cache_policy_hook;
+	boost::intrusive::set_member_hook<> _hook;
 
 protected:
 	net_address      _mn_home_addr;     ///MN Home Address
@@ -89,7 +70,48 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace opmip */
+class bcache {
+	struct compare {
+		bool operator()(const bcache_entry& rhs, const bcache_entry& lhs) const
+		{
+			return rhs._mn_id < lhs._mn_id;
+		}
+
+		bool operator()(const bcache_entry& rhs, const bcache_entry::net_access_id& key) const
+		{
+			return rhs._mn_id < key;
+		}
+
+		bool operator()(const bcache_entry::net_access_id& key, const bcache_entry& lhs) const
+		{
+			return key < lhs._mn_id;
+		}
+	};
+
+	typedef boost::intrusive::compare<compare> compare_option;
+
+	typedef boost::intrusive::member_hook<bcache_entry,
+	                                      boost::intrusive::set_member_hook<>,
+	                                      &bcache_entry::_hook> member_hook_option;
+
+public:
+	typedef boost::intrusive::rbtree<bcache_entry,
+	                                 member_hook_option,
+	                                 compare_option> type;
+
+	typedef bcache_entry                  entry_type;
+	typedef bcache_entry::net_address     net_address;
+	typedef bcache_entry::net_prefix      net_prefix;
+	typedef bcache_entry::net_prefix_list net_prefix_list;
+	typedef bcache_entry::net_access_id   net_access_id;
+	typedef bcache_entry::link_id         link_id;
+	typedef bcache_entry::link_type       link_type;
+	typedef bcache_entry::link_address    link_address;
+	typedef bcache_entry::tunnel_id       tunnel_id;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_BCACHE__HPP_ */
+} /* namespace pmip */ } /* namespace opmip */
+
+///////////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_PMIP_BCACHE__HPP_ */

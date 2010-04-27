@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : RT Netlink Attribute
+// Brief   : Utilities for System Errors
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,51 +15,38 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_SYS_RTNETLINK_ATTRIBUTE__HPP_
-#define OPMIP_SYS_RTNETLINK_ATTRIBUTE__HPP_
+#ifndef OPMIP_SYS_ERROR__HPP_
+#define OPMIP_SYS_ERROR__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/exception.hpp>
+#include <boost/system/system_error.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip {
+namespace opmip { namespace sys {
 
 ///////////////////////////////////////////////////////////////////////////////
-template<class T>
-struct attribute {
-	attribute* next();
-	T*         data();
-	size_t     length() const;
-
-
-	ushort _length;
-	ushort _type;
-};
-
-template<class T>
-inline attribute<T>* attribute<T>::next()
+void throw_on_error(error_code& ec)
 {
-	uchar* tmp = reinterpret_cast<uchar*>(this) + align_to<4>(_length);
-
-	return reinterpret_cast<attribute*>(tmp);
+	if (ec)
+		throw_exception(boost::system::system_error(ec));
 }
 
-template<class T>
-inline T* attribute<T>::data()
+void throw_on_error(error_code& ec, const char* what)
 {
-	uchar* tmp = reinterpret_cast<uchar*>(this) + align_to<4>(sizeof(*this));
-
-	return reinterpret_cast<T*>(tmp);
+	if (ec)
+		throw_exception(boost::system::system_error(ec, what));
 }
 
-template<class T>
-inline size_t attribute<T>::length() const
+void throw_on_error(error_code& ec, const std::string& what)
 {
-	return _length - align_to<4>(sizeof(*this));
+	if (ec)
+		throw_exception(boost::system::system_error(ec, what));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace opmip */
+} /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_RTNETLINK_ATTRIBUTE__HPP_ */
+#endif /* OPMIP_SYS_ERROR__HPP_ */

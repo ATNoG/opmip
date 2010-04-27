@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP Address Prefix
+// Brief   : Netlink Error
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,55 +15,33 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
+#ifndef OPMIP_SYS_NETLINK_ERROR__HPP_
+#define OPMIP_SYS_NETLINK_ERROR__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ip {
+#include <opmip/base.hpp>
+#include <opmip/sys/netlink/header.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-prefix_v6::prefix_v6()
-{
-	_prefix.assign(0);
-	_length = 0;
-}
-
-prefix_v6::prefix_v6(const bytes_type& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr;
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
-	}
-}
-
-prefix_v6::prefix_v6(const address_v6& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr.to_bytes();
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
-	}
-}
+namespace opmip { namespace sys { namespace nl {
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ip */ } /* namespace opmip */
+struct error {
+	enum m_type {
+		m_begin = 2,
+		m_error = m_begin,
+		m_end
+	};
+
+	enum attr_type {
+	};
+
+	int    error;
+	header hdr;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+} /* namespace nl */ } /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_SYS_NETLINK_ERROR__HPP_ */

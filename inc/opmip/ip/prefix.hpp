@@ -34,6 +34,7 @@ public:
 
 public:
 	prefix_v6();
+	prefix_v6(const bytes_type& addr, uint length);
 	prefix_v6(const address_v6& addr, uint length);
 
 

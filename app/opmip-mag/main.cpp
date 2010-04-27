@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : RT Netlink Message
+// Brief   : Mobile Access Gateway Main Entry Point
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,37 +15,37 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_SYS_RTNETLINK_MESSAGE__HPP_
-#define OPMIP_SYS_RTNETLINK_MESSAGE__HPP_
-
-///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/pmip/mag.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/asio/io_service.hpp>
+#include <iostream>
+#include "mag.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys { namespace rtnetlink {
+int main()
+{
+	size_t concurrency = boost::thread::hardware_concurrency();
+	boost::asio::io_service ios(concurrency);
+	opmip::pmip::mag mag(ios);
+	boost::thread_group tg;
 
-///////////////////////////////////////////////////////////////////////////////
-struct message {
-	enum type {
-		new_link      = 16,
-		del_link,
-		get_link,
-		set_link,
+	mag.start();
 
-		new_address   = 20,
-		del_address,
-		get_address,
-		set_address,
+	for (size_t i = 1; i < concurrency; ++i)
+		tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
 
-		new_route     = 24,
-		del_route,
-		get_route,
-		set_route,
-	};
-};
+	try {
+		ios.run();
+		tg.join_all();
 
-///////////////////////////////////////////////////////////////////////////////
-} /* namespace rtnetlink */ } /* namespace sys */ } /* namespace opmip */
+	} catch(std::exception& e) {
+		std::cerr << "error: " << e.what() << std::endl;
+		return 1;
+	}
+
+	return 0;
+}
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_RTNETLINK_MESSAGE__HPP_ */

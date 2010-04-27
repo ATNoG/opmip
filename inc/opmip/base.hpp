@@ -109,6 +109,12 @@ inline Integral align_to(Integral value)
 	return (value + Alignment - 1) & ~(Alignment - 1);
 }
 
+template<size_t Alignment, size_t Value>
+struct align_to_ {
+	typedef size_t    type;
+	static const type value = (Value + Alignment - 1) & ~(Alignment - 1);
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace opmip */
 

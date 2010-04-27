@@ -15,41 +15,44 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_BULIST__HPP_
-#define OPMIP_BULIST__HPP_
+#ifndef OPMIP_PMIP_BULIST__HPP_
+#define OPMIP_PMIP_BULIST__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/bcache.hpp>
+#include <opmip/ip/address.hpp>
+#include <opmip/ip/prefix.hpp>
+#include <opmip/ll/technology.hpp>
+#include <opmip/ll/mac_address.hpp>
+#include <boost/intrusive/rbtree.hpp>
+#include <string>
+#include <vector>
+#include <list>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip {
+namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class bulist {
-	class value;
+class bulist_entry {
 
-public:
-};
-
-class bulist::value {
 	friend class bulist;
 
 public:
-	typedef ip6_address           net_address;
-	typedef ip6_prefix            net_prefix;
+	typedef ip::address_v6        net_address;
+	typedef ip::prefix_v6         net_prefix;
 	typedef std::list<net_prefix> net_prefix_list;
 	typedef std::string           net_access_id;
 	typedef std::vector<uint8>    link_id;
-	typedef mac_address           link_address;
+	typedef ll::mac_address       link_address;
 	typedef uint                  tunnel_id;
 	typedef uint                  nic_id;
 
-	value()
+public:
+	bulist_entry()
 	{ }
 
 private:
-//	list_node _bulist_entry_hook;
+	boost::intrusive::set_member_hook<> _hook;
 
 protected:
 	net_address     _mn_addr;             ///MN Address
@@ -75,7 +78,48 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace opmip */
+class bulist {
+	struct compare {
+		bool operator()(const bulist_entry& rhs, const bulist_entry& lhs) const
+		{
+			return rhs._mn_id < lhs._mn_id;
+		}
+
+		bool operator()(const bulist_entry& rhs, const bulist_entry::net_access_id& key) const
+		{
+			return rhs._mn_id < key;
+		}
+
+		bool operator()(const bulist_entry::net_access_id& key, const bulist_entry& lhs) const
+		{
+			return key < lhs._mn_id;
+		}
+	};
+
+	typedef boost::intrusive::compare<compare> compare_option;
+
+	typedef boost::intrusive::member_hook<bulist_entry,
+	                                      boost::intrusive::set_member_hook<>,
+	                                      &bulist_entry::_hook> member_hook_option;
+
+public:
+	typedef boost::intrusive::rbtree<bulist_entry,
+	                                 member_hook_option,
+	                                 compare_option> type;
+
+	typedef bulist_entry                  entry_type;
+	typedef bulist_entry::net_address     net_address;
+	typedef bulist_entry::net_prefix      net_prefix;
+	typedef bulist_entry::net_prefix_list net_prefix_list;
+	typedef bulist_entry::net_access_id   net_access_id;
+	typedef bulist_entry::link_id         link_id;
+	typedef bulist_entry::link_address    link_address;
+	typedef bulist_entry::tunnel_id       tunnel_id;
+	typedef bulist_entry::nic_id          nic_id;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_BULIST__HPP_ */
+} /* namespace pmip */ } /* namespace opmip */
+
+///////////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_PMIP_BULIST__HPP_ */

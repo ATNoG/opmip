@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : OPMIP Library Unit Test Build
+# Brief   : OPMIP MAG Binary Build
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,17 +15,8 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe t0001
-	: t0001.cpp
-	  ../../lib/opmip//opmip
-	;
-
-exe t0002
-	: t0002.cpp
-	  ../../lib/opmip//opmip
-	;
-
-exe t0003
-	: t0003.cpp
-	  ../../lib/opmip//opmip
+exe opmip-mag
+	: main.cpp
+	  ../../lib/opmip
+	  /boost//thread
 	;

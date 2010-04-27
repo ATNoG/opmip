@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP Address Prefix
+// Brief   : Mobile Access Gateway Service
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,55 +15,59 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
+#ifndef OPMIP_PMIP_MAG__HPP_
+#define OPMIP_PMIP_MAG__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ip {
+#include <opmip/base.hpp>
+#include <opmip/pmip/bulist.hpp>
+#include <boost/bind.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/scoped_ptr.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-prefix_v6::prefix_v6()
-{
-	_prefix.assign(0);
-	_length = 0;
-}
+namespace opmip { namespace pmip {
 
-prefix_v6::prefix_v6(const bytes_type& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
+///////////////////////////////////////////////////////////////////////////////
+class mag {
+	typedef boost::asio::io_service::strand                  strand;
+	typedef boost::scoped_ptr<boost::asio::io_service::work> work_ptr;
 
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
+public:
+	mag(boost::asio::io_service& ios)
+		: _service(ios)
+	{ }
 
-		_prefix = addr;
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
+	void start()
+	{
+		_service.dispatch(boost::bind(&mag::istart, this));
 	}
-}
 
-prefix_v6::prefix_v6(const address_v6& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
-		_prefix = addr.to_bytes();
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
-		_length = static_cast<uchar>(length);
+	void stop()
+	{
+		_service.dispatch(boost::bind(&mag::istop, this));
 	}
-}
+
+private:
+	void istart()
+	{
+		_work.reset(new boost::asio::io_service::work(_service.get_io_service()));
+	}
+
+	void istop()
+	{
+		_work.reset(nullptr);
+	}
+
+private:
+	strand       _service;
+	work_ptr     _work;
+	bulist::type _bulist;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ip */ } /* namespace opmip */
+} /* namespace pmip */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_PMIP_MAG__HPP_ */
