@@ -72,6 +72,9 @@ public:
 	void get_enable(implementation_type& impl, bool& value, boost::system::error_code& ec);
 	void set_enable(implementation_type& impl, bool value, boost::system::error_code& ec);
 
+	bool delete_on_close(implementation_type& impl, bool value);
+	bool delete_on_close(const implementation_type& impl) const;
+
 private:
 	void shutdown_service();
 	void get(parameters& op, boost::system::error_code& ec);
@@ -152,7 +155,21 @@ std::ostream& operator<<(std::ostream& os, const ip6_tunnel_service::parameters&
 struct ip6_tunnel_service::implementation_type {
 	parameters data;
 	list_hook  node;
+	bool       delete_on_close;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+inline bool ip6_tunnel_service::delete_on_close(implementation_type& impl, bool value)
+{
+	bool prev = impl.delete_on_close;
+	impl.delete_on_close = value;
+	return prev;
+}
+
+inline bool ip6_tunnel_service::delete_on_close(const implementation_type& impl) const
+{
+	return impl.delete_on_close;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace sys */ } /* namespace opmip */

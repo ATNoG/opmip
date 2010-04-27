@@ -45,6 +45,9 @@ public:
 
 	void get_enable(bool& value, boost::system::error_code& ec);
 	void set_enable(bool value, boost::system::error_code& ec);
+
+	bool delete_on_close(bool value);
+	bool delete_on_close() const;
 };
 
 inline void ip6_tunnel::open(const char* name, boost::system::error_code& ec)
@@ -79,6 +82,16 @@ inline void ip6_tunnel::get_enable(bool& value, boost::system::error_code& ec)
 inline void ip6_tunnel::set_enable(bool value, boost::system::error_code& ec)
 {
 	service.set_enable(implementation, value, ec);
+}
+
+inline bool ip6_tunnel::delete_on_close(bool value)
+{
+	return service.delete_on_close(implementation, value);
+}
+
+inline bool ip6_tunnel::delete_on_close() const
+{
+	return service.delete_on_close(implementation);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

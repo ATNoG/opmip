@@ -84,6 +84,7 @@ void ip6_tunnel_service::open(implementation_type& impl, const char* name,
 
 	if (!ec) {
 		impl.data.name(name);
+		impl.delete_on_close = false;
 		get(impl.data, ec);
 	}
 
@@ -105,6 +106,7 @@ void ip6_tunnel_service::open(implementation_type& impl, const char* name,
 		impl.data.device(device);
 		impl.data.local_address(local_address);
 		impl.data.remote_address(remote_address);
+		impl.delete_on_close = true;
 		add(impl.data, ec);
 	}
 
@@ -120,10 +122,16 @@ bool ip6_tunnel_service::is_open(const implementation_type& impl) const
 void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_code& ec)
 {
 	if (is_open(impl)) {
-		remove(impl.data, ec);
+		if (impl.delete_on_close)
+			remove(impl.data, ec);
 		impl.data.clear();
+	} else {
+		ec = boost::system::error_code(boost::system::errc::invalid_argument,
+		                               boost::system::get_system_category());
+	}
 
 }
+
 void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
                                                                boost::system::error_code& ec)
 {
