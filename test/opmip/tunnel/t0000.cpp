@@ -26,14 +26,17 @@ int main()
 	boost::system::error_code ec;
 	boost::asio::io_service ios;
 	sys::ip6_tunnel tn0(ios);
-	sys::ip6_tunnel tn1(ios);
 
 	tn0.open("pmip0",
 	         1,
 	         sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"),
 	         sys::ip::address_v6::any(), ec);
+	if (ec)
+		std::cerr << "failed to create tunnel: " << ec.message() << std::endl;
 
-	tn1.open("pmip0", ec);
+	tn0.set_enable(true, ec);
+	if (ec)
+		std::cerr << "failed to set tunnel up: " << ec.message() << std::endl;
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

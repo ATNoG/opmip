@@ -35,11 +35,16 @@ namespace ip = boost::asio::ip;
 ///////////////////////////////////////////////////////////////////////////////
 class ip6_tunnel_service : public boost::asio::io_service::service {
 	static const std::size_t if_name_size = 16;
-	static const int         ioctl_begin  = 0x89F0;
-	static const int         ioctl_get    = ioctl_begin + 0;
-	static const int         ioctl_add    = ioctl_begin + 1;
-	static const int         ioctl_remove = ioctl_begin + 2;
-	static const int         ioctl_change = ioctl_begin + 3;
+
+	static const int ioctl_get_flags = 0x8913;
+	static const int ioctl_set_flags = 0x8914;
+	static const int ioctl_get_addr  = 0x8915;
+	static const int ioctl_set_addr  = 0x8916;
+	static const int ioctl_begin     = 0x89F0;
+	static const int ioctl_get       = ioctl_begin + 0;
+	static const int ioctl_add       = ioctl_begin + 1;
+	static const int ioctl_remove    = ioctl_begin + 2;
+	static const int ioctl_change    = ioctl_begin + 3;
 
 public:
 	static boost::asio::io_service::id id;
@@ -64,15 +69,17 @@ public:
 	bool is_open(const implementation_type& impl) const;
 	void close(implementation_type& impl, boost::system::error_code& ec);
 
+	void get_enable(implementation_type& impl, bool& value, boost::system::error_code& ec);
+	void set_enable(implementation_type& impl, bool value, boost::system::error_code& ec);
 
+private:
+	void shutdown_service();
 	void get(parameters& op, boost::system::error_code& ec);
 	void add(parameters& op, boost::system::error_code& ec);
 	void remove(parameters& op, boost::system::error_code& ec);
 	void change(parameters& op, boost::system::error_code& ec);
-
-private:
-	void shutdown_service();
 	void io_control(const char* name, int opcode, void* data, boost::system::error_code& ec);
+	void io_control(int opcode, void* data, boost::system::error_code& ec);
 
 private:
 	int          _fd;
@@ -123,9 +130,6 @@ public:
 	uint32         flags() const               { return _flags; }
 	ip::address_v6 local_address() const       { return ip::address_v6(_local_addr); }
 	ip::address_v6 remote_address() const      { return ip::address_v6(_remote_addr); }
-
-	const char* clone() { return "ip6tnl0"; }
-	static int  proto() { return AF_INET6; }
 
 	void* data() { return this; }
 

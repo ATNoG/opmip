@@ -18,6 +18,7 @@
 #include <opmip/sys/ip6_tunnel_service.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace sys {
@@ -43,7 +44,7 @@ ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
 {
 	boost::system::error_code ec;
 
-	_fd = ::socket(parameters::proto(), SOCK_DGRAM, 0);
+	_fd = ::socket(AF_INET6, SOCK_DGRAM, 0);
 	if (_fd < 0) {
 		boost::throw_exception(
 			boost::system::system_error(errno,
@@ -121,7 +122,57 @@ void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_c
 	if (is_open(impl)) {
 		remove(impl.data, ec);
 		impl.data.clear();
+
+}
+void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
+                                                               boost::system::error_code& ec)
+{
+	if (!is_open(impl)) {
+		return;
 	}
+
+	struct if_req {
+		char  name[if_name_size];
+		short flags;
+	} req;
+
+	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
+	io_control(SIOCGIFFLAGS, &req, ec);
+	if (ec)
+		return;
+
+	value = req.flags & IFF_UP;
+}
+
+void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
+                                                               boost::system::error_code& ec)
+{
+	if (!is_open(impl)) {
+		return;
+	}
+
+	struct if_req {
+		char  name[if_name_size];
+		union {
+			short  flags;
+			size_t pad;
+		};
+	} req;
+
+	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
+	io_control(SIOCGIFFLAGS, &req, ec);
+	if (ec) 
+		return;
+
+	if (value)
+		req.flags |= IFF_UP;
+	else
+		req.flags &= ~IFF_UP;
+
+	io_control(SIOCSIFFLAGS, &req, ec);
+	if (!ec && !(req.flags & IFF_UP))
+		ec = boost::system::error_code(boost::system::errc::invalid_argument,
+		                               boost::system::get_system_category());
 }
 
 void ip6_tunnel_service::shutdown_service()
@@ -146,7 +197,7 @@ void ip6_tunnel_service::add(parameters& op, boost::system::error_code& ec)
 {
 	parameters tmp = op;
 
-	io_control(op.clone(), ioctl_add, op.data(), ec);
+	io_control("ip6tnl0", ioctl_add, op.data(), ec);
 	if (!ec && (op != tmp))
 		ec = boost::system::error_code(boost::system::errc::invalid_argument,
 		                               boost::system::get_system_category());
@@ -168,14 +219,22 @@ void ip6_tunnel_service::io_control(const char* name, int opcode, void* data, bo
 		char  name[if_name_size];
 		void* data;
 	} req;
-	int res;
 
 	std::strncpy(req.name, name, sizeof(req.name));
 	req.data = data;
-	res = ::ioctl(_fd, opcode, &req);
+	io_control(opcode, &req, ec);
+}
+
+void ip6_tunnel_service::io_control(int opcode, void* data, boost::system::error_code& ec)
+{
+	int res;
+
+	res = ::ioctl(_fd, opcode, data);
 	if (res < 0)
 		ec = boost::system::error_code(errno,
 		                               boost::system::get_system_category());
+	else
+		ec = boost::system::error_code();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
