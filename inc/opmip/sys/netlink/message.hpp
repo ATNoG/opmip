@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/exception.hpp>
 #include <opmip/sys/netlink/header.hpp>
+#include <opmip/sys/netlink/message_iterator.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/utility.hpp>
 #include <algorithm>
@@ -56,6 +57,13 @@ public:
 		alloc(len);
 		new(_frame) frame();
 		_frame->hdr.length = len;
+	}
+
+	explicit message(message_iterator& mit)
+		: _frame(nullptr), _length(0), _capacity(0)
+	{
+		if (mit->type >= message_type::m_begin && mit->type < message_type::m_end)
+			_frame = reinterpret_cast<frame*>(mit.operator->());
 	}
 
 	~message()
