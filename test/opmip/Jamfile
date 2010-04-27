@@ -29,4 +29,3 @@ exe t0002
 	: t0002.cpp
 	  ../../lib/opmip//opmip
 	;
-

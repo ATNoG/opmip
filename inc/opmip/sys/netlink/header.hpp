@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : Netlink Frame
+// Brief   : Netlink Header
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_SYS_NETLINK_FRAME__HPP_
-#define OPMIP_SYS_NETLINK_FRAME__HPP_
+#ifndef OPMIP_SYS_NETLINK_HEADER__HPP_
+#define OPMIP_SYS_NETLINK_HEADER__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
@@ -25,8 +25,9 @@
 namespace opmip { namespace sys { namespace netlink {
 
 ///////////////////////////////////////////////////////////////////////////////
-struct frame {
-	enum flags {
+class header {
+public:
+	enum aflags {
 		request   = 1, ///It is request message
 		multipart = 2, ///Multipart message, terminated by NLMSG_DONE
 		ack       = 4, ///Reply with ack, with zero or error code
@@ -47,53 +48,46 @@ struct frame {
 		append    = 0x800, ///Add to end of list
 	};
 
-	static frame*       cast(void* buffer, std::size_t length);
-	static const frame* cast(const void* buffer, std::size_t length);
+public:
+	static header*       cast(void* buffer, std::size_t length);
+	static const header* cast(const void* buffer, std::size_t length);
 
+public:
+	header()
+		: length(0), type(0), flags(0),
+		  sequence(0), port_id(0)
+	{ }
 
-	void*  payload_data();
-	size_t payload_length();
-
-
+public:
 	uint32 length;   ///Length of message including header
-	uint32 type;     ///Message content
+	uint16 type;     ///Message content
 	uint16 flags;    ///Additional flags
 	uint32 sequence; ///Sequence number
 	uint32 port_id;  ///Sending process port ID
 };
 
-inline frame* frame::cast(void* buffer, std::size_t length)
+inline header* header::cast(void* buffer, std::size_t length)
 {
-	frame* tmp = reinterpret_cast<frame*>(buffer);
+	header* tmp = reinterpret_cast<header*>(buffer);
 
-	if ((length < sizeof(frame)) || (length < tmp->length))
+	if ((length < sizeof(header)) || (length < tmp->length))
 		return nullptr;
 
 	return tmp;
 }
 
-inline const frame* frame::cast(const void* buffer, std::size_t length)
+inline const header* header::cast(const void* buffer, std::size_t length)
 {
-	const frame* tmp = reinterpret_cast<const frame*>(buffer);
+	const header* tmp = reinterpret_cast<const header*>(buffer);
 
-	if ((length < sizeof(frame)) || (length < tmp->length))
+	if ((length < sizeof(header)) || (length < tmp->length))
 		return nullptr;
 
 	return tmp;
-}
-
-inline void* frame::payload_data()
-{
-	return reinterpret_cast<uchar*>(this) + align_to<4>(sizeof(*this));
-}
-
-inline size_t frame::payload_length()
-{
-	return this->length - align_to<4>(sizeof(*this));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace netlink */ } /* namespace sys */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_BASIC_NETLINK_SOCKET__HPP_ */
+#endif /* OPMIP_SYS_NETLINK_HEADER__HPP_ */
