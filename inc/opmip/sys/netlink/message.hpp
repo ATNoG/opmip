@@ -47,13 +47,6 @@ class message : boost::noncopyable {
 public:
 	typedef Message message_type;
 
-	enum m_type {
-		m_noop  = 1,
-		m_error,
-		m_done,
-		m_overrun,
-	};
-
 public:
 	message()
 		: _frame(nullptr), _length(0), _capacity(0)

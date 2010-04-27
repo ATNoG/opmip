@@ -27,6 +27,13 @@ namespace opmip { namespace sys { namespace nl {
 ///////////////////////////////////////////////////////////////////////////////
 class header {
 public:
+	enum m_type {
+		m_noop  = 1,
+		m_error,
+		m_done,
+		m_overrun,
+	};
+
 	enum aflags {
 		request   = 1, ///It is request message
 		multipart = 2, ///Multipart message, terminated by NLMSG_DONE
@@ -54,8 +61,7 @@ public:
 
 public:
 	header()
-		: length(0), type(0), flags(0),
-		  sequence(0), port_id(0)
+		: length(0), type(0), flags(0), sequence(0), port_id(0)
 	{ }
 
 public:
