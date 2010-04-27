@@ -126,16 +126,17 @@ void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_c
 			remove(impl.data, ec);
 		impl.data.clear();
 	} else {
-		ec = boost::system::error_code(boost::system::errc::invalid_argument,
-		                               boost::system::get_system_category());
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
 	}
-
 }
 
 void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
                                                                boost::system::error_code& ec)
 {
 	if (!is_open(impl)) {
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
 		return;
 	}
 
@@ -145,7 +146,7 @@ void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
 	} req;
 
 	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
-	io_control(SIOCGIFFLAGS, &req, ec);
+	io_control(ioctl_get_flags, &req, ec);
 	if (ec)
 		return;
 
@@ -156,6 +157,8 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
                                                                boost::system::error_code& ec)
 {
 	if (!is_open(impl)) {
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
 		return;
 	}
 
@@ -168,7 +171,7 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
 	} req;
 
 	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
-	io_control(SIOCGIFFLAGS, &req, ec);
+	io_control(ioctl_get_flags, &req, ec);
 	if (ec) 
 		return;
 
@@ -177,10 +180,8 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
 	else
 		req.flags &= ~IFF_UP;
 
-	io_control(SIOCSIFFLAGS, &req, ec);
-	if (!ec && !(req.flags & IFF_UP))
-		ec = boost::system::error_code(boost::system::errc::invalid_argument,
-		                               boost::system::get_system_category());
+	io_control(ioctl_set_flags, &req, ec);
+	BOOST_ASSERT((ec || (req.flags & IFF_UP)));
 }
 
 void ip6_tunnel_service::shutdown_service()

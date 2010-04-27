@@ -38,13 +38,12 @@ class ip6_tunnel_service : public boost::asio::io_service::service {
 
 	static const int ioctl_get_flags = 0x8913;
 	static const int ioctl_set_flags = 0x8914;
-	static const int ioctl_get_addr  = 0x8915;
-	static const int ioctl_set_addr  = 0x8916;
-	static const int ioctl_begin     = 0x89F0;
-	static const int ioctl_get       = ioctl_begin + 0;
-	static const int ioctl_add       = ioctl_begin + 1;
-	static const int ioctl_remove    = ioctl_begin + 2;
-	static const int ioctl_change    = ioctl_begin + 3;
+	static const int ioctl_get_index = 0x8933;
+
+	static const int ioctl_get       = 0x89F0;
+	static const int ioctl_add       = 0x89F1;
+	static const int ioctl_remove    = 0x89F2;
+	static const int ioctl_change    = 0x89F3;
 
 public:
 	static boost::asio::io_service::id id;
