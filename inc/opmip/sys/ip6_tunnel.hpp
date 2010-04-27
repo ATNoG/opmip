@@ -42,6 +42,8 @@ public:
 	bool is_open() const;
 	void close(boost::system::error_code& ec);
 
+	void set_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
+
 	void get_enable(bool& value, boost::system::error_code& ec);
 	void set_enable(bool value, boost::system::error_code& ec);
 
@@ -71,6 +73,11 @@ inline bool ip6_tunnel::is_open() const
 inline void ip6_tunnel::close(boost::system::error_code& ec)
 {
 	service.close(implementation, ec);
+}
+
+inline void ip6_tunnel::set_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec)
+{
+	service.set_address(implementation, address, prefix_length, ec);
 }
 
 inline void ip6_tunnel::get_enable(bool& value, boost::system::error_code& ec)

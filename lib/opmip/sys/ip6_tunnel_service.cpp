@@ -16,6 +16,9 @@
 //=============================================================================
 
 #include <opmip/sys/ip6_tunnel_service.hpp>
+#include <opmip/sys/netlink/error.hpp>
+#include <opmip/sys/netlink/message.hpp>
+#include <opmip/sys/rtnetlink/address.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 #include <cstdlib>
@@ -40,7 +43,7 @@ inline void throw_on_error(boost::system::error_code& ec, const char* what)
 boost::asio::io_service::id ip6_tunnel_service::id;
 
 ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
-	: boost::asio::io_service::service(ios)
+	: boost::asio::io_service::service(ios), _rtnl(ios), _rtnl_seq(0)
 {
 	boost::system::error_code ec;
 
@@ -52,6 +55,8 @@ ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
 			                            "::socket"));
 	}
 	_tunnels.init();
+	_rtnl.open(netlink<0>());
+	_rtnl.bind(netlink<0>::endpoint());
 }
 
 ip6_tunnel_service::~ip6_tunnel_service()
@@ -129,6 +134,78 @@ void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_c
 		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
 		                               boost::system::get_generic_category());
 	}
+}
+
+void ip6_tunnel_service::set_address(implementation_type& impl, const ip::address_v6& address,
+                                                                uint prefix_length,
+                                                                boost::system::error_code& ec)
+{
+	if (!is_open(impl)) {
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
+		return;
+	}
+
+	if (prefix_length > 128) {
+		ec = boost::system::error_code(boost::system::errc::invalid_argument,
+		                               boost::system::get_generic_category());
+		return;
+	}
+
+
+	uint idx;
+
+	get_index(impl, idx, ec);
+	if (ec)
+		return;
+
+
+	nl::message<rtnl::address> msg;
+
+	msg.mtype(rtnl::address::m_new);
+	msg.flags(nl::header::request | nl::header::create | nl::header::ack | nl::header::exclusive);
+	msg->family = AF_INET6;
+	msg->prefixlen = prefix_length;
+	msg->index = idx;
+
+	ip::address_v6::bytes_type tmp = address.to_bytes();
+	msg.push_attribute(rtnl::address::attr_local, tmp.elems, tmp.size());
+	msg.push_attribute(rtnl::address::attr_address, tmp.elems, tmp.size());
+
+
+	uchar  resp[512];
+	size_t rlen;
+	{
+		boost::mutex::scoped_lock lc(_rtnl_mutex);
+		msg.sequence(++_rtnl_seq);
+
+		_rtnl.send(msg.cbuffer(), 0, ec);
+		if (ec)
+			return;
+
+		rlen = _rtnl.receive(boost::asio::buffer(resp), 0, ec);
+		if (ec)
+			return;
+	}
+
+
+	nl::message_iterator mit(resp, rlen);
+	nl::message_iterator end;
+	int                  errc = 0;
+
+	for (; mit != end; ++mit) {
+		if (mit->type == nl::header::m_error) { //TODO: check the sequence
+			nl::message<nl::error> err(mit);
+
+			errc = -err->error;
+			break;
+		}
+	}
+
+	if (errc)
+		ec = boost::system::error_code(errc, boost::system::get_system_category());
+	else
+		ec = boost::system::error_code();
 }
 
 void ip6_tunnel_service::get_index(implementation_type& impl, uint& index, boost::system::error_code& ec)

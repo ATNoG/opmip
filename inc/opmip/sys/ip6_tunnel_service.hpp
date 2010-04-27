@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/list_hook.hpp>
+#include <opmip/sys/netlink.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address_v6.hpp>
@@ -68,6 +69,8 @@ public:
 	bool is_open(const implementation_type& impl) const;
 	void close(implementation_type& impl, boost::system::error_code& ec);
 
+	void set_address(implementation_type& impl, const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
+
 	void get_index(implementation_type& impl, uint& index, boost::system::error_code& ec);
 
 	void get_enable(implementation_type& impl, bool& value, boost::system::error_code& ec);
@@ -89,6 +92,10 @@ private:
 	int          _fd;
 	boost::mutex _mutex;
 	list_hook    _tunnels;
+
+	netlink<0>::socket _rtnl;
+	uint32             _rtnl_seq;
+	boost::mutex       _rtnl_mutex;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
