@@ -27,6 +27,16 @@ namespace opmip { namespace sys { namespace rtnetlink {
 ///////////////////////////////////////////////////////////////////////////////
 class route {
 public:
+	enum m_type {
+		m_begin = 24,
+
+		m_new = m_begin,
+		m_del,
+		m_get,
+
+		m_end
+	};
+
 	enum table {
 		table_unspecified = 0,
 
@@ -68,21 +78,6 @@ public:
 		scope_nowhere = 255,
 	};
 
-	enum type {
-		unspecified,
-		unicast,     ///Gateway or direct route
-		local,       ///Accept locally
-		broadcast,   ///Accept locally as broadcast, send as broadcast
-		anycast,     ///Accept locally as broadcast, but send as unicast
-		multicast,   ///Multicast route
-		blackhole,   ///Drop
-		unreachable, ///Destination is unreachable
-		prohibit,    ///Administratively prohibited
-		throw_,      ///Continue lookup in another table
-		nat,         ///Translate this address
-		xresolve,    ///Use external resolver
-	};
-
 	enum flags {
 		notify   = 0x100, ///Notify user of route change
 		cloned   = 0x200, ///This route is cloned
@@ -90,18 +85,42 @@ public:
 		prefix   = 0x800, ///Prefix addresses
 	};
 
-private:
-	uchar _family;
-	uchar _dst_len;
-	uchar _src_len;
-	uchar _tos;
+	enum attr_type {
+		attr_begin = 1,
 
-	uchar _table;    ///Routing table id
-	uchar _protocol; ///Routing protocol
-	uchar _scope;    ///Distance scope
-	uchar _type;
+		attr_unicast = attr_begin, ///Gateway or direct route
+		attr_local,                ///Accept locally
+		attr_broadcast,            ///Accept locally as broadcast, send as broadcast
+		attr_anycast,              ///Accept locally as broadcast, but send as unicast
+		attr_multicast,            ///Multicast route
+		attr_blackhole,            ///Drop
+		attr_unreachable,          ///Destination is unreachable
+		attr_prohibit,             ///Administratively prohibited
+		attr_throw,                ///Continue lookup in another table
+		attr_nat,                  ///Translate this address
+		attr_xresolve,             ///Use external resolver
 
-	uint  _flags;
+		attr_end
+	};
+
+public:
+	route()
+		: family(0), dst_len(0), src_len(0), tos(0), table(0), protocol(0),
+		  scope(0), type(0), flags(0)
+	{ }
+
+public:
+	uchar family;
+	uchar dst_len;
+	uchar src_len;
+	uchar tos;
+
+	uchar table;    ///Routing table id
+	uchar protocol; ///Routing protocol
+	uchar scope;    ///Distance scope
+	uchar type;
+
+	uint  flags;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,16 @@ namespace opmip { namespace sys { namespace rtnetlink {
 ///////////////////////////////////////////////////////////////////////////////
 class address {
 public:
+	enum m_type {
+		m_begin = 20,
+
+		m_new = m_begin,
+		m_del,
+		m_get,
+
+		m_end
+	};
+
 	enum flags {
 		temporary    = 0x01,
 		no_dad       = 0x02,
@@ -38,14 +48,26 @@ public:
 		permanent    = 0x80,
 	};
 
-	enum attr {
-		attr_address = 1,
+	enum attr_type {
+		attr_begin   = 1,
+
+		attr_address = attr_begin,
 		attr_local,
 		attr_label,
 		attr_broadcast,
 		attr_anycast,
 		attr_cacheinfo,
 		attr_multicast,
+
+		attr_end
+	};
+
+	enum scope_type {
+		scope_universe = 0,
+		scope_site     = 200,
+		scope_link     = 253,
+		scope_host     = 254,
+		scope_nowhere  = 255,
 	};
 
 	struct cacheinfo {
@@ -55,12 +77,18 @@ public:
 		uint32 ustamp; ///Updated timestamp, hundredths of seconds
 	};
 
-private:
-	uint8  _family;
-	uint8  _prefixlen;
-	uint8  _flags;
-	uint8  _scope;     ///Address scope
-	uint32 _index;     ///Link index
+public:
+	address()
+		: family(0), prefixlen(0), flags(0), scope(0), index(0)
+	{ }
+
+
+public:
+	uint8  family;
+	uint8  prefixlen;
+	uint8  flags;
+	uint8  scope;     ///Address scope
+	uint32 index;     ///Link index
 };
 
 ///////////////////////////////////////////////////////////////////////////////
