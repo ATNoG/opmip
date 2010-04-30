@@ -18,24 +18,8 @@
 project opmip
 	;
 
-lib pthread
-	:
-	: <name>pthread
-	  <link>shared
-	;
-
-explicit pthread ;
-
-alias source-list
-	: pthread
-	: <target-os>linux
-	;
-
-explicit source-list ;
-
 lib opmip
-	: source-list
-	  dummy.cpp
+	: dummy.cpp
 	  ip/prefix.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
