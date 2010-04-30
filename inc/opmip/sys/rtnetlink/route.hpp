@@ -78,6 +78,21 @@ public:
 		scope_nowhere = 255,
 	};
 
+	enum r_type {
+		r_unspecified,
+		r_unicast,              ///Gateway or direct route
+		r_local,                ///Accept locally
+		r_broadcast,            ///Accept locally as broadcast, send as broadcast
+		r_anycast,              ///Accept locally as broadcast, but send as unicast
+		r_multicast,            ///Multicast route
+		r_blackhole,            ///Drop
+		r_unreachable,          ///Destination is unreachable
+		r_prohibit,             ///Administratively prohibited
+		r_throw,                ///Continue lookup in another table
+		r_nat,                  ///Translate this address
+		r_xresolve,             ///Use external resolver
+	};
+
 	enum flags {
 		notify   = 0x100, ///Notify user of route change
 		cloned   = 0x200, ///This route is cloned
@@ -87,19 +102,14 @@ public:
 
 	enum attr_type {
 		attr_begin = 1,
-
-		attr_unicast = attr_begin, ///Gateway or direct route
-		attr_local,                ///Accept locally
-		attr_broadcast,            ///Accept locally as broadcast, send as broadcast
-		attr_anycast,              ///Accept locally as broadcast, but send as unicast
-		attr_multicast,            ///Multicast route
-		attr_blackhole,            ///Drop
-		attr_unreachable,          ///Destination is unreachable
-		attr_prohibit,             ///Administratively prohibited
-		attr_throw,                ///Continue lookup in another table
-		attr_nat,                  ///Translate this address
-		attr_xresolve,             ///Use external resolver
-
+		attr_destination = attr_begin,
+		attr_source,
+		attr_input_device,
+		attr_output_device,
+		attr_gateway,
+		attr_priority,
+		attr_prefered_source,
+		//imcomplete
 		attr_end
 	};
 
