@@ -34,7 +34,13 @@ route_table::route_table(boost::asio::io_service& ios)
 
 route_table::~route_table()
 {
-	//TODO: remove entries
+	boost::system::error_code ec;
+
+	for (iterator i = _map_by_src.begin(), e = _map_by_src.end(); i != e; ++i)
+		remove_by_src(i, ec);
+
+	for (iterator i = _map_by_dst.begin(), e = _map_by_dst.end(); i != e; ++i)
+		remove_by_dst(i, ec);
 }
 
 std::pair<route_table::const_iterator, bool> route_table::add_by_src(const ip::prefix_v6& prefix, uint device, const ip::address_v6& gateway)
