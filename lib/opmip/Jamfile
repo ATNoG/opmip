@@ -38,6 +38,7 @@ lib opmip
 	  dummy.cpp
 	  ip/prefix.cpp
 	  sys/ip6_tunnel_service.cpp
+	  sys/route_table.cpp
 	  /boost//system
 	;
 
