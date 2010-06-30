@@ -164,23 +164,23 @@ public:
 	{ }
 
 	uint16 sequence() const { return ::ntohs(_sequence); }
-	bool   a() const;
+	bool   ack() const;
 	bool   h() const;
 	bool   l() const;
 	bool   k() const;
 	bool   m() const;
 	bool   r() const;
-	bool   p() const;
+	bool   proxy_reg() const;
 	uint16 lifetime() const { return ::ntohs(_lifetime); }
 
 	void sequence(uint16 value) { _sequence = ::htons(value); }
-	void a(bool value);
+	void ack(bool value);
 	void h(bool value);
 	void l(bool value);
 	void k(bool value);
 	void m(bool value);
 	void r(bool value);
-	void p(bool value);
+	void proxy_reg(bool value);
 	void lifetime(uint16 value) { _lifetime = ::htons(value); }
 
 	const void* data() const
@@ -195,56 +195,56 @@ private:
 	uint16 _lifetime;
 };
 
-bool mproto::pbu::a() const
+inline bool mproto::pbu::ack() const
 {
 	const uint8 v = 1u << 7;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::h() const
+inline bool mproto::pbu::h() const
 {
 	const uint8 v = 1u << 6;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::l() const
+inline bool mproto::pbu::l() const
 {
 	const uint8 v = 1u << 5;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::k() const
+inline bool mproto::pbu::k() const
 {
 	const uint8 v = 1u << 4;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::m() const
+inline bool mproto::pbu::m() const
 {
 	const uint8 v = 1u << 3;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::r() const
+inline bool mproto::pbu::r() const
 {
 	const uint8 v = 1u << 2;
 
 	return _flags1 & v;
 }
 
-bool mproto::pbu::p() const
+inline bool mproto::pbu::proxy_reg() const
 {
 	const uint8 v = 1u << 1;
 
 	return _flags1 & v;
 }
 
-void mproto::pbu::a(bool value)
+inline void mproto::pbu::ack(bool value)
 {
 	const uint8 v = 1u << 7;
 
@@ -254,7 +254,7 @@ void mproto::pbu::a(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::h(bool value)
+inline void mproto::pbu::h(bool value)
 {
 	const uint8 v = 1u << 6;
 
@@ -264,7 +264,7 @@ void mproto::pbu::h(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::l(bool value)
+inline void mproto::pbu::l(bool value)
 {
 	const uint8 v = 1u << 5;
 
@@ -274,7 +274,7 @@ void mproto::pbu::l(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::k(bool value)
+inline void mproto::pbu::k(bool value)
 {
 	const uint8 v = 1u << 4;
 
@@ -284,7 +284,7 @@ void mproto::pbu::k(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::m(bool value)
+inline void mproto::pbu::m(bool value)
 {
 	const uint8 v = 1u << 3;
 
@@ -294,7 +294,7 @@ void mproto::pbu::m(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::r(bool value)
+inline void mproto::pbu::r(bool value)
 {
 	const uint8 v = 1u << 2;
 
@@ -304,7 +304,7 @@ void mproto::pbu::r(bool value)
 		_flags1 &= ~v;
 }
 
-void mproto::pbu::p(bool value)
+inline void mproto::pbu::proxy_reg(bool value)
 {
 	const uint8 v = 1u << 1;
 
@@ -331,10 +331,21 @@ public:
 		status_not_home_agent         = 133, ///Not home agent for this mobile node
 		status_duplicate_address      = 134, ///Duplicate Address Detection failed
 		status_bad_sequence           = 135, ///Sequence number out of window
-		status_expired_home           = 136, //Expired home nonce index
+		status_expired_home           = 136, ///Expired home nonce index
 		status_expired_care_of        = 137, ///Expired care-of nonce index
 		status_expired                = 138, ///Expired nonces
 		status_invalid_registration   = 139, ///Registration type change disallowed
+
+		status_not_lma_for_this_mn                = 153, ///Not local mobility anchor for this mobile node
+		status_not_authorized_for_proxy_reg       = 154, ///The mobile access gateway is not authorized to send proxy binding updates
+		status_not_authorized_for_net_prefix      = 155, ///The mobile node is not authorized for one or more of the requesting home network prefixes
+		status_timestamp_missmatch                = 156, ///Invalid timestamp value (the clocks are out of sync)
+		status_timestamp_lower_than_prev_accepted = 157, ///The timestamp value is lower than the previously accepted value
+		status_missing_home_network_prefix        = 158, ///Missing home network prefix option
+		status_bce_pbu_prefix_do_not_match        = 159, ///All the home network prefixes listed in the BCE do not match all the prefixes in the received PBU
+		status_missing_mn_identifier_option       = 160, ///Missing mobile node identifier option
+		status_missing_handoff_indicator_option   = 161, ///Missing handoff indicator option
+		status_missing_access_type_tech_option    = 162, ///Missing access technology type option
 	};
 
 public:
@@ -354,14 +365,14 @@ public:
 	status_type status() const   { return status_type(_status); }
 	bool        k() const;
 	bool        r() const;
-	bool        p() const;
+	bool        proxy_reg() const;
 	uint16      sequence() const { return ::ntohs(_sequence); }
 	uint16      lifetime() const { return ::ntohs(_lifetime); }
 
 	void status(status_type value) { _status = value; }
 	void k(bool value);
 	void r(bool value);
-	void p(bool value);
+	void proxy_reg(bool value);
 	void sequence(uint16 value)  { _sequence = ::htons(value); }
 	void lifetime(uint16 value)  { _lifetime = ::htons(value); }
 
@@ -377,28 +388,28 @@ private:
 	uint16 _lifetime;
 };
 
-bool mproto::pba::k() const
+inline bool mproto::pba::k() const
 {
 	const uint8 v = 1u << 7;
 
 	return _flags & v;
 }
 
-bool mproto::pba::r() const
+inline bool mproto::pba::r() const
 {
 	const uint8 v = 1u << 6;
 
 	return _flags & v;
 }
 
-bool mproto::pba::p() const
+inline bool mproto::pba::proxy_reg() const
 {
-	const uint8 v = 1u << 6;
+	const uint8 v = 1u << 5;
 
 	return _flags & v;
 }
 
-void mproto::pba::k(bool value)
+inline void mproto::pba::k(bool value)
 {
 	const uint8 v = 1u << 7;
 
@@ -408,7 +419,7 @@ void mproto::pba::k(bool value)
 		_flags &= ~v;
 }
 
-void mproto::pba::r(bool value)
+inline void mproto::pba::r(bool value)
 {
 	const uint8 v = 1u << 6;
 
@@ -418,7 +429,7 @@ void mproto::pba::r(bool value)
 		_flags &= ~v;
 }
 
-void mproto::pba::p(bool value)
+inline void mproto::pba::proxy_reg(bool value)
 {
 	const uint8 v = 1u << 5;
 
