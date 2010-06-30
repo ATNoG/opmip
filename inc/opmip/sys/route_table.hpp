@@ -32,22 +32,26 @@ namespace opmip { namespace sys {
 ///////////////////////////////////////////////////////////////////////////////
 class route_table : boost::noncopyable {
 public:
+	typedef opmip::ip::prefix_v6  ip_prefix;
+	typedef opmip::ip::address_v6 ip_address;
+
+public:
 	struct entry {
 		entry()
 			: device(0)
 		{ }
 
-		entry(uint device_, ip::address_v6 gateway_)
+		entry(uint device_, ip_address gateway_)
 			: device(device_), gateway(gateway_)
 		{ }
 
 
-		uint           device;
-		ip::address_v6 gateway;
+		uint       device;
+		ip_address gateway;
 	};
 
 private:
-	typedef std::map<ip::prefix_v6, entry> map;
+	typedef std::map<ip_prefix, entry> map;
 	typedef map::iterator                  iterator;
 
 public:
@@ -57,13 +61,13 @@ public:
 	route_table(boost::asio::io_service& ios);
 	~route_table();
 
-	std::pair<const_iterator, bool> add_by_src(const ip::prefix_v6& prefix, uint device, const ip::address_v6& gateway = ip::address_v6());
-	std::pair<const_iterator, bool> find_by_src(const ip::prefix_v6& prefix) const;
-	bool                            remove_by_src(const ip::prefix_v6& prefix);
+	std::pair<const_iterator, bool> add_by_src(const ip_prefix& prefix, uint device, const ip_address& gateway = ip_address());
+	std::pair<const_iterator, bool> find_by_src(const ip_prefix& prefix) const;
+	bool                            remove_by_src(const ip_prefix& prefix);
 
-	std::pair<const_iterator, bool> add_by_dst(const ip::prefix_v6& prefix, uint device, const ip::address_v6& gateway = ip::address_v6());
-	std::pair<const_iterator, bool> find_by_dst(const ip::prefix_v6& prefix) const;
-	bool                            remove_by_dst(const ip::prefix_v6& prefix);
+	std::pair<const_iterator, bool> add_by_dst(const ip_prefix& prefix, uint device, const ip_address& gateway = ip_address());
+	std::pair<const_iterator, bool> find_by_dst(const ip_prefix& prefix) const;
+	bool                            remove_by_dst(const ip_prefix& prefix);
 
 
 private:
@@ -74,8 +78,8 @@ private:
 	void remove_by_dst(iterator& entry, boost::system::error_code& ec);
 
 private:
-	std::map<ip::prefix_v6, entry> _map_by_src;
-	std::map<ip::prefix_v6, entry> _map_by_dst;
+	std::map<ip_prefix, entry> _map_by_src;
+	std::map<ip_prefix, entry> _map_by_dst;
 
 	netlink<0>::socket _rtnl;
 	uint               _rtnl_seq;
