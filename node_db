@@ -1,0 +1,60 @@
+{
+	"lma-nodes" :
+	[
+		{
+			"id"          : "kenny",
+			"ip-address"  : "2001:690:2380:777a:20c:6eff:feda:195c",
+			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "lma-patolas-it",
+			"ip-address"  : "2001:690:2380:7770:218:f3ff:fe90:6d6f",
+			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "lma-patolas-home",
+			"ip-address"  : "2002:545b:20b2:1:218:f3ff:fe90:6d6f",
+			"ip-scope-id" : "2"
+		}
+	],
+
+	"mag-nodes" :
+	[
+		{
+			"id"          : "kyle",
+			"ip-address"  : "2001:690:2380:778f:20c:6eff:fedc:2a16",
+			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "pathfinder",
+			"ip-address"  : "2001:690:2380:777c:20c:6eff:fef3:5dcf",
+			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "mag-patolas-it",
+			"ip-address"  : "2001:690:2380:7770:218:f3ff:fe90:6d6f",
+			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "mag-patolas-home",
+			"ip-address"  : "2002:545b:20b2:1:218:deff:fe10:872a",
+			"ip-scope-id" : "2"
+		}
+	],
+
+	"mobile-nodes" :
+	[
+		{
+			"id"        : "patolas",
+			"ip-prefix" : "2001:690:2380:7775::/64",
+			"mac"       : "00:18:f3:90:6d:6f",
+			"lma-id"    : "kenny"
+		},
+		{
+			"id"        : "unknown",
+			"ip-prefix" : "2001:690:2380:7774::/64",
+			"mac"       : "07:08:09:10:20:30",
+			"lma-id"    : "lma-patolas-home"
+		}
+	]
+}
