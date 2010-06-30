@@ -25,23 +25,47 @@
 namespace opmip { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
-template<uint8 TypeValue>
 class option {
-protected:
-	option(uint8 length)
-		: _type(TypeValue), _length((length / 8) - 1)
+public:
+	static option* cast(void* data, size_t len)
 	{
-		BOOST_ASSERT(((_length + 1) * 8) == length);
+		option* opt = reinterpret_cast<option*>(data);
+
+		if (len < sizeof(option) || len < (opt->_length * 8))
+			return nullptr;
+
+		return opt;
+	}
+
+	template<class T>
+	static T* cast(option* opt)
+	{
+		if (!opt || T::type_value != opt->_type || T::static_size > (opt->_length * 8))
+			return nullptr;
+
+		return static_cast<T*>(opt);
+	}
+
+	static uint8 type(const option* opt)
+	{
+		return opt->_type;
+	}
+
+	static size_t size(const option* opt)
+	{
+		return opt->_length * 8;
 	}
 
 public:
-	static const uint8 type_value = TypeValue;
-
-	uint8 length() const { return TypeValue; }
+	option(uint8 type, uint8 length)
+		: _type(type), _length(length / 8)
+	{
+		BOOST_ASSERT((_length * 8) == length);
+	}
 
 protected:
-	const uint8 _type;
-	uint8       _length;
+	uint8 _type;
+	uint8 _length;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

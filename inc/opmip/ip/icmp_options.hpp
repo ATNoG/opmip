@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/ip/options.hpp>
 #include <opmip/ip/prefix.hpp>
+#include <opmip/ll/mac_address.hpp>
 #include <boost/array.hpp>
 #include <algorithm>
 #include <utility>
@@ -31,51 +32,55 @@ namespace opmip { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
 template<uint8 TypeValue>
-class opt_link_layer : public option<TypeValue> {
-	typedef option<TypeValue> base;
+class opt_link_layer : public option {
+	typedef opt_link_layer<TypeValue> self_type;
 
 public:
-	typedef boost::array<uint8, 14> bytes_type;
+	static const size_t static_size = 8;
+	static const uint8  type_value  = TypeValue;
 
-	static const size_t static_size = 2 + bytes_type::static_size;
+	static self_type* cast(option* opt)
+	{
+		return option::cast<self_type>(opt);
+	}
 
 public:
 	opt_link_layer()
-		: base(static_size)
+		: option(type_value, static_size)
 	{
-		_addr.assign(0);
+		_mac.assign(0);
 	}
 
-	void set(const std::pair<uint8*, size_t>& addr)
+	opt_link_layer& operator=(const ll::mac_address& mac)
 	{
-		BOOST_ASSERT(addr.second <= bytes_type::static_size);
-		std::copy(addr.first, addr.first + base::_length, _addr.begin());
+		_mac = mac.to_bytes();
+		return *this;
 	}
 
-	std::pair<const uint8*, size_t> get() const
+	ll::mac_address to_mac() const
 	{
-		return std::pair<const uint8*, size_t>(_addr.begin(), base::_length);
+		BOOST_ASSERT(option::size(this) == static_size);
+		return ll::mac_address(_mac);
 	}
 
 private:
-	bytes_type _addr;
+	ll::mac_address::bytes_type _mac;
 };
 
-class opt_source_link_layer : opt_link_layer<1> { };
-class opt_target_link_layer : opt_link_layer<2> { };
+typedef opt_link_layer<1> opt_source_link_layer;
+typedef opt_link_layer<2> opt_target_link_layer;
 
 ///////////////////////////////////////////////////////////////////////////////
-class opt_prefix_info : public option<3> {
-	typedef option<3> base;
-
+class opt_prefix_info : public option {
 public:
 	typedef prefix_v6::bytes_type bytes_type;
 
+	static const uint8  type_value  = 3;
 	static const size_t static_size = 16 + bytes_type::static_size;
 
 public:
 	opt_prefix_info()
-		: base(static_size),
+		: option(type_value, static_size),
 		_plength(0),_flags(0), _valid_lifetime(0),
 		_prefered_lifetime(0), _reserved(0)
 	{
@@ -86,6 +91,9 @@ public:
 	uint8     plength() const { return _plength; }
 	bool      L() const       { return _flags & 0x80; }
 	bool      A() const       { return _flags & 0x40; }
+
+	void valid_lifetime(uint32 val)    { _valid_lifetime = ::htonl(val); }
+	void prefered_lifetime(uint32 val) { _prefered_lifetime = ::htonl(val); }
 
 	void prefix(const prefix_v6& val)
 	{
@@ -119,19 +127,18 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class opt_mtu : public option<5> {
-	typedef option<5> base;
-
+class opt_mtu : public option {
 public:
+	static const uint8  type_value  = 5;
 	static const size_t static_size = 8;
 
 public:
 	opt_mtu()
-		: base(static_size), _reserved(0)
+		: option(type_value, static_size), _reserved(0)
 	{ }
 
-	void   set(uint32 val) { _mtu = val; }
-	uint32 get() const     { return _mtu; }
+	void   set(uint32 val) { _mtu = ::htonl(val); }
+	uint32 get() const     { return ::ntohl(_mtu); }
 
 public:
 	uint16 _reserved;
