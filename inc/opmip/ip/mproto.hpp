@@ -36,6 +36,7 @@ public:
 	class header;
 	class pbu;
 	class pba;
+	class option;
 
 	enum mh_types {
 		mh_pbu = 5,
@@ -439,6 +440,96 @@ void mproto::pba::p(bool value)
 	else
 		_flags &= ~v;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+class mproto::option {
+public:
+	static option* cast(void* buff, size_t length)
+	{
+		option* opt = reinterpret_cast<option*>(buff);
+
+		if ((length < 2) || length < (opt->length + 2u))
+			return nullptr;
+
+		return opt;
+	}
+
+	static size_t size(const option* opt)
+	{
+		if (!opt->type)
+			return 1;
+
+		return opt->length + 2;
+	}
+
+	enum types {
+		nai_type     = 8,
+		handoff_type = 23,
+		att_type     = 24,
+	};
+
+	struct nai {
+		static const uint8 type_value = 8;
+
+		uint8 subtype;
+		char  id[0];
+	};
+
+	struct handoff {
+		static const uint8 type_value = 23;
+
+		enum type {
+			k_reserved       = 0,
+			k_new_interface  = 1,
+			k_diff_interface = 2,
+			k_same_interface = 3,
+			k_unknown        = 4,
+			k_not_changed    = 5,
+		};
+
+		uint8 reserved;
+		uint8 indicator;
+	};
+
+	struct att {
+		static const uint8 type_value = 24;
+
+		enum {
+			virtua        = 1,
+			ppp           = 2,
+			ieee802_3     = 3,
+			ieee802_11abg = 4,
+			ieee802_16e   = 5,
+		};
+
+		uint8 reserved;
+		uint8 tech_type;
+	};
+
+public:
+	template<class OptionT>
+	option(OptionT, size_t xlength = 0)
+	{
+		BOOST_ASSERT((sizeof(OptionT) < 0xff));
+		BOOST_ASSERT((xlength < 0xff));
+		BOOST_ASSERT(((sizeof(OptionT) + xlength) < 0xff));
+
+		type = OptionT::type_value;
+		length = sizeof(OptionT) + xlength;
+	}
+
+	template<class T>
+	T* get()
+	{
+		uint8* tmp = reinterpret_cast<uint8*>(this) + 2;
+
+		return reinterpret_cast<T*>(tmp);
+	}
+
+public:
+	uint8 type;
+	uint8 length;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ip */ } /* namespace opmip */
