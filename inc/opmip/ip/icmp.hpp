@@ -20,6 +20,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/ip/address.hpp>
+#include <boost/asio/ip/icmp.hpp>
+#include <netinet/icmp6.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
@@ -31,6 +34,7 @@ struct icmp {
 	class router_advertisement;
 	class neighbor_solicitation;
 	class neighbor_advertisement;
+	class filter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -184,6 +188,58 @@ private:
 	uint8                  _reserved1;
 	uint16                 _reserved2;
 	address_v6::bytes_type _target_addr;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class icmp::filter {
+public:
+	filter(bool block)
+	{
+		if (block) {
+			ICMP6_FILTER_SETBLOCKALL(&_filter);
+		} else {
+			ICMP6_FILTER_SETPASSALL(&_filter);
+		}
+	}
+
+	filter(bool block, uint except_value_type)
+	{
+		if (block) {
+			ICMP6_FILTER_SETBLOCKALL(&_filter);
+			ICMP6_FILTER_SETPASS(except_value_type, &_filter);
+		} else {
+			ICMP6_FILTER_SETPASSALL(&_filter);
+			ICMP6_FILTER_SETBLOCK(except_value_type, &_filter);
+		}
+	}
+
+	void pass()
+	{
+		ICMP6_FILTER_SETPASSALL(&_filter);
+	}
+
+	void pass(uint type_value)
+	{
+		ICMP6_FILTER_SETPASS(type_value, &_filter);
+	}
+
+	void block()
+	{
+		ICMP6_FILTER_SETBLOCKALL(&_filter);
+	}
+
+	void block(uint type_value)
+	{
+		ICMP6_FILTER_SETBLOCK(type_value, &_filter);
+	}
+
+	int level(const boost::asio::ip::icmp&) const        { return IPPROTO_ICMPV6; }
+	int name(const boost::asio::ip::icmp&) const         { return ICMP6_FILTER; }
+	const void* data(const boost::asio::ip::icmp&) const { return &_filter; }
+	size_t size(const boost::asio::ip::icmp&) const      { return sizeof(_filter); }
+
+private:
+	::icmp6_filter _filter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
