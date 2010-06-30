@@ -20,50 +20,66 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/ip/mproto.hpp>
+#include <opmip/ip/address.hpp>
+#include <opmip/ll/mac_address.hpp>
 #include <opmip/pmip/bulist.hpp>
+#include <opmip/pmip/node_db.hpp>
+#include <opmip/sys/ip6_tunnel.hpp>
+#include <opmip/sys/route_table.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/asio/ip/icmp.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class mag {
-	typedef boost::asio::io_service::strand                  strand;
-	typedef boost::scoped_ptr<boost::asio::io_service::work> work_ptr;
+	typedef boost::asio::io_service::strand strand;
 
 public:
-	mag(boost::asio::io_service& ios)
-		: _service(ios)
-	{ }
+	typedef ip::address_v6  ip_address;
+	typedef ll::mac_address mac_address;
 
-	void start()
-	{
-		_service.dispatch(boost::bind(&mag::istart, this));
-	}
+public:
+	mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void stop()
-	{
-		_service.dispatch(boost::bind(&mag::istop, this));
-	}
+	void start(const char* id, const ip_address& mn_access_link);
+	void stop();
+
+	void mobile_node_attach(const mac_address& mn_mac);
+	void mobile_node_detach(const mac_address& mn_mac);
 
 private:
-	void istart()
-	{
-		_work.reset(new boost::asio::io_service::work(_service.get_io_service()));
-	}
 
-	void istop()
-	{
-		_work.reset(nullptr);
-	}
+	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
+	void icmp_ra_send_handler(const boost::system::error_code& ec);
 
 private:
-	strand       _service;
-	work_ptr     _work;
-	bulist::type _bulist;
+	void istart(const char* id, const ip_address& mn_access_link);
+	void istop();
+
+	void imobile_node_attach(const mac_address& mn_mac);
+	void imobile_node_detach(const mac_address& mn_mac);
+
+	void add_route_entries(bulist_entry* be);
+	void del_route_entries(bulist_entry* be);
+
+private:
+	strand   _service;
+	bulist   _bulist;
+	node_db& _node_db;
+	ip::mproto::socket            _mp_sock;
+	boost::asio::ip::icmp::socket _icmp_sock;
+
+	uint             _tunnel_dev;
+	uint             _access_dev;
+	sys::route_table _route_table;
+	std::string      _identifier;
+	size_t           _concurrency;
+	sys::ip6_tunnel  _tunnel;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
