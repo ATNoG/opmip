@@ -27,19 +27,19 @@
 namespace opmip { namespace sys {
 
 ///////////////////////////////////////////////////////////////////////////////
-void throw_on_error(error_code& ec)
+inline void throw_on_error(error_code& ec)
 {
 	if (ec)
 		throw_exception(boost::system::system_error(ec));
 }
 
-void throw_on_error(error_code& ec, const char* what)
+inline void throw_on_error(error_code& ec, const char* what)
 {
 	if (ec)
 		throw_exception(boost::system::system_error(ec, what));
 }
 
-void throw_on_error(error_code& ec, const std::string& what)
+inline void throw_on_error(error_code& ec, const std::string& what)
 {
 	if (ec)
 		throw_exception(boost::system::system_error(ec, what));

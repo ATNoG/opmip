@@ -15,6 +15,7 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
+#include <opmip/sys/error.hpp>
 #include <opmip/sys/ip6_tunnel_service.hpp>
 #include <opmip/sys/netlink/error.hpp>
 #include <opmip/sys/netlink/message.hpp>
@@ -25,19 +26,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace sys {
-
-///////////////////////////////////////////////////////////////////////////////
-namespace detail {
-
-///////////////////////////////////////////////////////////////////////////////
-inline void throw_on_error(boost::system::error_code& ec, const char* what)
-{
-	if (ec)
-		boost::throw_exception(boost::system::system_error(ec, what));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-} /* namespace detail */
 
 ///////////////////////////////////////////////////////////////////////////////
 boost::asio::io_service::id ip6_tunnel_service::id;
@@ -229,13 +217,12 @@ void ip6_tunnel_service::get_index(implementation_type& impl, uint& index, boost
 	index = req.index;
 }
 
-void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
-                                                               boost::system::error_code& ec)
+bool ip6_tunnel_service::get_enable(implementation_type& impl, boost::system::error_code& ec)
 {
 	if (!is_open(impl)) {
 		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
 		                               boost::system::get_generic_category());
-		return;
+		return false;
 	}
 
 	struct if_req {
@@ -246,9 +233,9 @@ void ip6_tunnel_service::get_enable(implementation_type& impl, bool& value,
 	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
 	io_control(ioctl_get_flags, &req, ec);
 	if (ec)
-		return;
+		return false;
 
-	value = req.flags & IFF_UP;
+	return req.flags & IFF_UP;
 }
 
 void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
@@ -267,6 +254,7 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
 			size_t pad;
 		};
 	} req;
+	req.pad = 0;
 
 	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
 	io_control(ioctl_get_flags, &req, ec);
@@ -280,6 +268,31 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
 
 	io_control(ioctl_set_flags, &req, ec);
 	BOOST_ASSERT((ec || (req.flags & IFF_UP)));
+}
+
+uint ip6_tunnel_service::get_device_id(implementation_type& impl, boost::system::error_code& ec)
+{
+	if (!is_open(impl)) {
+		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
+		                               boost::system::get_generic_category());
+		return 0;
+	}
+
+	struct if_req {
+		char  name[if_name_size];
+		union {
+			int    dev;
+			size_t pad;
+		};
+	} req;
+
+	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
+	req.pad = 0;
+	io_control(SIOCGIFINDEX, &req, ec);
+	if (ec)
+		return 0;
+
+	return req.dev;
 }
 
 void ip6_tunnel_service::shutdown_service()

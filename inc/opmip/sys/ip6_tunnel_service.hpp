@@ -73,8 +73,10 @@ public:
 
 	void get_index(implementation_type& impl, uint& index, boost::system::error_code& ec);
 
-	void get_enable(implementation_type& impl, bool& value, boost::system::error_code& ec);
+	bool get_enable(implementation_type& impl, boost::system::error_code& ec);
 	void set_enable(implementation_type& impl, bool value, boost::system::error_code& ec);
+
+	uint get_device_id(implementation_type& impl, boost::system::error_code& ec);
 
 	bool delete_on_close(implementation_type& impl, bool value);
 	bool delete_on_close(const implementation_type& impl) const;
