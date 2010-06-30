@@ -24,6 +24,7 @@ lib opmip
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
 	  pmip/bcache.cpp
+	  pmip/bulist.cpp
 	  /boost//system
 	;
 
