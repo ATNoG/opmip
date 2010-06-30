@@ -97,9 +97,9 @@ public:
 	uint8  current_hop_limit() const { return _current_hop_limit; }
 	bool   M() const                 { return _flags & 0x80; }
 	bool   O() const                 { return _flags & 0x40; }
-	uint16 lifetime() const          { return _lifetime; }
-	uint32 reachable_time() const    { return _reachable_time; }
-	uint32 retrans_timer() const     { return _retrans_timer; }
+	uint16 lifetime() const          { return ::ntohs(_lifetime); }
+	uint32 reachable_time() const    { return ::ntohl(_reachable_time); }
+	uint32 retrans_timer() const     { return ::ntohl(_retrans_timer); }
 
 	void current_hop_limit(uint8 val) { _current_hop_limit = val; }
 
@@ -119,9 +119,9 @@ public:
 			_flags &= ~(0x40);
 	}
 
-	void lifetime(uint8 val)          { _current_hop_limit = val; }
-	void reachable_time(uint8 val)    { _reachable_time = val; }
-	void retrans_timer(uint16 val)    { _retrans_timer = val; }
+	void lifetime(uint16 val)       { _lifetime = ::htons(val); }
+	void reachable_time(uint32 val) { _reachable_time = ::htonl(val); }
+	void retrans_timer(uint32 val)  { _retrans_timer = ::htonl(val); }
 
 private:
 	uint8  _current_hop_limit;
