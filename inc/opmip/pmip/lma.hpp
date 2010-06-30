@@ -20,10 +20,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/exception.hpp>
+#include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/bcache.hpp>
+#include <opmip/pmip/node_db.hpp>
+#include <opmip/sys/route_table.hpp>
+#include <opmip/sys/ip6_tunnel.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/asio/ip/icmp.hpp>
 #include <boost/scoped_ptr.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,39 +37,52 @@ namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class lma {
-	typedef boost::asio::io_service::strand                  strand;
-	typedef boost::scoped_ptr<boost::asio::io_service::work> work_ptr;
+	typedef boost::asio::io_service::strand strand;
 
 public:
-	lma(boost::asio::io_service& ios)
-		: _service(ios)
-	{ }
+	typedef	ip::address_v6 ip_address;
 
-	void start()
-	{
-		_service.dispatch(boost::bind(&lma::istart, this));
-	}
 
-	void stop()
-	{
-		_service.dispatch(boost::bind(&lma::istop, this));
-	}
+
+public:
+	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
+
+	void start(const char* id, const ip_address& home_network_link);
+	void stop();
 
 private:
-	void istart()
-	{
-		_work.reset(new boost::asio::io_service::work(_service.get_io_service()));
-	}
+	void mp_send_handler(const boost::system::error_code& ec);
 
-	void istop()
-	{
-		_work.reset(nullptr);
-	}
+	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
+	void icmp_ra_send_handler(const boost::system::error_code& ec);
+
+	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 private:
-	strand       _service;
-	work_ptr     _work;
-	bcache::type _bcache;
+	void istart(const char* id, const ip_address& home_network_link);
+	void istop();
+
+	void irouter_advertisement(const std::string& mn_id);
+
+	void ibcache_remove_entry(const std::string& mn_id);
+
+	void add_route_entries(bcache_entry* be);
+	void del_route_entries(bcache_entry* be);
+
+private:
+	strand   _service;
+	bcache   _bcache;
+	node_db& _node_db;
+
+	ip::mproto::socket            _mp_sock;
+	boost::asio::ip::icmp::socket _icmp_sock;
+
+	sys::route_table _route_table;
+	uint             _tunnel_dev;
+	uint             _home_net_dev;
+	std::string      _identifier;
+	size_t           _concurrency;
+	sys::ip6_tunnel  _tunnel;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
