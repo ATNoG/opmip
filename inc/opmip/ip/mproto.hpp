@@ -109,58 +109,53 @@ inline void mproto::endpoint::address(const address_v6& addr)
 
 ///////////////////////////////////////////////////////////////////////////////
 struct mproto::header {
-	static const size_t mh_size = 6;
+	static header* cast(void* buff, size_t len)
+	{
+		header* hdr = reinterpret_cast<header*>(buff);
+
+		if (len < sizeof(header) || len < hdr->length())
+			return nullptr;
+
+		return hdr;
+	}
 
 	void init(uint8 type, size_t len)
 	{
-		len += mh_size;
-
 		next = 59;
-		length = (align_to<8>(len) / 8) - 1;
+		length(len);
 		mh_type = type;
 		reserved = 0;
 		checksum = 0;
-		plen = len % 8;
-		pad.assign(0);
 	}
 
-	boost::asio::const_buffer pad_buffer() const
+	size_t length() const { return (_length + 1) * 8; }
+
+	void length(size_t len)
 	{
-		return boost::asio::const_buffer(pad.elems, plen);
+		BOOST_ASSERT(!(len % 8));
+		_length = (len / 8) - 1;
 	}
-
 
 	uint8  next;
-	uint8  length;
+	uint8  _length;
 	uint8  mh_type;
 	uint8  reserved;
 	uint16 checksum;
-
-	uint8                  plen;
-	boost::array<uint8, 7> pad;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class mproto::pbu {
+class mproto::pbu : public header {
 public:
 	static const size_t mh_type = 5;
-	static const size_t mh_size = 6;
+	static const size_t mh_size = 12;
 
 public:
-	static pbu* cast(void* buff, size_t len)
+	static pbu* cast(header* hdr)
 	{
-		if (len < sizeof(pbu))
+		if ((hdr->mh_type != mh_type) || (hdr->length() < sizeof(pbu)))
 			return nullptr;
 
-		return reinterpret_cast<pbu*>(buff);
-	}
-
-	static const pbu* cast(const void* buff, size_t len)
-	{
-		if (len < sizeof(pbu))
-			return nullptr;
-
-		return reinterpret_cast<const pbu*>(buff);
+		return static_cast<pbu*>(hdr);
 	}
 
 public:
@@ -320,10 +315,10 @@ void mproto::pbu::p(bool value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-class mproto::pba {
+class mproto::pba : public header {
 public:
 	static const size_t mh_type = 6;
-	static const size_t mh_size = 6;
+	static const size_t mh_size = 12;
 
 	enum status_type {
 		status_ok                     = 0,   ///Accepted
@@ -343,20 +338,12 @@ public:
 	};
 
 public:
-	static pba* cast(void* buff, size_t len)
+	static pba* cast(header* hdr)
 	{
-		if (len < mh_size)
+		if ((hdr->mh_type != mh_type) || (hdr->length() < sizeof(pba)))
 			return nullptr;
 
-		return reinterpret_cast<pba*>(buff);
-	}
-
-	static const pba* cast(const void* buff, size_t len)
-	{
-		if (len < mh_size)
-			return nullptr;
-
-		return reinterpret_cast<const pba*>(buff);
+		return static_cast<pba*>(hdr);
 	}
 
 public:
