@@ -15,7 +15,13 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe mproto
-	: mproto.cpp
+
+exe mproto_pbu
+	: mproto_pbu.cpp
+	  ../../../lib/opmip//opmip
+	;
+
+exe mproto_pba
+	: mproto_pba.cpp
 	  ../../../lib/opmip//opmip
 	;

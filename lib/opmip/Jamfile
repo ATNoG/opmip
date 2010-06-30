@@ -19,8 +19,8 @@ project opmip
 	;
 
 lib opmip
-	: dummy.cpp
-	  ip/prefix.cpp
+	: ip/prefix.cpp
+	  ll/mac_address.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
 	  /boost//system
