@@ -16,11 +16,25 @@
 //=============================================================================
 
 #include <opmip/ip/prefix.hpp>
+#include <boost/lexical_cast.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
+prefix_v6 prefix_v6::from_string(const std::string& str)
+{
+	size_t pos = str.rfind('/');
+
+	if (pos == std::string::npos)
+		return prefix_v6(); //FIXME: throw_exception
+
+	address_v6 addr = address_v6::from_string(str.substr(0, pos));
+	uint       plen = boost::lexical_cast<uint>(str.substr(pos + 1));
+
+	return prefix_v6(addr, plen);
+}
+
 prefix_v6::prefix_v6()
 {
 	_prefix.assign(0);

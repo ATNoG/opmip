@@ -33,6 +33,9 @@ public:
 	typedef address_v6::bytes_type bytes_type;
 
 public:
+	static prefix_v6 from_string(const std::string& str);
+
+public:
 	prefix_v6();
 	prefix_v6(const bytes_type& addr, uint length);
 	prefix_v6(const address_v6& addr, uint length);
