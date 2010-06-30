@@ -23,6 +23,7 @@ lib opmip
 	  ll/mac_address.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
+	  pmip/bcache.cpp
 	  /boost//system
 	;
 
