@@ -26,11 +26,12 @@ namespace opmip { namespace ll {
 
 ///////////////////////////////////////////////////////////////////////////////
 enum technology {
-	unknown       = 0, ///Unknown
-	ethernet_10,       ///Ethernet 10 Mbits     - Ethernet
-	ethernet_100,      ///Ethernet 100 Mbits    - Fast Ethernet
-	ethernet_1000,     ///Ethernet 1000 Mbits   - Gigabit Ethernet
-	ieee802_11,        ///IEEE 802.11           - WiFi
+	k_tech_unknown       = 0,
+	k_tech_virtual       = 1,
+	k_tech_ppp           = 2,
+	k_tech_ieee802_3     = 3,
+	k_tech_ieee802_11abg = 4,
+	k_tech_ieee802_16e   = 5,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
