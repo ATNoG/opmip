@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/ip/address.hpp>
 #include <boost/asio/ip/icmp.hpp>
+#include <boost/type_traits/is_base_of.hpp>
 #include <netinet/icmp6.h>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,11 +41,25 @@ struct icmp {
 ///////////////////////////////////////////////////////////////////////////////
 class icmp::header {
 public:
+	template<class T>
+	static T* cast(void* buffer, size_t length)
+	{
+		OPMIP_STATIC_ASSERT((boost::is_base_of<header, T>::value), "T must be a base of opmip::ip::icmp::header");
+		header* hdr = static_cast<header*>(buffer);
+
+		if (length >= sizeof(T) && hdr->type() == T::type_value)
+			return static_cast<T*>(hdr);
+
+		return nullptr;
+	}
+
+public:
 	header(uint8 type, uint8 code)
 		: _type(type), _code(code), _checksum(0)
 	{ }
 
 	uint8 type() const { return _type; }
+	uint8 code() const { return _code; }
 
 protected:
 	uint8  _type;
