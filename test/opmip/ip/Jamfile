@@ -15,6 +15,10 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+exe icmp_ra
+	: icmp_ra.cpp
+	  ../../../lib/opmip//opmip
+	;
 
 exe mproto_pbu
 	: mproto_pbu.cpp
