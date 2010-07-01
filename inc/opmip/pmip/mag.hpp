@@ -20,11 +20,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/ip/mproto.hpp>
+#include <opmip/logger.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ll/mac_address.hpp>
 #include <opmip/pmip/bulist.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/pmip/mp_sender.hpp>
+#include <opmip/pmip/mp_receiver.hpp>
+#include <opmip/pmip/icmp_receiver.hpp>
 #include <opmip/sys/ip6_tunnel.hpp>
 #include <opmip/sys/route_table.hpp>
 #include <boost/bind.hpp>
@@ -53,9 +56,14 @@ public:
 	void mobile_node_detach(const mac_address& mn_mac);
 
 private:
+	void mp_send_handler(const boost::system::error_code& ec);
+	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
 
 	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
 	void icmp_ra_send_handler(const boost::system::error_code& ec);
+	void icmp_rs_receive_handler(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
+
+	void proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo);
 
 private:
 	void istart(const char* id, const ip_address& mn_access_link);
@@ -64,6 +72,12 @@ private:
 	void imobile_node_attach(const mac_address& mn_mac);
 	void imobile_node_detach(const mac_address& mn_mac);
 
+	void irouter_solicitation(const ip_address& address, const mac_address& mac);
+	void irouter_advertisement(const std::string& mn_id);
+
+	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
+	void iproxy_binding_retry(proxy_binding_info& pbinfo);
+
 	void add_route_entries(bulist_entry* be);
 	void del_route_entries(bulist_entry* be);
 
@@ -71,6 +85,8 @@ private:
 	strand   _service;
 	bulist   _bulist;
 	node_db& _node_db;
+	logger   _log;
+
 	ip::mproto::socket            _mp_sock;
 	boost::asio::ip::icmp::socket _icmp_sock;
 
