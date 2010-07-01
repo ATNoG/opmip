@@ -28,6 +28,7 @@
 #include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
+void link_sap(opmip::pmip::mag& mag);
 static opmip::pmip::mag* main_service;
 
 void terminate(int)
@@ -94,7 +95,11 @@ int main(int argc, char** argv)
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
 
+		boost::thread* td = tg.create_thread(boost::bind(link_sap, boost::ref(mag)));
+
 		ios.run();
+		td->interrupt();
+		td->detach();
 		tg.join_all();
 
 	} catch(std::exception& e) {
