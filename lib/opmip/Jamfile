@@ -26,6 +26,8 @@ lib opmip
 	  pmip/node_db.cpp
 	  pmip/bcache.cpp
 	  pmip/bulist.cpp
+	  pmip/icmp_sender.cpp
+	  pmip/icmp_receiver.cpp
 	  pmip/lma.cpp
 	  pmip/mag.cpp
 	  /boost//system
