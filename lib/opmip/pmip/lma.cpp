@@ -51,14 +51,15 @@ void lma::stop()
 
 void lma::mp_send_handler(const boost::system::error_code& ec)
 {
-	if (ec)
-		std::cerr << "lma::mp_send_handler error: " << ec.message() << std::endl;
+	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+		_log(0, "PBA sender error: ", ec.message());
 }
 
 void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur)
 {
 	if (ec) {
-		std::cerr << "lma::mp_receive_handler error: " << ec.message() << std::endl;
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "PBU receiver error: ", ec.message());
 		return;
 	}
 
@@ -69,7 +70,8 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 void lma::icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id)
 {
 	if (ec) {
-		std::cerr << "lma::icmp_ra_timer_handler error: " << ec.message() << std::endl;
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
 		return;
 	}
 
@@ -78,14 +80,19 @@ void lma::icmp_ra_timer_handler(const boost::system::error_code& ec, const std::
 
 void lma::icmp_ra_send_handler(const boost::system::error_code& ec)
 {
-	if (ec)
-		std::cerr << "lma::icmp_ra_send_handler error: " << ec.message() << std::endl;
+	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+		_log(0, "ICMPv6 router advertisement sender error: ", ec.message());
 }
 
 void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
 {
-	if (!ec)
-		_service.dispatch(boost::bind(&lma::ibcache_remove_entry, this, mn_id));
+	if (ec) {
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "Binding cache remove entry timer error: ", ec.message());
+		return;
+	}
+
+	_service.dispatch(boost::bind(&lma::ibcache_remove_entry, this, mn_id));
 }
 
 void lma::istart(const char* id, const ip_address& home_network_link)
@@ -140,8 +147,10 @@ void lma::istop()
 void lma::irouter_advertisement(const std::string& mn_id)
 {
 	bcache_entry* be = _bcache.find(mn_id);
-	if (!be || be->bind_status != bcache_entry::k_bind_registered)
+	if (!be || be->bind_status != bcache_entry::k_bind_registered) {
+		_log(0, "Router advertisement error: binding cache entry not found [id = ", mn_id, "]");
 		return;
+	}
 
 	icmp_ra_sender_ptr ra(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
 	                                                                      1460, be->prefix_list(),
@@ -238,8 +247,10 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 void lma::ibcache_remove_entry(const std::string& mn_id)
 {
 	bcache_entry* be = _bcache.find(mn_id);
-	if (!be || be->bind_status != bcache_entry::k_bind_deregistered)
+	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
+		_log(0, "Binding cahe remove entry error: not found [id = ", mn_id, "]");
 		return;
+	}
 
 	_bcache.remove(be);
 }
@@ -247,6 +258,8 @@ void lma::ibcache_remove_entry(const std::string& mn_id)
 void lma::add_route_entries(bcache_entry* be)
 {
 	const bcache::net_prefix_list& npl = be->prefix_list();
+
+	_log(0, "Add route entries [id = ", be->id(), "]");
 
 	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_src(*i, _tunnel_dev, be->care_of_address);
@@ -258,6 +271,8 @@ void lma::add_route_entries(bcache_entry* be)
 void lma::del_route_entries(bcache_entry* be)
 {
 	const bcache::net_prefix_list& npl = be->prefix_list();
+
+	_log(0, "Remove route entries [id = ", be->id(), "]");
 
 	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_src(*i);

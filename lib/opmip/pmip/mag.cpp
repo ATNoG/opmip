@@ -216,12 +216,18 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 void mag::imobile_node_detach(const mac_address& mn_mac)
 {
 	const mobile_node* mn = _node_db.find_mobile_node(mn_mac);
-	if (!mn)
+	if (!mn) {
+		_log(0, "Mobile Node detach error: not authorized [mac = ", mn_mac, "]");
 		return;
+	}
 
 	bulist_entry* be = _bulist.find(mn->id());
-	if (!be || be->bind_status != bulist_entry::k_bind_requested || be->bind_status != bulist_entry::k_bind_ack)
+	if (!be || be->bind_status != bulist_entry::k_bind_requested || be->bind_status != bulist_entry::k_bind_ack) {
+		_log(0, "Mobile Node detach error: not attached [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
 		return;
+	}
+
+	_log(0, "Mobile Node detach [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
 
 	if (be->bind_status == bulist_entry::k_bind_ack)
 		del_route_entries(be);
@@ -245,8 +251,12 @@ void mag::imobile_node_detach(const mac_address& mn_mac)
 void mag::irouter_solicitation(const ip_address& address, const mac_address& mac)
 {
 	bulist_entry* be = _bulist.find(mac);
-	if (!be || be->bind_status != bulist_entry::k_bind_ack)
+	if (!be || be->bind_status != bulist_entry::k_bind_ack) {
+		_log(0, "Router Solicitation error: unknown mobile node [mac = ", mac, "]");
 		return;
+	}
+
+	_log(0, "Router solicitation [mac = ", mac, ", id = ", be->mn_id(), "]");
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
 	                                                                       1460, be->mn_prefix_list(), address));
@@ -257,8 +267,10 @@ void mag::irouter_solicitation(const ip_address& address, const mac_address& mac
 void mag::irouter_advertisement(const std::string& mn_id)
 {
 	bulist_entry* be = _bulist.find(mn_id);
-	if (!be || be->bind_status != bulist_entry::k_bind_ack)
+	if (!be || be->bind_status != bulist_entry::k_bind_ack) {
+		_log(0, "Router advertisement error: binding update list not found [id = ", be->mn_id(), "]");
 		return;
+	}
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
 	                                                                       1460, be->mn_prefix_list(),
@@ -349,6 +361,8 @@ void mag::add_route_entries(bulist_entry* be)
 {
 	const bulist::net_prefix_list& npl = be->mn_prefix_list();
 
+	_log(0, "Added route entries [id = ", be->mn_id(), "]");
+
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_src(*i, _tunnel_dev, be->lma_address());
 
@@ -359,6 +373,8 @@ void mag::add_route_entries(bulist_entry* be)
 void mag::del_route_entries(bulist_entry* be)
 {
 	const bulist::net_prefix_list& npl = be->mn_prefix_list();
+
+	_log(0, "Removed route entries [id = ", be->mn_id(), "]");
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_src(*i);
