@@ -20,10 +20,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/logger.hpp>
 #include <opmip/exception.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/bcache.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/pmip/mp_receiver.hpp>
 #include <opmip/sys/route_table.hpp>
 #include <opmip/sys/ip6_tunnel.hpp>
 #include <boost/bind.hpp>
@@ -42,7 +44,15 @@ class lma {
 public:
 	typedef	ip::address_v6 ip_address;
 
+	struct config {
+		config()
+			: min_delay_before_BCE_delete(10000),
+			  max_delay_before_BCE_assign(1500)
+		{ }
 
+		uint min_delay_before_BCE_delete; //MinDelayBeforeBCEDelete (ms)
+		uint max_delay_before_BCE_assign; //MaxDelayBeforeNewBCEAssign (ms)
+	};
 
 public:
 	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
@@ -52,6 +62,7 @@ public:
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
+	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur);
 
 	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
 	void icmp_ra_send_handler(const boost::system::error_code& ec);
@@ -64,6 +75,7 @@ private:
 
 	void irouter_advertisement(const std::string& mn_id);
 
+	void iproxy_binding_update(proxy_binding_info& pbinfo);
 	void ibcache_remove_entry(const std::string& mn_id);
 
 	void add_route_entries(bcache_entry* be);
@@ -72,7 +84,9 @@ private:
 private:
 	strand   _service;
 	bcache   _bcache;
+	config   _config;
 	node_db& _node_db;
+	logger   _log;
 
 	ip::mproto::socket            _mp_sock;
 	boost::asio::ip::icmp::socket _icmp_sock;

@@ -54,7 +54,7 @@ public:
 	                                           const net_prefix_list& mn_prefix_list)
 		: _id(mn_id), _prefix_list(mn_prefix_list),
 		  lifetime(0), sequence(0),
-		  link_type(link_tech::k_tech_unknown),
+		  link_type(ll::k_tech_unknown),
 		  bind_status(k_bind_unknown),
 		  timer(ios)
 	{ }
