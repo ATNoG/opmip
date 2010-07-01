@@ -28,6 +28,7 @@ lib opmip
 	  pmip/bulist.cpp
 	  pmip/icmp_sender.cpp
 	  pmip/icmp_receiver.cpp
+	  pmip/mp_sender.cpp
 	  pmip/lma.cpp
 	  pmip/mag.cpp
 	  /boost//system
