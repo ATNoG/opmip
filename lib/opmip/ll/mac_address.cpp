@@ -37,8 +37,9 @@ static uchar hex_to_int(uchar c)
 mac_address mac_address::from_string(const char* str)
 {
 	mac_address mac;
+	uint i;
 
-	for (uint i = 0; i < bytes_type::static_size; ++i) {
+	for (i = 0; i < bytes_type::static_size; ++i) {
 		uint8 tmp[2];
 
 		if (!std::isxdigit(*str))
@@ -49,15 +50,15 @@ mac_address mac_address::from_string(const char* str)
 			break;
 		tmp[1] = hex_to_int(*(str++));
 
+		mac._address[i] = (tmp[0] << 4) | tmp[1];
+
 		if (*str != ':')
 			break;
 		++str;
-
-		mac._address[i] = (tmp[0] << 4) | tmp[1];
 	}
 
-	if (*str != '\0')
-		return mac_address(); //FIXME
+	if (((i + 1) != bytes_type::static_size) || *str != '\0')
+		return mac_address();
 
 	return mac;
 }
