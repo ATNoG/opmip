@@ -48,13 +48,7 @@ prefix_v6::prefix_v6(const bytes_type& addr, uint length)
 		_length = 0;
 
 	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
 		_prefix = addr;
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
 		_length = static_cast<uchar>(length);
 	}
 }
@@ -66,15 +60,15 @@ prefix_v6::prefix_v6(const address_v6& addr, uint length)
 		_length = 0;
 
 	} else {
-		const uint nbits = length % 8;
-		const uint nbytes = length / 8 + (nbits ? 1 : 0);
-
 		_prefix = addr.to_bytes();
-		std::fill(_prefix.begin() + nbytes, _prefix.end(), 0);
-		if (nbits)
-			_prefix[nbytes - 1] &= (static_cast<uint8>(~0) << nbits);
 		_length = static_cast<uchar>(length);
 	}
+}
+
+std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr)
+{
+	return out << address_v6(lhr._prefix)
+	           << '/' << static_cast<uint>(lhr._length);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

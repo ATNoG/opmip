@@ -102,12 +102,6 @@ inline bool operator>=(const prefix_v6& rhr, const prefix_v6& lhr)
 	       | ((rhr._length == lhr._length) && (rhr._prefix >= lhr._prefix));
 }
 
-inline std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr)
-{
-	return out << (lhr._length ? address_v6(lhr._prefix) : address_v6())
-		       << '/' << static_cast<uint>(lhr._length);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ip */ } /* namespace opmip */
 
