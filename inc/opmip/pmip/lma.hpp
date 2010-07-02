@@ -21,18 +21,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/logger.hpp>
-#include <opmip/exception.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/bcache.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/pmip/mp_receiver.hpp>
 #include <opmip/sys/route_table.hpp>
 #include <opmip/sys/ip6_tunnel.hpp>
-#include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/asio/ip/icmp.hpp>
-#include <boost/scoped_ptr.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -64,16 +60,11 @@ private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur);
 
-	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
-	void icmp_ra_send_handler(const boost::system::error_code& ec);
-
 	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 private:
 	void istart(const char* id, const ip_address& home_network_link);
 	void istop();
-
-	void irouter_advertisement(const std::string& mn_id);
 
 	void iproxy_binding_update(proxy_binding_info& pbinfo);
 	void ibcache_remove_entry(const std::string& mn_id);
@@ -88,8 +79,7 @@ private:
 	node_db& _node_db;
 	logger   _log;
 
-	ip::mproto::socket            _mp_sock;
-	boost::asio::ip::icmp::socket _icmp_sock;
+	ip::mproto::socket _mp_sock;
 
 	sys::route_table _route_table;
 	uint             _tunnel_dev;

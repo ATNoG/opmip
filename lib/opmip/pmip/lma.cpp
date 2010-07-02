@@ -16,9 +16,9 @@
 //=============================================================================
 
 #include <opmip/pmip/lma.hpp>
-#include <opmip/refcount.hpp>
 #include <opmip/pmip/mp_sender.hpp>
-#include <opmip/pmip/icmp_sender.hpp>
+#include <opmip/exception.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,8 +32,7 @@ bool validate_sequence_number(uint16 prev, uint16 current)
 
 ///////////////////////////////////////////////////////////////////////////////
 lma::lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
-	: _service(ios), _node_db(ndb), _log("LMA", &std::cout),
-	  _mp_sock(ios), _icmp_sock(ios),
+	: _service(ios), _node_db(ndb), _log("LMA", &std::cout), _mp_sock(ios),
 	  _route_table(ios), _tunnel_dev(0), _home_net_dev(0),
 	  _concurrency(concurrency), _tunnel(ios)
 {
@@ -67,23 +66,6 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
 }
 
-void lma::icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id)
-{
-	if (ec) {
-		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
-		return;
-	}
-
-	_service.dispatch(boost::bind(&lma::irouter_advertisement, this, mn_id));
-}
-
-void lma::icmp_ra_send_handler(const boost::system::error_code& ec)
-{
-	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-		_log(0, "ICMPv6 router advertisement sender error: ", ec.message());
-}
-
 void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
 {
 	if (ec) {
@@ -115,11 +97,6 @@ void lma::istart(const char* id, const ip_address& home_network_link)
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
 
-	_icmp_sock.open(boost::asio::ip::icmp::v6());
-	_icmp_sock.bind(boost::asio::ip::icmp::endpoint(home_network_link, 0));
-//	_icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
-//	_icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
-
 	_home_net_dev = home_network_link.scope_id();
 	_identifier   = id;
 
@@ -141,24 +118,6 @@ void lma::istop()
 	_bcache.clear();
 	_tunnel.close();
 	_mp_sock.close();
-	_icmp_sock.close();
-}
-
-void lma::irouter_advertisement(const std::string& mn_id)
-{
-	bcache_entry* be = _bcache.find(mn_id);
-	if (!be || be->bind_status != bcache_entry::k_bind_registered) {
-		_log(0, "Router advertisement error: binding cache entry not found [id = ", mn_id, "]");
-		return;
-	}
-
-	icmp_ra_sender_ptr ra(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
-	                                                                      1460, be->prefix_list(),
-	                                                                      ip::address_v6::from_string("ff02::1")));
-
-	ra->async_send(_icmp_sock, boost::bind(&lma::icmp_ra_send_handler, this, _1));
-	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer
-	be->timer.async_wait(boost::bind(&lma::icmp_ra_timer_handler, this, _1, mn_id));
 }
 
 void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
@@ -222,7 +181,7 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 
 		be->timer.cancel();
 		be->bind_status = bcache_entry::k_bind_registered;
-//		add_route_entries(be);
+		add_route_entries(be);
 	}
 
 	BOOST_ASSERT((be->bind_status != bcache_entry::k_bind_unknown));
