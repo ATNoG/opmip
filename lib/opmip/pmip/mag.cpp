@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/pmip/mag.hpp>
+#include <opmip/pmip/mp_sender.hpp>
 #include <opmip/pmip/icmp_sender.hpp>
 #include <opmip/ip/icmp.hpp>
 #include <boost/asio/ip/unicast.hpp>
@@ -30,9 +31,8 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 mag::mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 	: _service(ios), _node_db(ndb), _log("MAG", &std::cout),
-	_mp_sock(ios), _icmp_sock(ios),
-	_tunnel_dev(0), _access_dev(0), _route_table(ios), _concurrency(concurrency),
-	_tunnel(ios)
+	  _mp_sock(ios), _icmp_sock(ios), _tunnel_dev(0), _access_dev(0),
+	  _route_table(ios), _concurrency(concurrency), _tunnel(ios)
 {
 }
 
@@ -175,7 +175,7 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 	if (!be) {
 		const mobile_node* mn = _node_db.find_mobile_node(mn_mac);
 		if (!mn) {
-			_log(0, "Mobile Node attach error: not found [mac = ", mn_mac, "]");
+			_log(0, "Mobile Node attach error: not authorized [mac = ", mn_mac, "]");
 			return;
 		}
 
@@ -186,6 +186,7 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 		}
 
 		be = new bulist_entry(_service.get_io_service(), mn->id(), mn->mac_address(), mn->prefix_list(), lma->address());
+		_bulist.insert(be);
 
 		_log(0, "Mobile Node attach [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_id = ", mn->lma_id(), ", lma_ip = ", be->lma_address(), "]");
 	} else {
@@ -193,7 +194,7 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
-		_log(0, "Mobile Node attach bind error [mac =", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach error: previous bind failed [mac =", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
 		return;
 	}
 
@@ -222,7 +223,7 @@ void mag::imobile_node_detach(const mac_address& mn_mac)
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
-	if (!be || be->bind_status != bulist_entry::k_bind_requested || be->bind_status != bulist_entry::k_bind_ack) {
+	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
 		_log(0, "Mobile Node detach error: not attached [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
 		return;
 	}
@@ -305,7 +306,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
-//			add_route_entries(be);
+			add_route_entries(be);
 			be->bind_status = bulist_entry::k_bind_ack;
 			irouter_advertisement(be->mn_id());
 
@@ -350,11 +351,18 @@ void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
 	be->timer.expires_from_now(boost::posix_time::milliseconds(delay * 1000.f));
 	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
 
-	_log(0, "PBU retry [id = ", pbinfo.id,
-	                 ", lma = ", pbinfo.address,
-	                 ", sequence = ", pbinfo.sequence,
-	                 ", retry_count = ", uint(be->retry_count),
-	                 ", delay = ", delay, "]");
+	if (pbinfo.lifetime)
+		_log(0, "PBU register retry [id = ", pbinfo.id,
+			                      ", lma = ", pbinfo.address,
+			                      ", sequence = ", pbinfo.sequence,
+			                      ", retry_count = ", uint(be->retry_count),
+			                      ", delay = ", delay, "]");
+	else
+		_log(0, "PBU de-register retry [id = ", pbinfo.id,
+			                         ", lma = ", pbinfo.address,
+			                         ", sequence = ", pbinfo.sequence,
+			                         ", retry_count = ", uint(be->retry_count),
+			                         ", delay = ", delay, "]");
 }
 
 void mag::add_route_entries(bulist_entry* be)

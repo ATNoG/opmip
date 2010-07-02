@@ -21,16 +21,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/logger.hpp>
-#include <opmip/ip/address.hpp>
-#include <opmip/ll/mac_address.hpp>
 #include <opmip/pmip/bulist.hpp>
 #include <opmip/pmip/node_db.hpp>
-#include <opmip/pmip/mp_sender.hpp>
 #include <opmip/pmip/mp_receiver.hpp>
 #include <opmip/pmip/icmp_receiver.hpp>
 #include <opmip/sys/ip6_tunnel.hpp>
 #include <opmip/sys/route_table.hpp>
-#include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/ip/icmp.hpp>
