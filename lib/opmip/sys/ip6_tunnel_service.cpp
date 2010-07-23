@@ -315,12 +315,12 @@ void ip6_tunnel_service::get(parameters& op, boost::system::error_code& ec)
 
 void ip6_tunnel_service::add(parameters& op, boost::system::error_code& ec)
 {
-	parameters tmp = op;
+//	parameters tmp = op;
 
 	io_control("ip6tnl0", ioctl_add, op.data(), ec);
-	if (!ec && (op != tmp))
-		ec = boost::system::error_code(boost::system::errc::invalid_argument,
-		                               boost::system::get_system_category());
+//	if (!ec && (op != tmp))
+//		ec = boost::system::error_code(boost::system::errc::invalid_argument,
+//		                               boost::system::get_system_category());
 }
 
 void ip6_tunnel_service::remove(parameters& op, boost::system::error_code& ec)

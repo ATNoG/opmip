@@ -30,6 +30,7 @@ lib opmip
 	  pmip/icmp_receiver.cpp
 	  pmip/mp_sender.cpp
 	  pmip/mp_receiver.cpp
+	  pmip/tunnels.cpp
 	  pmip/lma.cpp
 	  pmip/mag.cpp
 	  /boost//system
