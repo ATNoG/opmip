@@ -149,7 +149,7 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 		}
 		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
-		if (be->care_of_address.is_unspecified())
+		if (!be->care_of_address.is_unspecified())
 			del_route_entries(be);
 		be->care_of_address = pbinfo.address;
 		be->lifetime = pbinfo.lifetime;
@@ -184,6 +184,7 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 		be->timer.cancel();
 		be->bind_status = bcache_entry::k_bind_deregistered;
 		del_route_entries(be);
+		be->care_of_address = ip::address_v6();
 
 		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
 		be->timer.async_wait(boost::bind(&lma::bcache_remove_entry, this, _1, be->id()));
