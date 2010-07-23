@@ -25,8 +25,8 @@
 #include <opmip/pmip/bcache.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/pmip/mp_receiver.hpp>
+#include <opmip/pmip/tunnels.hpp>
 #include <opmip/sys/route_table.hpp>
-#include <opmip/sys/ip6_tunnel.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
 
@@ -53,7 +53,7 @@ public:
 public:
 	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const char* id, const ip_address& home_network_link);
+	void start(const char* id);
 	void stop();
 
 private:
@@ -63,7 +63,7 @@ private:
 	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 private:
-	void istart(const char* id, const ip_address& home_network_link);
+	void istart(const char* id);
 	void istop();
 
 	void iproxy_binding_update(proxy_binding_info& pbinfo);
@@ -81,12 +81,10 @@ private:
 
 	ip::mproto::socket _mp_sock;
 
-	sys::route_table _route_table;
-	uint             _tunnel_dev;
-	uint             _home_net_dev;
-	std::string      _identifier;
-	size_t           _concurrency;
-	sys::ip6_tunnel  _tunnel;
+	std::string       _identifier;
+	pmip::ip6_tunnels _tunnels;
+	sys::route_table  _route_table;
+	size_t            _concurrency;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

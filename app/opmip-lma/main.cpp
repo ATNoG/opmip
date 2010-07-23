@@ -39,20 +39,16 @@ void terminate(int)
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-	if (argc != 5) {
-		std::cerr << "usage: " << argv[0] << " id node-database home-network-link home-network-device-id\n"
+	if (argc != 3) {
+		std::cerr << "usage: " << argv[0] << " id node-database\n"
 			         "\n"
 			         " id                     - this MAG identifier\n"
-			         " node-database          - path to node database file\n"
-			         " home-network-link      - MAG access link local ip6 address\n"
-		             " home-network-device-id - MAG access link device id\n";
+			         " node-database          - path to node database file\n";
 		return 1;
 	}
 
 	const char* id                     = argv[1];
 	const char* node_database          = argv[2];
-	const char* home_network_link_addr = argv[3];
-	const char* home_network_link_id   = argv[4];
 
 	try {
 		size_t                  concurrency = boost::thread::hardware_concurrency();
@@ -81,9 +77,7 @@ int main(int argc, char** argv)
 			::sigaction(SIGINT, &sa, 0);
 		}
 
-		opmip::ip::address_v6 lla(opmip::ip::address_v6::from_string(home_network_link_addr));
-		lla.scope_id(boost::lexical_cast<uint>(home_network_link_id));
-		lma.start(id, lla);
+		lma.start(id);
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)

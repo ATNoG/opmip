@@ -33,14 +33,13 @@ bool validate_sequence_number(uint16 prev, uint16 current)
 ///////////////////////////////////////////////////////////////////////////////
 lma::lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 	: _service(ios), _node_db(ndb), _log("LMA", &std::cout), _mp_sock(ios),
-	  _route_table(ios), _tunnel_dev(0), _home_net_dev(0),
-	  _concurrency(concurrency), _tunnel(ios)
+	  _tunnels(ios), _route_table(ios), _concurrency(concurrency)
 {
 }
 
-void lma::start(const char* id, const ip_address& home_network_link)
+void lma::start(const char* id)
 {
-	_service.dispatch(boost::bind(&lma::istart, this, id, home_network_link));
+	_service.dispatch(boost::bind(&lma::istart, this, id));
 }
 
 void lma::stop()
@@ -77,32 +76,22 @@ void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::st
 	_service.dispatch(boost::bind(&lma::ibcache_remove_entry, this, mn_id));
 }
 
-void lma::istart(const char* id, const ip_address& home_network_link)
+void lma::istart(const char* id)
 {
-	_log(0, "Starting... [id = ", id, ", home_network_link = ", home_network_link, "]");
-
-	if (!home_network_link.is_link_local()) {
-		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
-
-		throw_exception(exception(ec, "Home network link must be a link local IPv6 address"));
-	}
-
 	const lma_node* node = _node_db.find_lma(id);
 	if (!node) {
 		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
 
 		throw_exception(exception(ec, "LMA id not found in node database"));
 	}
+	_log(0, "Starting... [id = ", id, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
 
-	_home_net_dev = home_network_link.scope_id();
-	_identifier   = id;
+	_identifier = id;
 
-	_tunnel.open("lma0", node->device_id(), node->address(), ip_address::any());
-	_tunnel.set_enable(true);
-	_tunnel_dev = _tunnel.get_device_id();
+	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		refcount_ptr<pbu_receiver> pbur(new pbu_receiver());
@@ -116,8 +105,9 @@ void lma::istop()
 	_log(0, "Stoping...");
 
 	_bcache.clear();
-	_tunnel.close();
 	_mp_sock.close();
+	_route_table.clear();
+	_tunnels.clear();
 }
 
 void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
@@ -217,27 +207,24 @@ void lma::ibcache_remove_entry(const std::string& mn_id)
 void lma::add_route_entries(bcache_entry* be)
 {
 	const bcache::net_prefix_list& npl = be->prefix_list();
+	uint tdev = _tunnels.get(be->care_of_address);
 
-	_log(0, "Add route entries [id = ", be->id(), "]");
-
-	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.add_by_src(*i, _tunnel_dev, be->care_of_address);
+	_log(0, "Add route entries [id = ", be->id(), ", tunnel = ", tdev, ", CoA = ", be->care_of_address, "]");
 
 	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.add_by_dst(*i, _home_net_dev);
+		_route_table.add_by_dst(*i, tdev);
 }
 
 void lma::del_route_entries(bcache_entry* be)
 {
 	const bcache::net_prefix_list& npl = be->prefix_list();
 
-	_log(0, "Remove route entries [id = ", be->id(), "]");
-
-	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.remove_by_src(*i);
+	_log(0, "Remove route entries [id = ", be->id(), ", CoA = ", be->care_of_address, "]");
 
 	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_dst(*i);
+
+	_tunnels.del(be->care_of_address);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
