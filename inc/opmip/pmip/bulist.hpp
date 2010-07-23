@@ -61,8 +61,8 @@ public:
 		: _mn_id(mn_id), _mn_link_addr(mn_link_address),
 		  _mn_prefix_list(mn_prefix_list), _lma_addr(lma_address),
 		  initial_lifetime(0), remaining_lifetime(0), sequence_number(std::time(nullptr)),
-		  timestamp(std::time(nullptr)), bind_status(k_bind_unknown), retry_count(0),
-		  timer(ios)
+		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
+		  bind_status(k_bind_unknown), retry_count(0), timer(ios)
 	{ }
 
 	const std::string&     mn_id() const              { return _mn_id; }
@@ -84,6 +84,7 @@ public:
 	uint64        initial_lifetime;    ///Initial Lifetime
 	uint64        remaining_lifetime;  ///Remaining Lifetime
 	uint16        sequence_number;     ///Last Sequence Number
+	uint16        last_ack_sequence;   ///Last Sequence Number
 	uint64        timestamp;           ///Timestamp to limit the send rate
 	bind_status_t bind_status;
 	uint          retry_count;

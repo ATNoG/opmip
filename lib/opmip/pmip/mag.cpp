@@ -198,9 +198,10 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 
 	proxy_binding_info pbinfo;
 
+	be->last_ack_sequence = be->sequence_number;
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
-	pbinfo.sequence = be->sequence_number;
+	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = ~0;
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
@@ -235,7 +236,7 @@ void mag::imobile_node_detach(const mac_address& mn_mac)
 
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
-	pbinfo.sequence = be->sequence_number;
+	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = 0;
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
@@ -293,12 +294,16 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 		return;
 	}
 
-	if (be->sequence_number != pbinfo.sequence) {
-		_log(0, "PBU error: sequence number invalid [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
+	if ((pbinfo.sequence <= be->last_ack_sequence) || (pbinfo.sequence > be->sequence_number)) {
+		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
+		                                          ", lma = ", pbinfo.address,
+		                                          ", sequence = ", be->last_ack_sequence,
+		                                                    " < ", pbinfo.sequence,
+		                                                   " <= ", be->sequence_number, "]");
 		return;
 	}
 
-	++be->sequence_number;
+	be->last_ack_sequence = pbinfo.sequence;
 
 	if (be->bind_status == bulist_entry::k_bind_requested) {
 		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
