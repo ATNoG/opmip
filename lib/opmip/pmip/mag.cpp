@@ -305,7 +305,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 
 	be->last_ack_sequence = pbinfo.sequence;
 
-	if (be->bind_status == bulist_entry::k_bind_requested) {
+	if (pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_requested) {
 		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
@@ -318,7 +318,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 			be->timer.cancel();
 		}
 
-	} else 	if (be->bind_status == bulist_entry::k_bind_detach) {
+	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
 		_log(0, "PBA de-registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 
 		be->timer.cancel();
