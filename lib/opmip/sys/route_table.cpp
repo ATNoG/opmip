@@ -79,6 +79,7 @@ bool route_table::remove_by_src(const ip::prefix_v6& prefix)
 	boost::system::error_code ec;
 
 	remove_by_src(res, ec);
+	_map_by_src.erase(res);
 	throw_on_error(ec, "opmip::sys::route_table::remove_by_src");
 
 	return true;
@@ -126,6 +127,7 @@ bool route_table::remove_by_dst(const ip::prefix_v6& prefix)
 	boost::system::error_code ec;
 
 	remove_by_dst(res, ec);
+	_map_by_dst.erase(res);
 	throw_on_error(ec, "opmip::sys::route_table::remove_by_dst");
 
 	return true;
