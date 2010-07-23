@@ -158,7 +158,9 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 
 	} else {
 		if (!validate_sequence_number(be->sequence, pbinfo.sequence)) {
-			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id,
+			                                     ", mag = ", pbinfo.address,
+			                                     ", sequence = ", be->sequence, " <> ", pbinfo.sequence, "]");
 			return; //error
 		}
 
@@ -197,9 +199,10 @@ void lma::ibcache_remove_entry(const std::string& mn_id)
 {
 	bcache_entry* be = _bcache.find(mn_id);
 	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
-		_log(0, "Binding cahe remove entry error: not found [id = ", mn_id, "]");
+		_log(0, "Binding cache remove entry error: not found [id = ", mn_id, "]");
 		return;
 	}
+	_log(0, "Binding cache remove entry [id = ", mn_id, "]");
 
 	_bcache.remove(be);
 }

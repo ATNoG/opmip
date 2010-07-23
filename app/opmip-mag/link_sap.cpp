@@ -37,6 +37,7 @@ void link_sap(opmip::pmip::mag& mag)
 				rtnetlink::if_link lnk(msg);
 
 				std::stringstream info;
+				bool do_log = false;
 
 				if (lnk.has_name())
 					info << ", name = " << lnk.name();
@@ -49,17 +50,20 @@ void link_sap(opmip::pmip::mag& mag)
 				case rtnetlink::if_link::we_attach:
 					mag.mobile_node_attach(lnk.wireless_address());
 					info << ", wireless = { event = attach, address = " << lnk.wireless_address() << "}";
+					do_log = true;
 					break;
 
 				case rtnetlink::if_link::we_detach:
 					mag.mobile_node_detach(lnk.wireless_address());
 					info << ", wireless = { event = detach, address = " << lnk.wireless_address() << "}";
+					do_log = true;
 					break;
 				}
 
-				log(0, "Link event [type = ", lnk.type(),
-				                 ", id = ", lnk.index(),
-				                 ", flags = ", lnk.flags(), info.str(), "]");
+				if (do_log)
+					log(0, "Link event [type = ", lnk.type(),
+						             ", id = ", lnk.index(),
+						             ", flags = ", lnk.flags(), info.str(), "]");
 			}
 
 		} while (msg.next());

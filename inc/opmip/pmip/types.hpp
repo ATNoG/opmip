@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_PMIP_PROXY_BINDING_INFO__HPP_
-#define OPMIP_PMIP_PROXY_BINDING_INFO__HPP_
+#ifndef OPMIP_PMIP_TYPES__HPP_
+#define OPMIP_PMIP_TYPES__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
@@ -55,4 +55,4 @@ struct proxy_binding_info {
 } /* namespace pmip */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_PMIP_MP_RECEIVER__HPP_ */
+#endif /* OPMIP_PMIP_TYPES__HPP_ */

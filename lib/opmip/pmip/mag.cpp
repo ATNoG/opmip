@@ -284,12 +284,12 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 {
 	bulist_entry* be = _bulist.find(pbinfo.id);
 	if (!be) {
-		_log(0, "PBU error: binding update list entry not found [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
+		_log(0, "PBA error: binding update list entry not found [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 		return;
 	}
 
 	if (be->lma_address() != pbinfo.address) {
-		_log(0, "PBU error: not this LMA [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
+		_log(0, "PBA error: not this LMA [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 		return;
 	}
 

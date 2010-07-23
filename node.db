@@ -26,14 +26,14 @@
 	[
 		{
 			"id"        : "patolas",
-			"ip-prefix" : "2001:690:2380:7775::/64",
+			"ip-prefix" : "3001:bbbb:a::/64",
 			"mac"       : "00:18:de:10:87:2a",
 			"lma-id"    : "kenny"
 		},
 		{
 			"id"        : "fluffy",
-			"ip-prefix" : "2001:690:2380:7774::/64",
-			"mac"       : "00:00:00:00:00:00",
+			"ip-prefix" : "3001:bbbb:b::/64",
+			"mac"       : "00:0f:b5:5c:4c:57",
 			"lma-id"    : "kenny"
 		}
 	]

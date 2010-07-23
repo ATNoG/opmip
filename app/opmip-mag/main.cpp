@@ -86,11 +86,6 @@ int main(int argc, char** argv)
 		lla.scope_id(boost::lexical_cast<uint>(access_link_id));
 		mag.start(id, lla);
 
-		boost::asio::deadline_timer timer(ios);
-
-		timer.expires_from_now(boost::posix_time::seconds(1));
-		timer.async_wait(boost::bind(&opmip::pmip::mag::mobile_node_attach, &mag, opmip::ll::mac_address::from_string("07:08:09:10:20:30")));
-
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
