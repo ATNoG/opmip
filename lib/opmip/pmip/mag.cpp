@@ -31,8 +31,8 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 mag::mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 	: _service(ios), _node_db(ndb), _log("MAG", &std::cout),
-	  _mp_sock(ios), _icmp_sock(ios), _tunnel_dev(0), _access_dev(0),
-	  _route_table(ios), _concurrency(concurrency), _tunnel(ios)
+	  _mp_sock(ios), _icmp_sock(ios), _access_dev(0), _tunnels(ios),
+	  _route_table(ios), _concurrency(concurrency)
 {
 }
 
@@ -116,8 +116,6 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, const proxy_b
 
 void mag::istart(const char* id, const ip_address& mn_access_link)
 {
-	_log(0, "Starting... [id = ", id, ", mn_access_link = ", mn_access_link, "]");
-
 	if (!mn_access_link.is_link_local()) {
 		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
 
@@ -130,6 +128,7 @@ void mag::istart(const char* id, const ip_address& mn_access_link)
 
 		throw_exception(exception(ec, "MAG id not found in node database"));
 	}
+	_log(0, "Starting... [id = ", id, ", mn_access_link = ", mn_access_link, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
@@ -139,12 +138,10 @@ void mag::istart(const char* id, const ip_address& mn_access_link)
 	_icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
 	_icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
 
-	_access_dev = mn_access_link.scope_id();
 	_identifier = id;
+	_access_dev = mn_access_link.scope_id();
 
-	_tunnel.open("mag0", node->device_id(), node->address(), ip_address::any());
-	_tunnel.set_enable(true);
-	_tunnel_dev = _tunnel.get_device_id();
+	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pba_receiver_ptr pbar(new pba_receiver);
@@ -166,7 +163,8 @@ void mag::istop()
 	_bulist.clear();
 	_mp_sock.close();
 	_icmp_sock.close();
-	_tunnel.close();
+	_route_table.clear();
+	_tunnels.clear();
 }
 
 void mag::imobile_node_attach(const mac_address& mn_mac)
@@ -368,27 +366,31 @@ void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
 void mag::add_route_entries(bulist_entry* be)
 {
 	const bulist::net_prefix_list& npl = be->mn_prefix_list();
+	uint adev = _access_dev;
+	uint tdev = _tunnels.get(be->lma_address());
 
-	_log(0, "Added route entries [id = ", be->mn_id(), "]");
+	_log(0, "Add route entries [id = ", be->mn_id(), ", tunnel = ", tdev, ", LMA = ", be->lma_address(), "]");
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.add_by_src(*i, _tunnel_dev, be->lma_address());
+		_route_table.add_by_dst(*i, adev);
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.add_by_dst(*i, _access_dev);
+		_route_table.add_by_src(*i, tdev);
 }
 
 void mag::del_route_entries(bulist_entry* be)
 {
 	const bulist::net_prefix_list& npl = be->mn_prefix_list();
 
-	_log(0, "Removed route entries [id = ", be->mn_id(), "]");
+	_log(0, "Remove route entries [id = ", be->mn_id(), ", LMA = ", be->lma_address(), "]");
+
+	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
+		_route_table.remove_by_dst(*i);
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_src(*i);
 
-	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
-		_route_table.remove_by_dst(*i);
+	_tunnels.del(be->lma_address());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

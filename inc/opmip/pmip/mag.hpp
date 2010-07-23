@@ -25,7 +25,7 @@
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/pmip/mp_receiver.hpp>
 #include <opmip/pmip/icmp_receiver.hpp>
-#include <opmip/sys/ip6_tunnel.hpp>
+#include <opmip/pmip/tunnels.hpp>
 #include <opmip/sys/route_table.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
@@ -86,12 +86,11 @@ private:
 	ip::mproto::socket            _mp_sock;
 	boost::asio::ip::icmp::socket _icmp_sock;
 
-	uint             _tunnel_dev;
-	uint             _access_dev;
-	sys::route_table _route_table;
-	std::string      _identifier;
-	size_t           _concurrency;
-	sys::ip6_tunnel  _tunnel;
+	std::string       _identifier;
+	uint              _access_dev;
+	pmip::ip6_tunnels _tunnels;
+	sys::route_table  _route_table;
+	size_t            _concurrency;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
