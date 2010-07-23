@@ -69,6 +69,7 @@ public:
 	std::pair<const_iterator, bool> find_by_dst(const ip_prefix& prefix) const;
 	bool                            remove_by_dst(const ip_prefix& prefix);
 
+	void clear();
 
 private:
 	void add_by_src(iterator& entry, boost::system::error_code& ec);

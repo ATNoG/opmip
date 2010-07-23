@@ -34,13 +34,7 @@ route_table::route_table(boost::asio::io_service& ios)
 
 route_table::~route_table()
 {
-	boost::system::error_code ec;
-
-	for (iterator i = _map_by_src.begin(), e = _map_by_src.end(); i != e; ++i)
-		remove_by_src(i, ec);
-
-	for (iterator i = _map_by_dst.begin(), e = _map_by_dst.end(); i != e; ++i)
-		remove_by_dst(i, ec);
+	clear();
 }
 
 std::pair<route_table::const_iterator, bool> route_table::add_by_src(const ip::prefix_v6& prefix, uint device, const ip::address_v6& gateway)
@@ -135,6 +129,17 @@ bool route_table::remove_by_dst(const ip::prefix_v6& prefix)
 	throw_on_error(ec, "opmip::sys::route_table::remove_by_dst");
 
 	return true;
+}
+
+void route_table::clear()
+{
+	boost::system::error_code ec;
+
+	for (iterator i = _map_by_src.begin(), e = _map_by_src.end(); i != e; ++i)
+		remove_by_src(i, ec);
+
+	for (iterator i = _map_by_dst.begin(), e = _map_by_dst.end(); i != e; ++i)
+		remove_by_dst(i, ec);
 }
 
 void route_table::add_by_src(iterator& entry, boost::system::error_code& ec)
