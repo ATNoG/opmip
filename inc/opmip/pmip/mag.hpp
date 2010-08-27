@@ -75,7 +75,6 @@ private:
 
 	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
 	void icmp_ra_send_handler(const boost::system::error_code& ec);
-	void icmp_rs_receive_handler(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
 
 	void proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo);
 
@@ -86,14 +85,16 @@ private:
 	void imobile_node_attach(const attach_info& ai);
 	void imobile_node_detach(const attach_info& ai);
 
-	void irouter_solicitation(const ip_address& address, const mac_address& mac);
+	void irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
 	void irouter_advertisement(const std::string& mn_id);
 
 	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
 	void iproxy_binding_retry(proxy_binding_info& pbinfo);
 
-	void add_route_entries(bulist_entry* be);
-	void del_route_entries(bulist_entry* be);
+	void add_route_entries(bulist_entry& be);
+	void del_route_entries(bulist_entry& be);
+
+	void setup_icmp_socket(bulist_entry& be);
 
 private:
 	strand   _service;
@@ -101,11 +102,9 @@ private:
 	node_db& _node_db;
 	logger   _log;
 
-	ip::mproto::socket            _mp_sock;
-	boost::asio::ip::icmp::socket _icmp_sock;
+	ip::mproto::socket _mp_sock;
 
 	std::string       _identifier;
-	uint              _access_dev;
 	pmip::ip6_tunnels _tunnels;
 	sys::route_table  _route_table;
 	size_t            _concurrency;

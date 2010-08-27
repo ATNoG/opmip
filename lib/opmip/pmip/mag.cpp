@@ -31,8 +31,8 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 mag::mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 	: _service(ios), _node_db(ndb), _log("MAG", &std::cout),
-	  _mp_sock(ios), _icmp_sock(ios), _access_dev(0), _tunnels(ios),
-	  _route_table(ios), _concurrency(concurrency)
+	  _mp_sock(ios), _tunnels(ios), _route_table(ios),
+	  _concurrency(concurrency)
 {
 }
 
@@ -91,18 +91,6 @@ void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 		_log(0, "ICMPv6 router advertisement send error: ", ec.message());
 }
 
-void mag::icmp_rs_receive_handler(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr)
-{
-	if (ec) {
-		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "ICMPv6 router solicitation receive error: ", ec.message());
-
-	} else {
-		_service.dispatch(boost::bind(&mag::irouter_solicitation, this, address, mac));
-		rsr->async_receive(_icmp_sock, boost::bind(&mag::icmp_rs_receive_handler, this, _1, _2, _3, _4));
-	}
-}
-
 void mag::proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo)
 {
 	if (ec) {
@@ -116,12 +104,6 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, const proxy_b
 
 void mag::istart(const char* id, const ip_address& mn_access_link)
 {
-	if (!mn_access_link.is_link_local()) {
-		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
-
-		throw_exception(exception(ec, "Access link must be a link local IPv6 address"));
-	}
-
 	const mag_node* node = _node_db.find_mag(id);
 	if (!node) {
 		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
@@ -133,14 +115,7 @@ void mag::istart(const char* id, const ip_address& mn_access_link)
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
 
-	_icmp_sock.open(boost::asio::ip::icmp::v6());
-	_icmp_sock.bind(boost::asio::ip::icmp::endpoint(mn_access_link, 0));
-	_icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
-	_icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
-	_icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
-
 	_identifier = id;
-	_access_dev = mn_access_link.scope_id();
 
 	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
@@ -148,12 +123,6 @@ void mag::istart(const char* id, const ip_address& mn_access_link)
 		pba_receiver_ptr pbar(new pba_receiver);
 
 		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3));
-	}
-
-	for (size_t i = 0; i < _concurrency; ++i) {
-		icmp_rs_receiver_ptr rsr(new icmp_rs_receiver);
-
-		rsr->async_receive(_icmp_sock, boost::bind(&mag::icmp_rs_receive_handler, this, _1, _2, _3, _4));
 	}
 }
 
@@ -163,7 +132,6 @@ void mag::istop()
 
 	_bulist.clear();
 	_mp_sock.close();
-	_icmp_sock.close();
 	_route_table.clear();
 	_tunnels.clear();
 }
@@ -188,6 +156,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 		                      ai.poa_ip_address, ai.poa_ll_address, ai.poa_dev_id);
 
 		_bulist.insert(be);
+		setup_icmp_socket(*be);
 
 		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_ll_address, ")"
 		                          ", lma = ", mn->lma_id(), " (", be->lma_address(), ")]");
@@ -227,13 +196,13 @@ void mag::imobile_node_detach(const attach_info& ai)
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
-		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_ll_address, ")", "]");
 		return;
 	}
 	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
 
 	if (be->bind_status == bulist_entry::k_bind_ack)
-		del_route_entries(be);
+		del_route_entries(*be);
 
 	proxy_binding_info pbinfo;
 
@@ -251,14 +220,23 @@ void mag::imobile_node_detach(const attach_info& ai)
 	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
 }
 
-void mag::irouter_solicitation(const ip_address& address, const mac_address& mac)
+void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr)
 {
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "ICMPv6 router solicitation receive error: ", ec.message());
+
+		return;
+	}
+
 	bulist_entry* be = _bulist.find(mac);
 	if (!be || be->bind_status != bulist_entry::k_bind_ack) {
 		_log(0, "Router Solicitation error: unknown mobile node [mac = ", mac, "]");
 		return;
 	}
 	_log(0, "Router solicitation [mac = ", mac, ", id = ", be->mn_id(), "]");
+
+	rsr->async_receive(be->icmp_sock, _service.wrap(boost::bind(&mag::irouter_solicitation, this, _1, _2, _3, _4)));
 
 	router_advertisement_info rainfo;
 
@@ -269,7 +247,7 @@ void mag::irouter_solicitation(const ip_address& address, const mac_address& mac
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
-	ras->async_send(_icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
+	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 }
 
 void mag::irouter_advertisement(const std::string& mn_id)
@@ -289,7 +267,7 @@ void mag::irouter_advertisement(const std::string& mn_id)
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
-	ras->async_send(_icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
+	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer
 	be->timer.async_wait(boost::bind(&mag::icmp_ra_timer_handler, this, _1, mn_id));
 }
@@ -322,7 +300,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
-			add_route_entries(be);
+			add_route_entries(*be);
 			be->bind_status = bulist_entry::k_bind_ack;
 			irouter_advertisement(be->mn_id());
 
@@ -381,13 +359,13 @@ void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
 			                         ", delay = ", delay, "]");
 }
 
-void mag::add_route_entries(bulist_entry* be)
+void mag::add_route_entries(bulist_entry& be)
 {
-	const bulist::net_prefix_list& npl = be->mn_prefix_list();
-	uint adev = _access_dev;
-	uint tdev = _tunnels.get(be->lma_address());
+	const bulist::net_prefix_list& npl = be.mn_prefix_list();
+	uint adev = be.poa_dev_id();
+	uint tdev = _tunnels.get(be.lma_address());
 
-	_log(0, "Add route entries [id = ", be->mn_id(), ", tunnel = ", tdev, ", LMA = ", be->lma_address(), "]");
+	_log(0, "Add route entries [id = ", be.mn_id(), ", tunnel = ", tdev, ", LMA = ", be.lma_address(), "]");
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_dst(*i, adev);
@@ -396,11 +374,11 @@ void mag::add_route_entries(bulist_entry* be)
 		_route_table.add_by_src(*i, tdev);
 }
 
-void mag::del_route_entries(bulist_entry* be)
+void mag::del_route_entries(bulist_entry& be)
 {
-	const bulist::net_prefix_list& npl = be->mn_prefix_list();
+	const bulist::net_prefix_list& npl = be.mn_prefix_list();
 
-	_log(0, "Remove route entries [id = ", be->mn_id(), ", LMA = ", be->lma_address(), "]");
+	_log(0, "Remove route entries [id = ", be.mn_id(), ", LMA = ", be.lma_address(), "]");
 
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_dst(*i);
@@ -408,7 +386,22 @@ void mag::del_route_entries(bulist_entry* be)
 	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_src(*i);
 
-	_tunnels.del(be->lma_address());
+	_tunnels.del(be.lma_address());
+}
+
+void mag::setup_icmp_socket(bulist_entry& be)
+{
+	be.icmp_sock.open(boost::asio::ip::icmp::v6());
+	be.icmp_sock.bind(boost::asio::ip::icmp::endpoint(be.poa_ip_address(), 0));
+	be.icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
+	be.icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
+	be.icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
+
+	for (size_t i = 0; i < _concurrency; ++i) {
+		icmp_rs_receiver_ptr rsr(new icmp_rs_receiver);
+
+		rsr->async_receive(be.icmp_sock, _service.wrap(boost::bind(&mag::irouter_solicitation, this, _1, _2, _3, _4)));
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

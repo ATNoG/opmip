@@ -25,6 +25,7 @@
 #include <opmip/ll/technology.hpp>
 #include <opmip/ll/mac_address.hpp>
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/ip/icmp.hpp>
 #include <boost/intrusive/rbtree.hpp>
 #include <string>
 #include <vector>
@@ -68,7 +69,8 @@ public:
 		  _poa_dev_id(poa_dev_id),
 		  initial_lifetime(0), remaining_lifetime(0), sequence_number(std::time(nullptr)),
 		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
-		  bind_status(k_bind_unknown), retry_count(0), mtu(1460), timer(ios)
+		  bind_status(k_bind_unknown), retry_count(0), mtu(1460),
+		  timer(ios), icmp_sock(ios)
 	{ }
 
 	const std::string&     mn_id() const              { return _mn_id; }
@@ -102,7 +104,8 @@ public:
 	uint          retry_count;
 	uint          mtu;
 
-	boost::asio::deadline_timer timer;
+	boost::asio::deadline_timer   timer;
+	boost::asio::ip::icmp::socket icmp_sock;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
