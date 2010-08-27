@@ -258,8 +258,14 @@ void mag::irouter_solicitation(const ip_address& address, const mac_address& mac
 	}
 	_log(0, "Router solicitation [mac = ", mac, ", id = ", be->mn_id(), "]");
 
-	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:14:6c:51:a7:3c"),
-	                                                                       1460, be->mn_prefix_list(), address));
+	router_advertisement_info rainfo;
+
+	rainfo.link_address = ll::mac_address::from_string("00:14:6c:51:a7:3c");
+	rainfo.mtu = 1460;
+	rainfo.prefix_list = be->mn_prefix_list();
+	rainfo.destination = address;
+
+	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
 	ras->async_send(_icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 }
@@ -272,9 +278,14 @@ void mag::irouter_advertisement(const std::string& mn_id)
 		return;
 	}
 
-	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:14:6c:51:a7:3c"),
-	                                                                       1460, be->mn_prefix_list(),
-	                                                                       ip::address_v6::from_string("ff02::1")));
+	router_advertisement_info rainfo;
+
+	rainfo.link_address = ll::mac_address::from_string("00:14:6c:51:a7:3c");
+	rainfo.mtu = 1460;
+	rainfo.prefix_list = be->mn_prefix_list();
+	rainfo.destination = ip::address_v6::from_string("ff02::1");
+
+	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
 	ras->async_send(_icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer

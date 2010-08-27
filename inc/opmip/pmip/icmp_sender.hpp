@@ -21,8 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/refcount.hpp>
-#include <opmip/ip/prefix.hpp>
-#include <opmip/ll/mac_address.hpp>
+#include <opmip/pmip/types.hpp>
 #include <boost/asio/ip/icmp.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,9 +36,7 @@ public:
 	typedef std::vector<ip::prefix_v6> prefix_list;
 
 public:
-	icmp_ra_sender(const ll::mac_address& mac, uint32 mtu,
-	                                           const prefix_list& preflist,
-	                                           const ip::address_v6& destination);
+	icmp_ra_sender(const router_advertisement_info& rainfo);
 
 	template<class Handler>
 	void async_send(boost::asio::ip::icmp::socket& sock, Handler handler)

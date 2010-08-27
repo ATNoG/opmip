@@ -51,6 +51,20 @@ struct proxy_binding_info {
 	ll::technology                    link_type;
 };
 
+struct router_advertisement_info {
+	router_advertisement_info()
+		: hop_limit(64), lifetime(~0), mtu(1500)
+	{ }
+
+
+	uint8                      hop_limit;
+	uint16                     lifetime;
+	ll::mac_address            link_address;
+	uint32                     mtu;
+	std::vector<ip::prefix_v6> prefix_list;
+	ip::address_v6             destination;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace pmip */ } /* namespace opmip */
 
