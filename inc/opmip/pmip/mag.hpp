@@ -42,14 +42,32 @@ public:
 	typedef ip::address_v6  ip_address;
 	typedef ll::mac_address mac_address;
 
+	struct attach_info {
+		attach_info(const ll::mac_address& mn_ll_address_,
+		            const ip::address_v6& poa_ip_address_,
+		            const ll::mac_address& poa_ll_address_,
+		            uint poa_dev_id_)
+
+			: mn_ll_address(mn_ll_address_), poa_ip_address(poa_ip_address_),
+			  poa_ll_address(poa_ll_address_), poa_dev_id(poa_dev_id_)
+		{ }
+
+
+		ll::mac_address  mn_ll_address;
+		ip::address_v6   poa_ip_address;
+		ll::mac_address  poa_ll_address;
+		uint             poa_dev_id;
+//		mobility_options mob_options;
+	};
+
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
 	void start(const char* id, const ip_address& mn_access_link);
 	void stop();
 
-	void mobile_node_attach(const mac_address& mn_mac);
-	void mobile_node_detach(const mac_address& mn_mac);
+	void mobile_node_attach(const attach_info& ai);
+	void mobile_node_detach(const attach_info& ai);
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
@@ -65,8 +83,8 @@ private:
 	void istart(const char* id, const ip_address& mn_access_link);
 	void istop();
 
-	void imobile_node_attach(const mac_address& mn_mac);
-	void imobile_node_detach(const mac_address& mn_mac);
+	void imobile_node_attach(const attach_info& ai);
+	void imobile_node_detach(const attach_info& ai);
 
 	void irouter_solicitation(const ip_address& address, const mac_address& mac);
 	void irouter_advertisement(const std::string& mn_id);

@@ -28,7 +28,7 @@
 #include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-void link_sap(opmip::pmip::mag& mag);
+void link_sap(opmip::pmip::mag& mag, const opmip::ip::address_v6& ll_ip_address, const opmip::ll::mac_address& ll_mac_address);
 static opmip::pmip::mag* main_service;
 
 void terminate(int)
@@ -40,20 +40,22 @@ void terminate(int)
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-	if (argc != 5) {
-		std::cerr << "usage: " << argv[0] << " id node-database lma-access-link mn-access-link-device-id\n"
+	if (argc != 6) {
+		std::cerr << "usage: " << argv[0] << " id node-database mn-access-link-ip-address mn-access-link-mac-address mn-access-link-device-id\n"
 			         "\n"
-			         " id                       - this MAG identifier\n"
-			         " node-database            - path to node database file\n"
-			         " mn-access-link-address   - mobile node(s) access link local ip6 address\n"
-			         " mn-access-link-device-id - mobile node(s) access link device id\n";
+			         " id                         - this MAG identifier\n"
+			         " node-database              - path to node database file\n"
+			         " mn-access-link-ip-address  - mobile node(s) access link local ip6 address\n"
+			         " mn-access-link-mac-address - mobile node(s) access link mac address\n"
+			         " mn-access-link-device-id   - mobile node(s) access link device id\n";
 		return 1;
 	}
 
 	const char* id               = argv[1];
 	const char* node_database    = argv[2];
 	const char* access_link_addr = argv[3];
-	const char* access_link_id   = argv[4];
+	const char* access_link_mac  = argv[4];
+	const char* access_link_id   = argv[5];
 
 	try {
 		size_t                  concurrency = boost::thread::hardware_concurrency();
@@ -90,7 +92,8 @@ int main(int argc, char** argv)
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
 
-		boost::thread* td = tg.create_thread(boost::bind(link_sap, boost::ref(mag)));
+		opmip::ll::mac_address mac(opmip::ll::mac_address::from_string(access_link_mac));
+		boost::thread* td = tg.create_thread(boost::bind(link_sap, boost::ref(mag), boost::cref(lla), boost::cref(mac)));
 
 		ios.run();
 		td->interrupt();

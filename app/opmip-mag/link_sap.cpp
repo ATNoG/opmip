@@ -23,7 +23,7 @@
 #include <sstream>
 
 ///////////////////////////////////////////////////////////////////////////////
-void link_sap(opmip::pmip::mag& mag)
+void link_sap(opmip::pmip::mag& mag, const opmip::ip::address_v6& ll_ip_address, const opmip::ll::mac_address& ll_mac_address)
 {
 	rtnetlink nl(rtnetlink::link);
 	rtnetlink::message msg;
@@ -47,16 +47,29 @@ void link_sap(opmip::pmip::mag& mag)
 					info << ", link_type = " << lnk.link_type();
 
 				switch (lnk.wireless_event()) {
-				case rtnetlink::if_link::we_attach:
-					mag.mobile_node_attach(lnk.wireless_address());
+				case rtnetlink::if_link::we_attach: {
+					opmip::pmip::mag::attach_info ai(lnk.wireless_address(),
+					                                 ll_ip_address,
+					                                 ll_mac_address,
+													 lnk.index());
+
+					mag.mobile_node_attach(ai);
 					info << ", wireless = { event = attach, address = " << lnk.wireless_address() << "}";
 					do_log = true;
-					break;
+				} break;
 
-				case rtnetlink::if_link::we_detach:
-					mag.mobile_node_detach(lnk.wireless_address());
+				case rtnetlink::if_link::we_detach: {
+					opmip::pmip::mag::attach_info ai(lnk.wireless_address(),
+					                                 ll_ip_address,
+					                                 ll_mac_address,
+													 lnk.index());
+
+					mag.mobile_node_detach(ai);
 					info << ", wireless = { event = detach, address = " << lnk.wireless_address() << "}";
 					do_log = true;
+				} break;
+
+				default:
 					break;
 				}
 

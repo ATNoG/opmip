@@ -46,14 +46,14 @@ void mag::stop()
 	_service.dispatch(boost::bind(&mag::istop, this));
 }
 
-void mag::mobile_node_attach(const mac_address& mn_mac)
+void mag::mobile_node_attach(const attach_info& ai)
 {
-	_service.dispatch(boost::bind(&mag::imobile_node_attach, this, mn_mac));
+	_service.dispatch(boost::bind(&mag::imobile_node_attach, this, ai));
 }
 
-void mag::mobile_node_detach(const mac_address& mn_mac)
+void mag::mobile_node_detach(const attach_info& ai)
 {
-	_service.dispatch(boost::bind(&mag::imobile_node_detach, this, mn_mac));
+	_service.dispatch(boost::bind(&mag::imobile_node_detach, this, ai));
 }
 
 void mag::mp_send_handler(const boost::system::error_code& ec)
@@ -168,32 +168,35 @@ void mag::istop()
 	_tunnels.clear();
 }
 
-void mag::imobile_node_attach(const mac_address& mn_mac)
+void mag::imobile_node_attach(const attach_info& ai)
 {
-	bulist_entry* be = _bulist.find(mn_mac);
+	bulist_entry* be = _bulist.find(ai.mn_ll_address);
 	if (!be) {
-		const mobile_node* mn = _node_db.find_mobile_node(mn_mac);
+		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
 		if (!mn) {
-			_log(0, "Mobile Node attach error: not authorized [mac = ", mn_mac, "]");
+			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_ll_address, "]");
 			return;
 		}
 
 		const lma_node* lma = _node_db.find_lma(mn->lma_id());
 		if (!lma) {
-			_log(0, "Mobile Node attach error: unknown LMA [mac = ", mn_mac, ", id = ", mn->id(), ", lma_id = ", mn->lma_id(), "]");
+			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", mn->lma_id(), "]");
 			return;
 		}
 
-		be = new bulist_entry(_service.get_io_service(), mn->id(), mn->mac_address(), mn->prefix_list(), lma->address());
+		be = new bulist_entry(_service.get_io_service(), mn->id(), ai.mn_ll_address, mn->prefix_list(), lma->address(),
+		                      ai.poa_ip_address, ai.poa_ll_address, ai.poa_dev_id);
+
 		_bulist.insert(be);
 
-		_log(0, "Mobile Node attach [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_id = ", mn->lma_id(), ", lma_ip = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_ll_address, ")"
+		                          ", lma = ", mn->lma_id(), " (", be->lma_address(), ")]");
 	} else {
-		_log(0, "Mobile Node re-attach [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
+		_log(0, "Mobile Node re-attach [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
-		_log(0, "Mobile Node attach error: previous bind failed [mac =", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
 
@@ -214,21 +217,20 @@ void mag::imobile_node_attach(const mac_address& mn_mac)
 	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
 }
 
-void mag::imobile_node_detach(const mac_address& mn_mac)
+void mag::imobile_node_detach(const attach_info& ai)
 {
-	const mobile_node* mn = _node_db.find_mobile_node(mn_mac);
+	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
 	if (!mn) {
-		_log(0, "Mobile Node detach error: not authorized [mac = ", mn_mac, "]");
+		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_ll_address, "]");
 		return;
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
-		_log(0, "Mobile Node detach error: not attached [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
+		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
-
-	_log(0, "Mobile Node detach [mac = ", mn_mac, ", id = ", be->mn_id(), ", lma_ip = ", be->lma_address(), "]");
+	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
 
 	if (be->bind_status == bulist_entry::k_bind_ack)
 		del_route_entries(be);
@@ -260,8 +262,8 @@ void mag::irouter_solicitation(const ip_address& address, const mac_address& mac
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = ll::mac_address::from_string("00:14:6c:51:a7:3c");
-	rainfo.mtu = 1460;
+	rainfo.link_address = be->poa_ll_address();
+	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
 	rainfo.destination = address;
 
@@ -280,8 +282,8 @@ void mag::irouter_advertisement(const std::string& mn_id)
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = ll::mac_address::from_string("00:14:6c:51:a7:3c");
-	rainfo.mtu = 1460;
+	rainfo.link_address = be->poa_ll_address();
+	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
