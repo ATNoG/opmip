@@ -31,9 +31,9 @@
 			"lma-id"    : "kenny"
 		},
 		{
-			"id"        : "fluffy",
+			"id"        : "butters",
 			"ip-prefix" : "3001:bbbb:b::/64",
-			"mac"       : "00:0f:b5:5c:4c:57",
+			"mac"       : "00:13:e8:ef:6e:81",
 			"lma-id"    : "kenny"
 		}
 	]

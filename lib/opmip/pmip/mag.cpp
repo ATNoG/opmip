@@ -135,6 +135,7 @@ void mag::istart(const char* id, const ip_address& mn_access_link)
 
 	_icmp_sock.open(boost::asio::ip::icmp::v6());
 	_icmp_sock.bind(boost::asio::ip::icmp::endpoint(mn_access_link, 0));
+	_icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
 	_icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
 	_icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
 
@@ -255,10 +256,9 @@ void mag::irouter_solicitation(const ip_address& address, const mac_address& mac
 		_log(0, "Router Solicitation error: unknown mobile node [mac = ", mac, "]");
 		return;
 	}
-
 	_log(0, "Router solicitation [mac = ", mac, ", id = ", be->mn_id(), "]");
 
-	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
+	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:14:6c:51:a7:3c"),
 	                                                                       1460, be->mn_prefix_list(), address));
 
 	ras->async_send(_icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
@@ -272,7 +272,7 @@ void mag::irouter_advertisement(const std::string& mn_id)
 		return;
 	}
 
-	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:18:f3:90:6d:00"),
+	icmp_ra_sender_ptr ras(new icmp_ra_sender(ll::mac_address::from_string("00:14:6c:51:a7:3c"),
 	                                                                       1460, be->mn_prefix_list(),
 	                                                                       ip::address_v6::from_string("ff02::1")));
 
