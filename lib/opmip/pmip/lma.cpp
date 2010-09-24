@@ -155,6 +155,7 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 		be->lifetime = pbinfo.lifetime;
 		be->sequence = pbinfo.sequence;
 		be->link_type = pbinfo.link_type;
+		be->bind_status = bcache_entry::k_bind_unknown;
 
 	} else {
 		if (!validate_sequence_number(be->sequence, pbinfo.sequence)) {
