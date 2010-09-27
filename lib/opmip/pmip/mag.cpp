@@ -74,32 +74,10 @@ void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	}
 }
 
-void mag::icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id)
-{
-	if (ec) {
-		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
-
-	} else {
-		_service.dispatch(boost::bind(&mag::irouter_advertisement, this, mn_id));
-	}
-}
-
 void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 {
 	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
 		_log(0, "ICMPv6 router advertisement send error: ", ec.message());
-}
-
-void mag::proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo)
-{
-	if (ec) {
-		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "PBU retry timer error: ", ec.message());
-
-	} else {
-		_service.dispatch(boost::bind(&mag::iproxy_binding_retry, this, pbinfo));
-	}
 }
 
 void mag::istart(const char* id, const ip_address& mn_access_link)
@@ -183,7 +161,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(1.5)); //FIXME: set a proper timer
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 }
 
 void mag::imobile_node_detach(const attach_info& ai)
@@ -217,7 +195,7 @@ void mag::imobile_node_detach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 }
 
 void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr)
@@ -250,8 +228,15 @@ void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_add
 	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 }
 
-void mag::irouter_advertisement(const std::string& mn_id)
+void mag::irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id)
 {
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
+
+		return;
+	}
+
 	bulist_entry* be = _bulist.find(mn_id);
 	if (!be || be->bind_status != bulist_entry::k_bind_ack) {
 		_log(0, "Router advertisement error: binding update list not found [id = ", be->mn_id(), "]");
@@ -269,7 +254,7 @@ void mag::irouter_advertisement(const std::string& mn_id)
 
 	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer
-	be->timer.async_wait(boost::bind(&mag::icmp_ra_timer_handler, this, _1, mn_id));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::irouter_advertisement, this, _1, mn_id)));
 }
 
 void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
@@ -302,7 +287,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			add_route_entries(*be);
 			be->bind_status = bulist_entry::k_bind_ack;
-			irouter_advertisement(be->mn_id());
+			irouter_advertisement(boost::system::error_code(), be->mn_id());
 
 		} else {
 			be->bind_status = bulist_entry::k_bind_error;
@@ -320,8 +305,15 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	}
 }
 
-void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
+void mag::iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo)
 {
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "PBU retry timer error: ", ec.message());
+
+		return;
+	}
+
 	bulist_entry* be = _bulist.find(pbinfo.id);
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_detach)) {
 		_log(0, "PBU retry error: binding update list entry not found [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
@@ -343,7 +335,7 @@ void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
 
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(delay * 1000.f));
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 
 	if (pbinfo.lifetime)
 		_log(0, "PBU register retry [id = ", pbinfo.id,

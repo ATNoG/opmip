@@ -73,10 +73,7 @@ private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
 
-	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
 	void icmp_ra_send_handler(const boost::system::error_code& ec);
-
-	void proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo);
 
 private:
 	void istart(const char* id, const ip_address& mn_access_link);
@@ -86,10 +83,10 @@ private:
 	void imobile_node_detach(const attach_info& ai);
 
 	void irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
-	void irouter_advertisement(const std::string& mn_id);
+	void irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id);
 
 	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
-	void iproxy_binding_retry(proxy_binding_info& pbinfo);
+	void iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
 
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);
