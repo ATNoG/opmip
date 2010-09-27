@@ -25,15 +25,21 @@
 	"mobile-nodes" :
 	[
 		{
+			"id"        : "butters",
+			"ip-prefix" : "2001:690:2380:7792::/64",
+			"mac"       : "00:13:e8:ef:6e:81",
+			"lma-id"    : "kenny"
+		},
+		{
 			"id"        : "patolas",
-			"ip-prefix" : "3001:bbbb:a::/64",
+			"ip-prefix" : "3001:690:2380:7793::/64",
 			"mac"       : "00:18:de:10:87:2a",
 			"lma-id"    : "kenny"
 		},
 		{
-			"id"        : "butters",
-			"ip-prefix" : "3001:bbbb:b::/64",
-			"mac"       : "00:13:e8:ef:6e:81",
+			"id"        : "marcelo",
+			"ip-prefix" : "3001:690:2380:7794::/64",
+			"mac"       : "00:1c:bf:6e:7b:15",
 			"lma-id"    : "kenny"
 		}
 	]
