@@ -60,8 +60,6 @@ private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur);
 
-	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
-
 private:
 	void istart(const char* id);
 	void istop();
@@ -71,7 +69,7 @@ private:
 	bool          pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo);
 	void          pbu_process(proxy_binding_info& pbinfo);
 
-	void ibcache_remove_entry(const std::string& mn_id);
+	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 	void add_route_entries(bcache_entry* be);
 	void del_route_entries(bcache_entry* be);

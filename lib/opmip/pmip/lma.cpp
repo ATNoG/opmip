@@ -65,17 +65,6 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
 }
 
-void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
-{
-	if (ec) {
-		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "Binding cache remove entry timer error: ", ec.message());
-		return;
-	}
-
-	_service.dispatch(boost::bind(&lma::ibcache_remove_entry, this, mn_id));
-}
-
 void lma::istart(const char* id)
 {
 	const lma_node* node = _node_db.find_lma(id);
@@ -232,12 +221,19 @@ void lma::pbu_process(proxy_binding_info& pbinfo)
 		be->care_of_address = ip::address_v6();
 
 		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
-		be->timer.async_wait(boost::bind(&lma::bcache_remove_entry, this, _1, be->id()));
+		be->timer.async_wait(_service.wrap(boost::bind(&lma::bcache_remove_entry, this, _1, be->id())));
 	}
 }
 
-void lma::ibcache_remove_entry(const std::string& mn_id)
+void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
 {
+	if (ec) {
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "Binding cache remove entry timer error: ", ec.message());
+
+		return;
+	}
+
 	bcache_entry* be = _bcache.find(mn_id);
 	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
 		_log(0, "Binding cache remove entry error: not found [id = ", mn_id, "]");
