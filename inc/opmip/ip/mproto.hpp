@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/sys/error.hpp>
 #include <opmip/ip/address.hpp>
+#include <opmip/ip/prefix.hpp>
 #include <boost/asio/basic_raw_socket.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -461,9 +462,10 @@ public:
 	}
 
 	enum types {
-		nai_type     = 8,
-		handoff_type = 23,
-		att_type     = 24,
+		nai_type       = 8,
+		netprefix_type = 22,
+		handoff_type   = 23,
+		att_type       = 24,
 	};
 
 	struct nai {
@@ -471,6 +473,14 @@ public:
 
 		uint8 subtype;
 		char  id[0];
+	};
+
+	struct netprefix {
+		static const uint8 type_value = 22;
+
+		uint8                 reserved;
+		uint8                 length;
+		prefix_v6::bytes_type prefix;
 	};
 
 	struct handoff {
