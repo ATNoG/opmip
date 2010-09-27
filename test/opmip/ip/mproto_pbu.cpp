@@ -16,11 +16,18 @@
 //=============================================================================
 
 #include <opmip/ip/mproto.hpp>
+#include <opmip/pmip/mp_sender.hpp>
+#include <opmip/pmip/mp_receiver.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void send_pbu(opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep);
-static void receive_pbu(opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep);
+static void send_pbu(boost::asio::io_service& ios, opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep);
+static void receive_pbu(boost::asio::io_service& ios, opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep);
+
+inline void send_handler()
+{
+}
 
 int main()
 {
@@ -28,66 +35,27 @@ int main()
 	opmip::ip::mproto::endpoint ep(opmip::ip::address_v6::loopback());
 	opmip::ip::mproto::socket   sock(ios, opmip::ip::mproto::endpoint());
 
-	send_pbu(sock, ep);
-	receive_pbu(sock, ep);
+	send_pbu(ios, sock, ep);
+	receive_pbu(ios, sock, ep);
 }
 
-static void send_pbu(opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep)
+static void send_pbu(boost::asio::io_service& ios, opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep)
 {
-	using namespace opmip;
-	char buffer[1460];
+	opmip::pmip::proxy_binding_info pbinfo;
 
-	std::fill(buffer, buffer + sizeof(buffer), 0);
 
-	std::string         id("mobile-node");
-	ip::mproto::pbu*    pbu = new(buffer) ip::mproto::pbu;
-	ip::mproto::option* opt;
-	::size_t            len = sizeof(ip::mproto::pbu);
+	pbinfo.id = "mobile-node";
+	pbinfo.sequence = 1234;
+	pbinfo.lifetime = ~0;
 
-	pbu->sequence(1234);
-	pbu->ack(true);
-	pbu->proxy_reg(true);
-	pbu->lifetime(~0);
+	opmip::pmip::pbu_sender_ptr pbus(new opmip::pmip::pbu_sender(pbinfo));
 
-	//
-	// NAI Option
-	//
-	ip::mproto::option::nai* nai;
-
-	opt = new(buffer + len) ip::mproto::option(ip::mproto::option::nai(), id.length());
-	nai = opt->get<ip::mproto::option::nai>();
-	nai->subtype = 1;
-	std::copy(id.begin(), id.end(), nai->id);
-	len += ip::mproto::option::size(opt);
-
-	//
-	// Handoff Option
-	//
-	ip::mproto::option::handoff* hof;
-
-	opt = new(buffer + len) ip::mproto::option(ip::mproto::option::handoff());
-	hof = opt->get<ip::mproto::option::handoff>();
-	hof->indicator = 4; //Handoff state unknown
-	len += ip::mproto::option::size(opt);
-
-	//
-	//	Access Type Technology
-	//
-	ip::mproto::option::att* att;
-
-	opt = new(buffer + len) ip::mproto::option(ip::mproto::option::att());
-	att = opt->get<ip::mproto::option::att>();
-	att->tech_type = ip::mproto::option::att::ieee802_11abg;
-	len += ip::mproto::option::size(opt);
-
-	len = align_to<8>(len);
-	pbu->init(ip::mproto::pbu::mh_type, len);
-
-	std::cout << "Sended = " << len << std::endl;
-	sock.send_to(boost::asio::buffer(buffer, len), ep);
+	pbus->async_send(sock, boost::bind(&send_handler));
+	ios.run();
 }
 
-static void receive_pbu(opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep)
+
+static void receive_pbu(boost::asio::io_service& ios, opmip::ip::mproto::socket& sock, opmip::ip::mproto::endpoint& ep)
 {
 	using namespace opmip;
 	char     buffer[1460];
@@ -137,11 +105,11 @@ static void receive_pbu(opmip::ip::mproto::socket& sock, opmip::ip::mproto::endp
 					break;
 				}
 				if (!id.empty())
-					std::cerr << "option identifier: duplicate ";
+					std::cout << "option identifier: duplicate";
 				else
-					std::cerr << "option identifier: ";
+					std::cout << "option identifier: ";
 				id.assign(nai->id, opt->length - 1);
-				std::cout << " NAI " << id << std::endl;
+				std::cout << id << std::endl;
 			}
 			break;
 
