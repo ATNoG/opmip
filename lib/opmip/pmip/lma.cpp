@@ -61,7 +61,7 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 		return;
 	}
 
-	_service.dispatch(boost::bind(&lma::iproxy_binding_update, this, pbinfo));
+	_service.dispatch(boost::bind(&lma::proxy_binding_update, this, pbinfo));
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
 }
 
@@ -110,31 +110,13 @@ void lma::istop()
 	_tunnels.clear();
 }
 
-void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
+void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 {
 	_log(0, "PBU [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
-	bcache_entry* be = _bcache.find(pbinfo.id);
-	if (!be) {
-		if (!pbinfo.lifetime) {
-			_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
-
-		const mobile_node* mn = _node_db.find_mobile_node(pbinfo.id);
-		if (!mn) {
-			_log(0, "PBU registration error: unknown mobile node [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-
-		}
-		if (mn->lma_id() != _identifier) {
-			_log(0, "PBU registration error: not this LMA [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
-
-		be = new bcache_entry(_service.get_io_service(), pbinfo.id, mn->prefix_list());
-		_bcache.insert(be);
-	}
+	bcache_entry* be = pbu_get_be(pbinfo);
+	if (!be)
+		return;
 
 	if (be->care_of_address != pbinfo.address) {
 		const mag_node* mag = _node_db.find_mag(pbinfo.address);
@@ -195,6 +177,35 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 	pba_sender_ptr pbas(new pba_sender(pbinfo));
 
 	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
+}
+
+bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
+{
+	bcache_entry* be = _bcache.find(pbinfo.id);
+	if (be)
+		return be;
+
+	if (!pbinfo.lifetime) {
+		_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		return nullptr; //error
+	}
+
+	const mobile_node* mn = _node_db.find_mobile_node(pbinfo.id);
+	if (!mn) {
+		_log(0, "PBU registration error: unknown mobile node [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		return nullptr; //error
+
+	}
+
+	if (mn->lma_id() != _identifier) {
+		_log(0, "PBU registration error: not this LMA [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		return nullptr; //error
+	}
+
+	be = new bcache_entry(_service.get_io_service(), pbinfo.id, mn->prefix_list());
+	_bcache.insert(be);
+
+	return be;
 }
 
 void lma::ibcache_remove_entry(const std::string& mn_id)
