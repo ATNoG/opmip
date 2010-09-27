@@ -114,6 +114,9 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 {
 	_log(0, "PBU [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
+	if (pbinfo.status != ip::mproto::pba::status_ok)
+		return; //error
+
 	pbu_process(pbinfo);
 
 	pba_sender_ptr pbas(new pba_sender(pbinfo));
@@ -123,25 +126,34 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 
 bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
 {
+	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
+
 	bcache_entry* be = _bcache.find(pbinfo.id);
 	if (be)
 		return be;
 
-	if (!pbinfo.lifetime) {
-		_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-		return nullptr; //error
+	if (!_node_db.find_mag(pbinfo.address)) {
+		_log(0, "PBU registration error: MAG not authorized [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
+		return nullptr;
 	}
 
 	const mobile_node* mn = _node_db.find_mobile_node(pbinfo.id);
 	if (!mn) {
 		_log(0, "PBU registration error: unknown mobile node [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-		return nullptr; //error
-
+		pbinfo.status = ip::mproto::pba::status_not_lma_for_this_mn;
+		return nullptr;
 	}
 
 	if (mn->lma_id() != _identifier) {
 		_log(0, "PBU registration error: not this LMA [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-		return nullptr; //error
+		pbinfo.status = ip::mproto::pba::status_not_lma_for_this_mn;
+		return nullptr;
+	}
+
+	if (!pbinfo.lifetime) {
+		_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		return nullptr; //note: no error for this
 	}
 
 	be = new bcache_entry(_service.get_io_service(), pbinfo.id, mn->prefix_list());
@@ -152,16 +164,19 @@ bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
 
 bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 {
+	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
+
 	if (be.care_of_address != pbinfo.address) {
 		const mag_node* mag = _node_db.find_mag(pbinfo.address);
 		if (!mag) {
 			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return false; //error
+			pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
+			return false;
 		}
 
 		if (!pbinfo.lifetime) {
 			_log(0, "PBU de-registration error: not this MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return false; //error
+			return false; //note: no error for this
 		}
 		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
@@ -178,7 +193,8 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id,
 			                                     ", mag = ", pbinfo.address,
 			                                     ", sequence = ", be.sequence, " <> ", pbinfo.sequence, "]");
-			return false; //error
+			pbinfo.status = ip::mproto::pba::status_bad_sequence;
+			return false;
 		}
 
 		be.lifetime = pbinfo.lifetime;
