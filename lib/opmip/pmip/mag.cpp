@@ -154,6 +154,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = ~0;
+	pbinfo.prefix_list = be->mn_prefix_list();
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
@@ -188,6 +189,7 @@ void mag::imobile_node_detach(const attach_info& ai)
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = 0;
+	pbinfo.prefix_list = be->mn_prefix_list();
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
