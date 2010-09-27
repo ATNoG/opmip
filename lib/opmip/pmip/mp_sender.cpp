@@ -25,9 +25,6 @@ static size_t append_options(uchar* buffer, size_t len, const proxy_binding_info
 {
 	ip::mproto::option* opt;
 
-
-	len = align_to<8>(len);
-
 	//
 	// NAI Option
 	//
@@ -38,6 +35,26 @@ static size_t append_options(uchar* buffer, size_t len, const proxy_binding_info
 	nai->subtype = 1;
 	std::copy(pbinfo.id.begin(), pbinfo.id.end(), nai->id);
 	len += ip::mproto::option::size(opt);
+
+	//
+	// Network Prefix Option
+	//
+	ip::mproto::option::netprefix* npf;
+
+	if (pbinfo.prefix_list.empty()) {
+		opt = new(buffer + len) ip::mproto::option(ip::mproto::option::netprefix());
+		npf = opt->get<ip::mproto::option::netprefix>();
+		len += ip::mproto::option::size(opt);
+
+	} else {
+		for (auto i = pbinfo.prefix_list.begin(), e = pbinfo.prefix_list.end(); i != e; ++i) {
+			opt = new(buffer + len) ip::mproto::option(ip::mproto::option::netprefix());
+			npf = opt->get<ip::mproto::option::netprefix>();
+			npf->length = i->length();
+			npf->prefix = i->bytes();
+			len += ip::mproto::option::size(opt);
+		}
+	}
 
 	//
 	// Handoff Option
