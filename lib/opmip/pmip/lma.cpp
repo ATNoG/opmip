@@ -114,36 +114,8 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 {
 	_log(0, "PBU [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
-	bcache_entry* be = pbu_get_be(pbinfo);
-	if (!be)
-		return;
+	pbu_process(pbinfo);
 
-	if (!pbu_mag_checkin(*be, pbinfo))
-		return;
-
-	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
-		_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-
-		be->timer.cancel();
-		be->bind_status = bcache_entry::k_bind_unknown;
-		add_route_entries(be);
-	}
-
-	BOOST_ASSERT((be->bind_status != bcache_entry::k_bind_unknown));
-
-	if (!pbinfo.lifetime && be->bind_status == bcache_entry::k_bind_registered) {
-		_log(0, "PBU de-registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-
-		be->timer.cancel();
-		be->bind_status = bcache_entry::k_bind_deregistered;
-		del_route_entries(be);
-		be->care_of_address = ip::address_v6();
-
-		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
-		be->timer.async_wait(boost::bind(&lma::bcache_remove_entry, this, _1, be->id()));
-	}
-
-	pbinfo.status = ip::mproto::pba::status_ok;
 	pba_sender_ptr pbas(new pba_sender(pbinfo));
 
 	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
@@ -214,6 +186,38 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 	}
 
 	return true;
+}
+
+void lma::pbu_process(proxy_binding_info& pbinfo)
+{
+	bcache_entry* be = pbu_get_be(pbinfo);
+	if (!be)
+		return;
+
+	if (!pbu_mag_checkin(*be, pbinfo))
+		return;
+
+	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
+		_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+
+		be->timer.cancel();
+		be->bind_status = bcache_entry::k_bind_registered;
+		add_route_entries(be);
+	}
+
+	BOOST_ASSERT((be->bind_status != bcache_entry::k_bind_unknown));
+
+	if (!pbinfo.lifetime && be->bind_status == bcache_entry::k_bind_registered) {
+		_log(0, "PBU de-registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+
+		be->timer.cancel();
+		be->bind_status = bcache_entry::k_bind_deregistered;
+		del_route_entries(be);
+		be->care_of_address = ip::address_v6();
+
+		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
+		be->timer.async_wait(boost::bind(&lma::bcache_remove_entry, this, _1, be->id()));
+	}
 }
 
 void lma::ibcache_remove_entry(const std::string& mn_id)

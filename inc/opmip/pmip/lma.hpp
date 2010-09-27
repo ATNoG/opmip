@@ -69,6 +69,7 @@ private:
 	void          proxy_binding_update(proxy_binding_info& pbinfo);
 	bcache_entry* pbu_get_be(proxy_binding_info& pbinfo);
 	bool          pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo);
+	void          pbu_process(proxy_binding_info& pbinfo);
 
 	void ibcache_remove_entry(const std::string& mn_id);
 
