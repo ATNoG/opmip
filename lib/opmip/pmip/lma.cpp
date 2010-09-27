@@ -118,44 +118,14 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 	if (!be)
 		return;
 
-	if (be->care_of_address != pbinfo.address) {
-		const mag_node* mag = _node_db.find_mag(pbinfo.address);
-		if (!mag) {
-			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
-
-		if (!pbinfo.lifetime) {
-			_log(0, "PBU de-registration error: not this MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
-		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-
-		if (!be->care_of_address.is_unspecified())
-			del_route_entries(be);
-		be->care_of_address = pbinfo.address;
-		be->lifetime = pbinfo.lifetime;
-		be->sequence = pbinfo.sequence;
-		be->link_type = pbinfo.link_type;
-		be->bind_status = bcache_entry::k_bind_unknown;
-
-	} else {
-		if (!validate_sequence_number(be->sequence, pbinfo.sequence)) {
-			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id,
-			                                     ", mag = ", pbinfo.address,
-			                                     ", sequence = ", be->sequence, " <> ", pbinfo.sequence, "]");
-			return; //error
-		}
-
-		be->lifetime = pbinfo.lifetime;
-		be->sequence = pbinfo.sequence;
-	}
+	if (!pbu_mag_checkin(*be, pbinfo))
+		return;
 
 	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
 		_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
 		be->timer.cancel();
-		be->bind_status = bcache_entry::k_bind_registered;
+		be->bind_status = bcache_entry::k_bind_unknown;
 		add_route_entries(be);
 	}
 
@@ -206,6 +176,44 @@ bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
 	_bcache.insert(be);
 
 	return be;
+}
+
+bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
+{
+	if (be.care_of_address != pbinfo.address) {
+		const mag_node* mag = _node_db.find_mag(pbinfo.address);
+		if (!mag) {
+			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			return false; //error
+		}
+
+		if (!pbinfo.lifetime) {
+			_log(0, "PBU de-registration error: not this MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			return false; //error
+		}
+		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+
+		if (!be.care_of_address.is_unspecified())
+			del_route_entries(&be);
+		be.care_of_address = pbinfo.address;
+		be.lifetime = pbinfo.lifetime;
+		be.sequence = pbinfo.sequence;
+		be.link_type = pbinfo.link_type;
+		be.bind_status = bcache_entry::k_bind_unknown;
+
+	} else {
+		if (!validate_sequence_number(be.sequence, pbinfo.sequence)) {
+			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id,
+			                                     ", mag = ", pbinfo.address,
+			                                     ", sequence = ", be.sequence, " <> ", pbinfo.sequence, "]");
+			return false; //error
+		}
+
+		be.lifetime = pbinfo.lifetime;
+		be.sequence = pbinfo.sequence;
+	}
+
+	return true;
 }
 
 void lma::ibcache_remove_entry(const std::string& mn_id)
