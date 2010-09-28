@@ -18,6 +18,7 @@
 #include <opmip/base.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/sys/if_service.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -28,13 +29,36 @@
 #include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-void link_sap(opmip::pmip::mag& mag, const opmip::ip::address_v6& ll_ip_address, const opmip::ll::mac_address& ll_mac_address);
-static opmip::pmip::mag* main_service;
+static opmip::sys::if_service* ifs_service;
+static opmip::pmip::mag*       mag_service;
 
 void terminate(int)
 {
 	std::cout << "\r";
-	main_service->stop();
+	ifs_service->stop();
+	mag_service->stop();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void link_event(const boost::system::error_code& ec,
+                const opmip::sys::if_service::event& event,
+                opmip::pmip::mag& mag,
+                const opmip::ip::address_v6& ll_ip_address,
+                const opmip::ll::mac_address& ll_mac_address)
+{
+	if (ec || (event.if_wireless.which != opmip::sys::impl::if_service::wevent_attach
+		       && event.if_wireless.which != opmip::sys::impl::if_service::wevent_detach))
+		return;
+
+	opmip::pmip::mag::attach_info ai(event.if_wireless.address,
+	                                 ll_ip_address,
+	                                 ll_mac_address,
+									 event.if_index);
+
+	if (event.if_wireless.which == opmip::sys::impl::if_service::wevent_attach)
+		mag.mobile_node_attach(ai);
+	else
+		mag.mobile_node_detach(ai);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,6 +86,7 @@ int main(int argc, char** argv)
 		boost::asio::io_service ios(concurrency);
 		opmip::pmip::node_db    ndb;
 		opmip::pmip::mag        mag(ios, ndb, concurrency);
+		opmip::sys::if_service  ifs(ios);
 
 		{
 			std::ifstream in(node_database);
@@ -79,7 +104,8 @@ int main(int argc, char** argv)
 			struct ::sigaction sa;
 
 			std::memset(&sa, 0, sizeof(sa));
-			main_service = &mag;
+			ifs_service = &ifs;
+			mag_service = &mag;
 			sa.sa_handler = terminate;
 			::sigaction(SIGINT, &sa, 0);
 		}
@@ -88,16 +114,14 @@ int main(int argc, char** argv)
 		lla.scope_id(boost::lexical_cast<uint>(access_link_id));
 		mag.start(id, lla);
 
+		opmip::ll::mac_address mac(opmip::ll::mac_address::from_string(access_link_mac));
+		ifs.start(boost::bind(link_event, _1, _2, boost::ref(mag), boost::cref(lla), boost::cref(mac)));
+
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
 
-		opmip::ll::mac_address mac(opmip::ll::mac_address::from_string(access_link_mac));
-		boost::thread* td = tg.create_thread(boost::bind(link_sap, boost::ref(mag), boost::cref(lla), boost::cref(mac)));
-
 		ios.run();
-		td->interrupt();
-		td->detach();
 		tg.join_all();
 
 	} catch(std::exception& e) {

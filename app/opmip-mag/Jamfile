@@ -17,9 +17,6 @@
 
 exe opmip-mag
 	: main.cpp
-	  link_sap.cpp
-	  netlink.cpp
-	  rtnetlink.cpp
 	  ../../lib/opmip
 	  /boost//thread
 	;
