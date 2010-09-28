@@ -21,6 +21,7 @@ project opmip
 lib opmip
 	: ip/prefix.cpp
 	  ll/mac_address.cpp
+	  sys/impl/if_service.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
 	  pmip/node_db.cpp
