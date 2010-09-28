@@ -133,8 +133,10 @@ public:
 	explicit message(message_iterator& mit)
 		: _frame(nullptr), _length(0), _capacity(0)
 	{
-		if (mit->type >= message_type::m_begin && mit->type < message_type::m_end)
+		if (mit->type >= message_type::m_begin && mit->type < message_type::m_end) {
 			_frame = reinterpret_cast<frame*>(mit.operator->());
+			_length = _frame->hdr.length;
+		}
 	}
 
 	~message()
@@ -176,7 +178,7 @@ public:
 	attr_iterator abegin()
 	{
 		void* buff = reinterpret_cast<uchar*>(_frame) + align_to_<4, sizeof(frame)>::value;
-		size_t len = _length - align_to_<4, sizeof(frame)>::value;
+		size_t len = _length - std::min<size_t>(size_t(align_to_<4, sizeof(frame)>::value), _length);
 
 		return attr_iterator(buff, len);
 	}

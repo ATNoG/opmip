@@ -43,7 +43,7 @@ public:
 	message_iterator& operator++()
 	{
 		uchar* next = reinterpret_cast<uchar*>(_header) + align_to<4>(_header->length);
-		size_t len  = _length - (std::min)(align_to<4, size_t>(_header->length), _length);
+		size_t len  = _length - std::min<size_t>(align_to<4>(_header->length), _length);
 
 		BOOST_ASSERT(_header);
 
