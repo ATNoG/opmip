@@ -24,3 +24,8 @@ exe route_table
 	: route_table.cpp
 	  ../../../lib/opmip//opmip
 	;
+
+exe if_service
+	: if_service.cpp
+	  ../../../lib/opmip//opmip
+	;
