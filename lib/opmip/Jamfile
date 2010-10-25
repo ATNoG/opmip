@@ -15,9 +15,6 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project opmip
-	;
-
 lib opmip
 	: ip/prefix.cpp
 	  ll/mac_address.cpp

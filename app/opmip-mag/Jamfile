@@ -20,3 +20,5 @@ exe opmip-mag
 	  ../../lib/opmip
 	  /boost//thread
 	;
+
+install install : opmip-mag : <location>../../dist ;

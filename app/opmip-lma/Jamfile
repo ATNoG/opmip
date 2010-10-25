@@ -20,3 +20,5 @@ exe opmip-lma
 	  ../../lib/opmip
 	  /boost//thread
 	;
+
+install install : opmip-lma : <location>../../dist ;

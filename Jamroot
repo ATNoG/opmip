@@ -26,5 +26,10 @@ project opmip
 
 boost.use-project 1.42 ;
 
-build-project lib/opmip//opmip ;
+build-project app/opmip-mag ;
+build-project app/opmip-lma ;
 
+alias install
+	: app/opmip-lma//install
+	  app/opmip-mag//install
+	;
