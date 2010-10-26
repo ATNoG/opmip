@@ -21,6 +21,8 @@ lib opmip
 	  sys/impl/if_service.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
+	  sys/signals.cpp
+	  sys/signals_unix.cpp
 	  pmip/node_db.cpp
 	  pmip/bcache.cpp
 	  pmip/bulist.cpp
