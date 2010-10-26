@@ -18,6 +18,7 @@
 #include <opmip/base.hpp>
 #include <opmip/pmip/lma.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/sys/signals.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -25,15 +26,12 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-static opmip::pmip::lma* main_service;
-
-void terminate(int)
+void interrupt(opmip::pmip::lma& lma)
 {
 	std::cout << "\r";
-	main_service->stop();
+	lma.stop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,14 +66,10 @@ int main(int argc, char** argv)
 			std::cout << "Loaded " << n << " nodes from database\n";
 		}
 
-		{
-			struct ::sigaction sa;
+		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
+		                                                 boost::ref(lma)));
 
-			std::memset(&sa, 0, sizeof(sa));
-			main_service = &lma;
-			sa.sa_handler = terminate;
-			::sigaction(SIGINT, &sa, 0);
-		}
+		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
 		lma.start(id);
 

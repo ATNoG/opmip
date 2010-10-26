@@ -19,6 +19,7 @@
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/sys/if_service.hpp>
+#include <opmip/sys/signals.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -26,17 +27,13 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-static opmip::sys::if_service* ifs_service;
-static opmip::pmip::mag*       mag_service;
-
-void terminate(int)
+static void interrupt(opmip::sys::if_service& ifs, opmip::pmip::mag& mag)
 {
 	std::cout << "\r";
-	ifs_service->stop();
-	mag_service->stop();
+	ifs.stop();
+	mag.stop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -100,15 +97,11 @@ int main(int argc, char** argv)
 			std::cout << "Loaded " << n << " nodes from database\n";
 		}
 
-		{
-			struct ::sigaction sa;
+		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
+		                                                 boost::ref(ifs),
+		                                                 boost::ref(mag)));
 
-			std::memset(&sa, 0, sizeof(sa));
-			ifs_service = &ifs;
-			mag_service = &mag;
-			sa.sa_handler = terminate;
-			::sigaction(SIGINT, &sa, 0);
-		}
+		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
 		opmip::ip::address_v6 lla(opmip::ip::address_v6::from_string(access_link_addr));
 		lla.scope_id(boost::lexical_cast<uint>(access_link_id));
