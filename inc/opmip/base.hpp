@@ -99,6 +99,28 @@ inline ParentT* parent_of(MemberT* member, MemberT ParentT::* Member)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+template<class T, class U>
+inline T offset_cast(U* from, size_t offset)
+{
+	//TODO: add support for references
+	//      make sure this only works with pointers and references
+
+	uchar* p = reinterpret_cast<uchar*>(from);
+
+	return reinterpret_cast<T>(p + offset);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+template<class T>
+inline T remaining_length(T length, T position)
+{
+	if (position > length)
+		return 0;
+
+	return length - position;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 template<size_t Alignment, class Integral>
 inline Integral align_to(Integral value)
 {
