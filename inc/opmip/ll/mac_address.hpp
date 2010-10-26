@@ -43,6 +43,11 @@ public:
 		_address.assign(0);
 	}
 
+	explicit mac_address(const uint8 address[6])
+	{
+		std::copy(address, address + 6, _address.begin());
+	}
+
 	explicit mac_address(const bytes_type& address)
 	{
 		std::copy(address.begin(), address.end(), _address.begin());

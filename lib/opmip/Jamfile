@@ -17,6 +17,7 @@
 
 lib opmip
 	: ip/prefix.cpp
+	  linux/nl80211.cpp
 	  ll/mac_address.cpp
 	  net/link/ethernet.cpp
 	  pmip/node_db.cpp
