@@ -1,15 +1,11 @@
 {
-	"lma-nodes" :
+	"router-nodes" :
 	[
 		{
 			"id"          : "kenny",
 			"ip-address"  : "2001:690:2380:777a:20c:6eff:feda:195c",
 			"ip-scope-id" : "2"
-		}
-	],
-
-	"mag-nodes" :
-	[
+		},
 		{
 			"id"          : "kyle",
 			"ip-address"  : "2001:690:2380:778f:20c:6eff:fedc:2a16",

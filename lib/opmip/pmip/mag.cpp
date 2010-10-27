@@ -83,7 +83,7 @@ void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 
 void mag::istart(const char* id, const ip_address& mn_access_link)
 {
-	const mag_node* node = _node_db.find_mag(id);
+	const router_node* node = _node_db.find_router(id);
 	if (!node)
 		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
 		                                 "MAG id not found in node database"));
@@ -124,7 +124,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 			return;
 		}
 
-		const lma_node* lma = _node_db.find_lma(mn->lma_id());
+		const router_node* lma = _node_db.find_router(mn->lma_id());
 		if (!lma) {
 			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", mn->lma_id(), "]");
 			return;

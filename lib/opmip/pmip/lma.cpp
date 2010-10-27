@@ -67,7 +67,7 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 
 void lma::istart(const char* id)
 {
-	const lma_node* node = _node_db.find_lma(id);
+	const router_node* node = _node_db.find_router(id);
 	if (!node) {
 		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
 
@@ -121,7 +121,7 @@ bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
 	if (be)
 		return be;
 
-	if (!_node_db.find_mag(pbinfo.address)) {
+	if (!_node_db.find_router(pbinfo.address)) {
 		_log(0, "PBU registration error: MAG not authorized [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 		pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
 		return nullptr;
@@ -156,7 +156,7 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
 
 	if (be.care_of_address != pbinfo.address) {
-		const mag_node* mag = _node_db.find_mag(pbinfo.address);
+		const router_node* mag = _node_db.find_router(pbinfo.address);
 		if (!mag) {
 			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 			pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
