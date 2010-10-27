@@ -23,4 +23,9 @@ exe opmip-mag
 	  /boost//program_options
 	;
 
-install install : opmip-mag : <location>../../dist ;
+install install
+	: opmip-mag
+	  ../../node.db
+	  ../../start_mag
+	: <location>../../dist
+	;
