@@ -15,6 +15,7 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
+#include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/mp_sender.hpp>
 #include <opmip/pmip/icmp_sender.hpp>
@@ -83,11 +84,10 @@ void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 void mag::istart(const char* id, const ip_address& mn_access_link)
 {
 	const mag_node* node = _node_db.find_mag(id);
-	if (!node) {
-		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
+	if (!node)
+		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
+		                                 "MAG id not found in node database"));
 
-		throw_exception(exception(ec, "MAG id not found in node database"));
-	}
 	_log(0, "Starting... [id = ", id, ", mn_access_link = ", mn_access_link, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());

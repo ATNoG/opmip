@@ -50,7 +50,7 @@ std::pair<route_table::const_iterator, bool> route_table::add_by_src(const ip::p
 	add_by_src(res.first, ec);
 	if (ec) {
 		_map_by_src.erase(res.first);
-		throw_exception(boost::system::system_error(ec, "opmip::sys::route_table::add_by_src"));
+		boost::throw_exception(boost::system::system_error(ec, "opmip::sys::route_table::add_by_src"));
 
 		return std::pair<const_iterator, bool>(_map_by_src.end(), false);
 	}
@@ -98,7 +98,7 @@ std::pair<route_table::const_iterator, bool> route_table::add_by_dst(const ip::p
 	add_by_dst(res.first, ec);
 	if (ec) {
 		_map_by_dst.erase(res.first);
-		throw_exception(boost::system::system_error(ec, "opmip::sys::route_table::add_by_dst"));
+		boost::throw_exception(boost::system::system_error(ec, "opmip::sys::route_table::add_by_dst"));
 
 		return std::pair<const_iterator, bool>(_map_by_dst.end(), false);
 	}

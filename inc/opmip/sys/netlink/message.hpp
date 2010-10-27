@@ -197,7 +197,7 @@ private:
 			mem = reinterpret_cast<uchar*>(std::realloc(mem, capacity));
 
 			if (!mem)
-				throw_exception(std::bad_alloc());
+				OPMIP_THROW_EXCEPTION(std::bad_alloc());
 
 			std::fill(mem + _capacity, mem + capacity, 0);
 			_frame = reinterpret_cast<frame*>(mem);

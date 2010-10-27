@@ -20,29 +20,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/exception.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace sys {
 
 ///////////////////////////////////////////////////////////////////////////////
-inline void throw_on_error(error_code& ec)
+inline void throw_on_error(boost::system::error_code& ec)
 {
 	if (ec)
-		throw_exception(boost::system::system_error(ec));
+		boost::throw_exception(boost::system::system_error(ec));
 }
 
-inline void throw_on_error(error_code& ec, const char* what)
+inline void throw_on_error(boost::system::error_code& ec, const char* what)
 {
 	if (ec)
-		throw_exception(boost::system::system_error(ec, what));
+		boost::throw_exception(boost::system::system_error(ec, what));
 }
 
-inline void throw_on_error(error_code& ec, const std::string& what)
+inline void throw_on_error(boost::system::error_code& ec, const std::string& what)
 {
 	if (ec)
-		throw_exception(boost::system::system_error(ec, what));
+		boost::throw_exception(boost::system::system_error(ec, what));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
