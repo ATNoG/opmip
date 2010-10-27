@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/base.hpp>
+#include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/sys/if_service.hpp>
@@ -60,6 +61,19 @@ void link_event(const boost::system::error_code& ec,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
+{
+	std::ifstream in(file_name);
+
+	if (!in)
+		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
+		                       "Failed to open \"" + file_name + "\" node database file");
+
+	size_t n = ndb.load(in);
+	std::cout << "app: loaded " << n << " nodes from database\n";
+}
+
+///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
 	try {
@@ -74,17 +88,14 @@ int main(int argc, char** argv)
 		opmip::pmip::mag        mag(ios, ndb, concurrency);
 		opmip::sys::if_service  ifs(ios);
 
-		{
-			std::ifstream in(opts.node_db);
+		load_node_database(opts.node_db, ndb);
 
-			if (!in) {
-				std::cerr << "Failed to open \"" << opts.node_db << " node database file\n";
-				return 1;
-			}
-
-			size_t n = ndb.load(in);
-			std::cout << "Loaded " << n << " nodes from database\n";
-		}
+		opts.access_link.ip_local_addr.scope_id(opts.access_link.device);
+		mag.start(opts.identifier.c_str(), opts.access_link.ip_local_addr);
+		ifs.start(boost::bind(link_event, _1, _2,
+		                      boost::ref(mag),
+		                      boost::cref(opts.access_link.ip_local_addr),
+		                      boost::cref(opts.access_link.address)));
 
 		opts.access_link.ip_local_addr.scope_id(opts.access_link.device);
 		mag.start(opts.identifier.c_str(), opts.access_link.ip_local_addr);
