@@ -44,8 +44,8 @@ bool cmdline_options::parse(int argc, char** argv)
 		                  "access-link address")
 		("link-dev-id",   po::value<uint>()->required(),
 		                  "access-link device ID")
-		("link-local-ip", po::value<std::string>()->required(),
-		                  "access-link link-local IP address");
+		("link-local-ip", po::value<std::string>()->default_value("fe80::1"),
+		                  "link-local IP address for all access links");
 
 	po::store(po::parse_command_line(argc, argv, options), vm);
 	po::notify(vm);
