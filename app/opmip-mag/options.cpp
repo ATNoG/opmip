@@ -18,7 +18,9 @@
 #include "options.hpp"
 #include <boost/program_options.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/throw_exception.hpp>
 #include <iostream>
+#include <exception>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
@@ -40,23 +42,31 @@ bool cmdline_options::parse(int argc, char** argv)
 		                  "node database")
 		("id",            po::value<std::string>()->default_value(boost::asio::ip::host_name()),
 		                  "MAG identifier on the node database")
-		("link-addr",     po::value<std::string>()->required(),
+		("link-addr",     po::value<std::string>(),
 		                  "access-link address")
-		("link-dev-id",   po::value<uint>()->required(),
+		("link-dev-id",   po::value<uint>(),
 		                  "access-link device ID")
 		("link-local-ip", po::value<std::string>()->default_value("fe80::1"),
 		                  "link-local IP address for all access links");
+	options.add(config);
 
 	po::store(po::parse_command_line(argc, argv, options), vm);
 	po::notify(vm);
 
 	if (vm.count("help")) {
-		std::cerr << options.add(config) << std::endl;
+		std::cerr << options << std::endl;
 		return false;
-	}
 
-	po::store(po::parse_command_line(argc, argv, config), vm);
-	po::notify(vm);
+	}
+	if (!vm.count("link-addr")) {
+		std::cerr << options << std::endl;
+		boost::throw_exception(std::runtime_error("missing option link-addr"));
+
+	}
+	if (!vm.count("link-dev-id")) {
+		std::cerr << options << std::endl;
+		boost::throw_exception(std::runtime_error("missing option link-dev-id"));
+	}
 
 	identifier = vm["id"].as<std::string>();
 	node_db = vm["node-db"].as<std::string>();
