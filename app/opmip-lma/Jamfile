@@ -23,4 +23,7 @@ exe opmip-lma
 	  /boost//program_options
 	;
 
-install install : opmip-lma : <location>../../dist ;
+install install
+	: opmip-lma
+	  ../../start_lma
+	: <location>../../dist ;
