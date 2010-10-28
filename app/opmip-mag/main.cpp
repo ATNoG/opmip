@@ -97,13 +97,6 @@ int main(int argc, char** argv)
 		                      boost::cref(opts.access_link.ip_local_addr),
 		                      boost::cref(opts.access_link.address)));
 
-		opts.access_link.ip_local_addr.scope_id(opts.access_link.device);
-		mag.start(opts.identifier.c_str(), opts.access_link.ip_local_addr);
-		ifs.start(boost::bind(link_event, _1, _2,
-		                      boost::ref(mag),
-		                      boost::cref(opts.access_link.ip_local_addr),
-		                      boost::cref(opts.access_link.address)));
-
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
 		                                                 boost::ref(ifs),
 		                                                 boost::ref(mag)));

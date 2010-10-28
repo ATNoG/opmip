@@ -66,12 +66,12 @@ int main(int argc, char** argv)
 
 		load_node_database(opts.node_db, ndb);
 
+		lma.start(opts.identifier.c_str());
+
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
 		                                                 boost::ref(lma)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
-
-		lma.start(opts.identifier.c_str());
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
