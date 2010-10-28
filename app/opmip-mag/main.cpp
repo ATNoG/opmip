@@ -21,6 +21,7 @@
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/sys/if_service.hpp>
 #include <opmip/sys/signals.hpp>
+#include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -28,7 +29,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include "options.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 static void interrupt(opmip::sys::if_service& ifs, opmip::pmip::mag& mag)
@@ -39,11 +39,11 @@ static void interrupt(opmip::sys::if_service& ifs, opmip::pmip::mag& mag)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void link_event(const boost::system::error_code& ec,
-                const opmip::sys::if_service::event& event,
-                opmip::pmip::mag& mag,
-                const opmip::ip::address_v6& ll_ip_address,
-                const opmip::ll::mac_address& ll_mac_address)
+static void link_event(const boost::system::error_code& ec,
+                       const opmip::sys::if_service::event& event,
+                       opmip::pmip::mag& mag,
+                       const opmip::ip::address_v6& ll_ip_address,
+                       const opmip::ll::mac_address& ll_mac_address)
 {
 	if (ec || (event.if_wireless.which != opmip::sys::impl::if_service::wevent_attach
 		       && event.if_wireless.which != opmip::sys::impl::if_service::wevent_detach))

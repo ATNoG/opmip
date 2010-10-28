@@ -16,9 +16,11 @@
 //=============================================================================
 
 #include <opmip/base.hpp>
+#include <opmip/exception.hpp>
 #include <opmip/pmip/lma.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/sys/signals.hpp>
+#include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -28,50 +30,48 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-void interrupt(opmip::pmip::lma& lma)
+static void interrupt(opmip::pmip::lma& lma)
 {
 	std::cout << "\r";
 	lma.stop();
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
+{
+	std::ifstream in(file_name);
+
+	if (!in)
+		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
+		                       "Failed to open \"" + file_name + "\" node database file");
+
+	size_t n = ndb.load(in);
+	std::cout << "app: loaded " << n << " nodes from database\n";
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-	if (argc != 3) {
-		std::cerr << "usage: " << argv[0] << " id node-database\n"
-			         "\n"
-			         " id                     - this MAG identifier\n"
-			         " node-database          - path to node database file\n";
-		return 1;
-	}
-
-	const char* id                     = argv[1];
-	const char* node_database          = argv[2];
-
 	try {
+		opmip::app::cmdline_options opts;
+
+		if (!opts.parse(argc, argv))
+			return 1;
+
 		size_t                  concurrency = boost::thread::hardware_concurrency();
 		boost::asio::io_service ios(concurrency);
 		opmip::pmip::node_db    ndb;
 		opmip::pmip::lma        lma(ios, ndb, concurrency);
 
-		{
-			std::ifstream in(node_database);
-
-			if (!in) {
-				std::cerr << "Failed to open \"" << node_database << " node database file\n";
-				return 1;
-			}
-
-			size_t n = ndb.load(in);
-			std::cout << "Loaded " << n << " nodes from database\n";
-		}
+		load_node_database(opts.node_db, ndb);
 
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
 		                                                 boost::ref(lma)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
-		lma.start(id);
+		lma.start(opts.identifier.c_str());
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)

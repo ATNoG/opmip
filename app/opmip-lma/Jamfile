@@ -17,8 +17,10 @@
 
 exe opmip-lma
 	: main.cpp
+	  options.cpp
 	  ../../lib/opmip
 	  /boost//thread
+	  /boost//program_options
 	;
 
 install install : opmip-lma : <location>../../dist ;
