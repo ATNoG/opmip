@@ -34,6 +34,7 @@ lib opmip
 	  sys/route_table.cpp
 	  sys/signals.cpp
 	  sys/signals_unix.cpp
+	  /boost//headers
 	  /boost//system
 	;
 
