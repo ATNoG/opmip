@@ -19,3 +19,8 @@ exe node_db-load
 	: node_db-load.cpp
 	  ../../../lib/opmip//opmip
 	;
+
+exe icmp6-ra
+	: icmp6-ra.cpp
+	  ../../../lib/opmip//opmip
+	;
