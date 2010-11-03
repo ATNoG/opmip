@@ -61,6 +61,8 @@ public:
 	uint8 type() const { return _type; }
 	uint8 code() const { return _code; }
 
+	void checksum(uint16 csum) { _checksum = csum; }
+
 protected:
 	uint8  _type;
 	uint8  _code;

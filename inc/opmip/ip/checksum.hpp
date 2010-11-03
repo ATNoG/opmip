@@ -57,9 +57,14 @@ public:
 		_sum = static_cast<uint16>(sum);
 	}
 
-	uint16 final()
+	uint16 final() const
 	{
 		return ~_sum;
+	}
+
+	void clear()
+	{
+		_sum = 0;
 	}
 
 private:
