@@ -101,8 +101,6 @@ void lma::istop()
 
 void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 {
-	_log(0, "PBU [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-
 	if (pbinfo.status != ip::mproto::pba::status_ok)
 		return; //error
 
@@ -162,12 +160,10 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 			pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
 			return false;
 		}
-
 		if (!pbinfo.lifetime) {
 			_log(0, "PBU de-registration error: not this MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 			return false; //note: no error for this
 		}
-		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
 		if (!be.care_of_address.is_unspecified())
 			del_route_entries(&be);
@@ -203,7 +199,10 @@ void lma::pbu_process(proxy_binding_info& pbinfo)
 		return;
 
 	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
-		_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		if (be->care_of_address == pbinfo.address)
+			_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		else
+			_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
 		be->timer.cancel();
 		be->bind_status = bcache_entry::k_bind_registered;
