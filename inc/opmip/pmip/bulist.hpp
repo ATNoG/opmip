@@ -24,6 +24,7 @@
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/technology.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <opmip/net/link/ethernet.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/ip/icmp.hpp>
 #include <boost/intrusive/rbtree.hpp>
@@ -70,7 +71,7 @@ public:
 		  initial_lifetime(0), remaining_lifetime(0), sequence_number(std::time(nullptr)),
 		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
 		  bind_status(k_bind_unknown), retry_count(0), mtu(1460),
-		  timer(ios), icmp_sock(ios)
+		  timer(ios), ra_sock(ios)
 	{ }
 
 	const std::string&     mn_id() const              { return _mn_id; }
@@ -105,7 +106,8 @@ public:
 	uint          mtu;
 
 	boost::asio::deadline_timer   timer;
-	boost::asio::ip::icmp::socket icmp_sock;
+	net::link::ethernet::socket   ra_sock;
+	net::link::ethernet::endpoint ra_ep;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

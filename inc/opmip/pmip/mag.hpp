@@ -91,7 +91,7 @@ private:
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);
 
-	void setup_icmp_socket(bulist_entry& be);
+	void setup_ra_socket(bulist_entry& be);
 
 private:
 	strand   _service;
