@@ -22,6 +22,9 @@
 #include <opmip/base.hpp>
 #include <opmip/refcount.hpp>
 #include <opmip/pmip/types.hpp>
+#include <opmip/net/ip/ipv6_packet.hpp>
+#include <opmip/net/ip/icmp6_ra_packet.hpp>
+#include <opmip/net/link/ethernet.hpp>
 #include <boost/asio/ip/icmp.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,15 +44,23 @@ public:
 	template<class Handler>
 	void async_send(boost::asio::ip::icmp::socket& sock, Handler handler)
 	{
-		sock.async_send_to(boost::asio::buffer(_buffer, _length),
+		sock.async_send_to(_ra_pkt.cbuffer(),
 			               _endpoint,
+			               asio_handler<Handler>(this, handler));
+	}
+
+	template<class Handler>
+	void async_send(net::link::ethernet::socket& sock, net::link::ethernet::endpoint& ep, Handler handler)
+	{
+		sock.async_send_to(_ipv6_pkt.cbuffer(),
+			               ep,
 			               asio_handler<Handler>(this, handler));
 	}
 
 public:
 	boost::asio::ip::icmp::endpoint _endpoint;
-	uint                            _length;
-	uchar                           _buffer[1460];
+	net::ip::ipv6_packet            _ipv6_pkt;
+	net::ip::icmp6_ra_packet        _ra_pkt;
 };
 
 typedef refcount_ptr<icmp_ra_sender> icmp_ra_sender_ptr;
@@ -60,9 +71,8 @@ struct icmp_ra_sender::asio_handler {
 		: _ras(ras), _handler(handler)
 	{ }
 
-	void operator()(const boost::system::error_code& ec, size_t wbytes)
+	void operator()(const boost::system::error_code& ec, size_t /*wbytes*/)
 	{
-		BOOST_ASSERT((ec || (!ec && wbytes == _ras->_length)));
 		_handler(ec, _ras);
 	}
 

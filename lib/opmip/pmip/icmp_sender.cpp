@@ -25,49 +25,38 @@ namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 icmp_ra_sender::icmp_ra_sender(const router_advertisement_info& rainfo)
-
-	: _endpoint(rainfo.destination, 0), _length(0)
+	: _endpoint(rainfo.destination, 0)
 {
-	std::fill(_buffer, _buffer + sizeof(_buffer), 0);
-
-	ip::icmp::router_advertisement* ra = new(_buffer) ip::icmp::router_advertisement();
-	size_t                          len = sizeof(ip::icmp::router_advertisement);
-
-	ra->current_hop_limit(rainfo.hop_limit);
-	ra->lifetime(rainfo.lifetime);
+	_ra_pkt(rainfo.hop_limit, rainfo.lifetime, 0, 0);
 
 	//
 	// Source link layer
 	//
-	ip::opt_source_link_layer* sll = new(_buffer + len) ip::opt_source_link_layer();
+	ip::opt_source_link_layer* sll = _ra_pkt.add_option<ip::opt_source_link_layer>();
 
 	*sll = rainfo.link_address;
-	len += ip::option::size(sll);
 
 	//
 	// MTU
 	//
-	ip::opt_mtu* omtu = new(_buffer + len) ip::opt_mtu();
+	ip::opt_mtu* omtu = _ra_pkt.add_option<ip::opt_mtu>();
 
 	omtu->set(rainfo.mtu);
-	len += ip::option::size(omtu);
 
 	//
 	// Prefixes
 	//
 	for (prefix_list::const_iterator i = rainfo.prefix_list.begin(), e = rainfo.prefix_list.end(); i != e; ++i) {
-		ip::opt_prefix_info* pref = new(_buffer + len) ip::opt_prefix_info();
+		ip::opt_prefix_info* pref = _ra_pkt.add_option<ip::opt_prefix_info>();
 
 		pref->L(true);
 		pref->A(true);
 		pref->valid_lifetime(7200);
 		pref->prefered_lifetime(1800);
 		pref->prefix(*i);
-
-		len += ip::option::size(pref);
 	}
 
-	_length = len;
+	_ipv6_pkt(rainfo.source, rainfo.destination, 255, _ra_pkt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
