@@ -25,5 +25,4 @@ exe opmip-lma
 
 install install
 	: opmip-lma
-	  ../../start_lma
 	: <location>../../dist ;

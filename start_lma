@@ -1,3 +1,0 @@
-#!/bin/bash
-
-./opmip-lma > lma.log
