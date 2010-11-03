@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/technology.hpp>
@@ -106,6 +107,8 @@ public:
 
 	boost::asio::deadline_timer   timer;
 	boost::asio::ip::icmp::socket icmp_sock;
+
+	chrono handover_delay;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

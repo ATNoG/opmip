@@ -149,6 +149,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 
 	proxy_binding_info pbinfo;
 
+	be->handover_delay.start(); //begin chrono handover delay
 	be->last_ack_sequence = be->sequence_number;
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
@@ -185,6 +186,7 @@ void mag::imobile_node_detach(const attach_info& ai)
 
 	proxy_binding_info pbinfo;
 
+	be->handover_delay.start(); //begin chrono handover delay
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
@@ -284,8 +286,6 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	be->last_ack_sequence = pbinfo.sequence;
 
 	if (pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_requested) {
-		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
-
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			add_route_entries(*be);
 			be->bind_status = bulist_entry::k_bind_ack;
@@ -295,11 +295,21 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 			be->bind_status = bulist_entry::k_bind_error;
 			be->timer.cancel();
 		}
+		be->handover_delay.stop();
+
+		_log(0, "PBA registration [delay = ", be->handover_delay.get(),
+		                        ", id = ", pbinfo.id,
+		                        ", lma = ", pbinfo.address,
+		                        ", status = ", pbinfo.status, "]");
 
 	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
-		_log(0, "PBA de-registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
-
 		be->timer.cancel();
+		be->handover_delay.stop();
+
+		_log(0, "PBA de-registration [delay = ", be->handover_delay.get(),
+		                           ", id = ", pbinfo.id,
+		                           ", lma = ", pbinfo.address, "]");
+
 		_bulist.remove(be);
 
 	} else {
