@@ -1,0 +1,28 @@
+[article OPMIP User Manual
+	[quickbook 1.5]
+	[version 1.0]
+	[copyright 2010 Universidade Aveiro]
+	[copyright 2010 Instituto de Telecomunicações - Pólo Aveiro]
+	[purpose How to use the OPMIP MAG and LMA applications]
+	[authors [Santos, Bruno]]
+]
+
+[section:intro Introduction]
+
+The Open Proxy Mobile IPv6 (OPMIP) is an implementation of the Proxy Mobile IPv6
+[footnote RFC 5213 - [@http://tools.ietf.org/html/rfc5213]] (PMIPv6) standard.
+
+This manual provides information on how to use the OPMIP applications opmip-mag
+and opmip-lma.
+
+[warning This is beta software, expect it not to fully implement every detail
+of the standard or have issues. In this regard, if you find any issue, please
+report it.]
+
+[endsect]
+
+[section:started Getting Started]
+
+bla bla bla
+
+[endsect]
