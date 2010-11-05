@@ -1,6 +1,0 @@
-#!/bin/bash
-
-WLAN_LADDR=$(ip link list dev ath0 | sed -n '2 p' | sed -e 's/\s*link\/ether //' -e 's/ brd.*//')
-WLAN_IFIDX=$(ip link list dev ath0 | sed -n '1 p' | sed -e 's/:.*//')
-
-./opmip-mag --link-addr $WLAN_LADDR --link-dev-id $WLAN_IFIDX > mag.log
