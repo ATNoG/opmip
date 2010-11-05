@@ -18,6 +18,7 @@
 exe opmip-mag
 	: main.cpp
 	  options.cpp
+	  drivers/madwifi_driver_impl.cpp
 	  ../../lib/opmip
 	  /boost//thread
 	  /boost//program_options

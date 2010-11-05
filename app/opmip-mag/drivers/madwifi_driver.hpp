@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : Network Interface Service
+// Brief   : MadWifi Driver
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // -----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,29 +15,28 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef OPMIP_SYS_IF_SERVICE__HPP_
-#define OPMIP_SYS_IF_SERVICE__HPP_
+#ifndef OPMIP_APP_DRIVER_MADWIFI_DRIVER__HPP_
+#define OPMIP_APP_DRIVER_MADWIFI_DRIVER__HPP_
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/sys/impl/if_service.hpp>
 #include <opmip/sys/error.hpp>
+#include "madwifi_driver_impl.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys {
+namespace opmip { namespace app {
 
 ////////////////////////////////////////////////////////////////////////////////
-class if_service : boost::noncopyable {
+class madwifi_driver : boost::noncopyable {
 public:
-	typedef impl::if_service::address_mac        address_mac;
-	typedef impl::if_service::event_type         event_type;
-	typedef impl::if_service::wireless_event     wireless_event;
-	typedef impl::if_service::wireless_frequency wireless_frequency;
-	typedef impl::if_service::event              event;
-	typedef impl::if_service::event_handler      event_handler;
+	typedef madwifi_driver_impl::address_mac        address_mac;
+	typedef madwifi_driver_impl::event_type         event_type;
+	typedef madwifi_driver_impl::wireless_event     wireless_event;
+	typedef madwifi_driver_impl::event              event;
+	typedef madwifi_driver_impl::event_handler      event_handler;
 
 public:
-	if_service(boost::asio::io_service& ios)
+	madwifi_driver(boost::asio::io_service& ios)
 		: implementation(ios)
 	{ }
 
@@ -48,7 +47,7 @@ public:
 
 		implementation.set_event_handler(handler);
 		implementation.start(ec);
-		throw_on_error(ec);
+		sys::throw_on_error(ec);
 	}
 
 	void stop()
@@ -56,15 +55,15 @@ public:
 		boost::system::error_code ec;
 
 		implementation.stop(ec);
-		throw_on_error(ec);
+		sys::throw_on_error(ec);
 	}
 
 private:
-	impl::if_service implementation;
+	madwifi_driver_impl implementation;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-} /* namespace sys */ } /* namespace opmip */
+} /* namespace app */ } /* namespace opmip */
 
 // EOF /////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_IF_SERVICE__HPP_ */
+#endif /* OPMIP_APP_DRIVER_MADWIFI_DRIVER__HPP_ */

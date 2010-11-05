@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : Network Interface Service Implementation
+// Brief   : MadWifi Driver Implementation
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // -----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef OPMIP_SYS_IMPL_IF_SERVICE__HPP_
-#define OPMIP_SYS_IMPL_IF_SERVICE__HPP_
+#ifndef OPMIP_APP_DRIVER_MADWIFI_DRIVER_IMPL__HPP_
+#define OPMIP_APP_DRIVER_MADWIFI_DRIVER_IMPL__HPP_
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
@@ -26,10 +26,10 @@
 #include <boost/function.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys { namespace impl {
+namespace opmip { namespace app {
 
 ////////////////////////////////////////////////////////////////////////////////
-class if_service : boost::noncopyable {
+class madwifi_driver_impl : boost::noncopyable {
 public:
 	typedef ll::mac_address address_mac;
 
@@ -43,17 +43,8 @@ public:
 
 	enum wireless_event {
 		wevent_none,
-		wevent_frequency,
-		wevent_new_scan_results,
 		wevent_attach,
 		wevent_detach,
-	};
-
-	struct wireless_frequency {
-		sint  mantissa;
-		sint  exponent;
-		uint8 index;
-		bool  fixed;
 	};
 
 	struct event {
@@ -62,10 +53,6 @@ public:
 			  if_change(0), if_state(0), if_mtu(0)
 		{
 			if_wireless.which = wevent_none;
-			if_wireless.frequency.mantissa = 0;
-			if_wireless.frequency.exponent = 0;
-			if_wireless.frequency.index = 0;
-			if_wireless.frequency.fixed = false;
 		}
 
 		event_type  which;
@@ -79,9 +66,8 @@ public:
 		uint        if_mtu;
 
 		struct {
-			wireless_event     which;
-			address_mac        address;
-			wireless_frequency frequency;
+			wireless_event which;
+			address_mac    address;
 		} if_wireless;
 	};
 
@@ -89,8 +75,8 @@ public:
 	                             const event&)> event_handler;
 
 public:
-	if_service(boost::asio::io_service& ios);
-	~if_service();
+	madwifi_driver_impl(boost::asio::io_service& ios);
+	~madwifi_driver_impl();
 
 	void start(boost::system::error_code& ec);
 	void stop(boost::system::error_code& ec);
@@ -105,13 +91,13 @@ private:
 	void receive_handler(boost::system::error_code ec, size_t rbytes);
 
 private:
-	netlink<0>::socket _rtnl;
-	event_handler      _event_handler;
-	uchar              _buffer[4096];
+	sys::netlink<0>::socket _rtnl;
+	event_handler           _event_handler;
+	uchar                   _buffer[4096];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-} /* namespace impl */ } /* namespace sys */ } /* namespace opmip */
+} /* namespace app */ } /* namespace opmip */
 
 // EOF /////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_IMPL_IF_SERVICE__HPP_ */
+#endif /* OPMIP_APP_DRIVER_MADWIFI_DRIVER_IMPL__HPP_ */
