@@ -1,28 +1,207 @@
 [article OPMIP User Manual
 	[quickbook 1.5]
-	[version 1.0]
+	[version 0.1]
+	[id manual]
 	[copyright 2010 Universidade Aveiro]
 	[copyright 2010 Instituto de Telecomunicações - Pólo Aveiro]
 	[purpose How to use the OPMIP MAG and LMA applications]
 	[authors [Santos, Bruno]]
 ]
 
+[def __usage__     [link manual.usage usage]]
+[def __opmip_mag__ [link manual.usage.mag opmip-mag]]
+[def __opmip_lma__ [link manual.usage.lma opmip-lma]]
+[def __mad_wifi__  [@http://madwifi-project.org/ MadWifi]]
+[def __json__      [@http://www.json.org/ JSON]]
+
 [section:intro Introduction]
 
 The Open Proxy Mobile IPv6 (OPMIP) is an implementation of the Proxy Mobile IPv6
 [footnote RFC 5213 - [@http://tools.ietf.org/html/rfc5213]] (PMIPv6) standard.
 
-This manual provides information on how to use the OPMIP applications opmip-mag
-and opmip-lma.
+The implementation of the PMIPv6 is provided by two applications:
 
-[warning This is beta software, expect it not to fully implement every detail
-of the standard or have issues. In this regard, if you find any issue, please
-report it.]
+* __opmip_mag__ - implements the Mobile Access Gateway (MAG)
+
+* __opmip_lma__ - implements the Local Mobility Anchor (LMA)
 
 [endsect]
 
+
 [section:started Getting Started]
 
-bla bla bla
+[section:reqs Requirements]
+
+To use OPMIP, you will need the Linux kernel:
+
+* version 2.6.30 or higher
+
+* compiled with: *CONFIG_IPV6_SUBTREES*
+
+* the following modules must be loaded or compiled build-in: *ip6_tunnel*
+
+[important You will most likely need to compile a custom kernel, since the
+requirements are not meet on most distributions.]
+
+Additionally, for the __opmip_mag__ application you will need a wireless
+interface card configured and working as an Access Point.
+
+[warning Currently, only wireless cards with __mad_wifi__ drivers are supported.
+Because the opmip-mag attach/detach event monitor driver is only implemented for
+__mad_wifi__.]
+
+[endsect]
+
+[section:setup Operating System Setup]
+
+For both __opmip_mag__ and __opmip_lma__ applications, you will need to setup
+IPv6 forwarding in the kernel.
+Typically, this can be configured at your [^/etc/sysctl.conf] file, edit it
+and add the line:
+
+[^net.ipv6.conf.all.forwarding=1]
+
+[important Don't forget to reboot for the changes to take effect.]
+
+[section:mag MAG]
+
+All access links for all __opmip_mag__'s must have the same IPv6 link local
+address. For example, you can setup all access links to use the address
+[^ffe80::1], see __opmip_mag__ usage.
+
+[note Currently, only network wireless cards can be used as access links.
+See [link manual.started.reqs requirements].]
+
+[endsect]
+
+[section:lma LMA]
+
+__opmip_lma__ adds static route entries to the routing tables for the mobile
+nodes, the route manager software must be aware of this and propagate the route
+entries to other routers. This can be accomplished with routing software, such
+as [@http://www.quagga.net/ Quagga], that monitors the route table and
+propagates static entries.
+
+[endsect]
+
+[endsect]
+
+[section:install Installation]
+
+Currently, no installation script is provided for OPMIP. However, the provided
+binaries are standalone, they can put put anywhere. They only require an
+additional file, the [link manual.started.nodedb node database]. You will have
+to manually configure the startup of the OPMIP as a service, if you wish.
+
+[endsect]
+
+[section:nodedb Node Database]
+
+The node database contains the database of LMA/MAG nodes, also known as router
+nodes, and the mobile node database. It uses the __json__ format:
+
+	{
+		"router-nodes" :
+		[
+			{
+				"id"          : "node1",
+				"ip-address"  : "2001:aaaa:bbbb:cccc::1",
+				"ip-scope-id" : "2"
+			},
+			{
+				"id"          : "node2",
+				"ip-address"  : "2001:dddd:eeee:ffff::2",
+				"ip-scope-id" : "2"
+			}
+		],
+
+		"mobile-nodes" :
+		[
+			{
+				"id"        : "mn1",
+				"ip-prefix" : "2001:deadb::1/64",
+				"mac"       : "00:11:22:33:44:55",
+				"lma-id"    : "node1"
+			},
+			{
+				"id"        : "mn2",
+				"ip-prefix" : "2001:deadb::2/64",
+				"mac"       : "00:12:23:34:45:56",
+				"lma-id"    : "node1"
+			}
+	}
+
+In the above example, we have a database with:
+
+* two router nodes
+* two mobile nodes
+
+[table Router Node Entry
+[[Key] [Description]]
+[[id] [Router node identifier. This is used to find the entry in the database.]
+]
+[[ip-address] [The router node's IP address.]]
+[[ip-scope-id] [The interface identifier for the router node's IP address.]]
+]
+
+[table Mobile Node Entry
+[[Key] [Description]]
+[[id] [Mobile Node identifier. This is used to find the entry in the database,
+it is also used has the PMIPv6 Mobile Node identifier.]]
+[[ip-prefix] [One or more prefixes, has [^"key" : "value"] pairs,  to assign to
+the mobile node.]]
+[[mac] [The mobile node interface link address.]]
+[[lma-id] [The identifier of the LMA router node for this mobile node.]]
+]
+
+See __usage__ on how to pass the node database to a router node.
+
+[note When a router node bootstraps, it's entry is lookup in the database. The
+entry must match the network interface configuration.]
+
+[endsect]
+
+[endsect]
+
+[section:usage Usage]
+
+Both __opmip_mag__ and __opmip_lma__ log all output to the standard output. If
+you wish to log to a file, you will have to manually redirect the output.
+
+[section:mag opmip-mag]
+
+To get usage help, type at the command prompt: [^opmip-mag --help]
+
+[table command line options
+[[Option]                 [Description]]
+[[--help]                 [Display command line options]]
+[[--node-db [^arg]]       [Node database file. Defaults to [^node.db]]]
+[[--id [^arg]]            [This node identifier on the node database. Defaults
+to the hostname]]
+[[--link-addr [^arg]]     [Access link address]]
+[[--link-dev-id [^arg]]   [Access link device ID]]
+[[--link-local-ip [^arg]] [Link local IP address for all access links. Defaults
+to [^fe80::1], see [link manual.started.setup.mag MAG setup]]]
+]
+
+[warning Has you can see from the command line options, only one access link is
+supported. In the future, a list of access link device names will be used,
+instead of a link address and device ID pair.]
+
+[endsect]
+
+[section:lma opmip-lma]
+
+To get usage help, type at the command prompt: [^opmip-lma --help]
+
+[table command line options
+[[Option]                 [Description]]
+[[--help]                 [Display command line options]]
+[[--node-db [^arg]]       [Node database file. Defaults to [^node.db]]]
+[[--id [^arg]]            [This node identifier on the node database. Defaults
+to the hostname]]
+]
+
+[endsect]
 
 [endsect]

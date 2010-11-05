@@ -14,10 +14,10 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-xml manual-xml
+xml manual
 	: opmip-manual.qbk
 	;
 
-boostbook manual
-	: manual-xml
+boostbook manual-doc
+	: manual
 	;
