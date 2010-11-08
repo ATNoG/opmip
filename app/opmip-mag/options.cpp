@@ -38,14 +38,14 @@ bool cmdline_options::parse(int argc, char** argv)
 		("help,h", "display command line options");
 
 	config.add_options()
-		("node-db",       po::value<std::string>()->default_value("node.db"),
-		                  "node database")
-		("id",            po::value<std::string>()->default_value(boost::asio::ip::host_name()),
-		                  "MAG identifier on the node database")
-		("link-local-ip", po::value<std::string>()->default_value("fe80::1"),
-		                  "link local IP address for all access links")
-		("access-links",  po::value<std::vector<std::string> >()->multitoken(),
-		                  "list of access link interfaces");
+		("node-db",        po::value<std::string>()->default_value("node.db"),
+		                   "node database")
+		("id",             po::value<std::string>()->default_value(boost::asio::ip::host_name()),
+		                   "MAG identifier on the node database")
+		("link-local-ip",  po::value<std::string>()->default_value("fe80::1"),
+		                   "link local IP address for all access links")
+		("access-links,a", po::value<std::vector<std::string> >()->multitoken(),
+		                   "list of access link interfaces");
 
 	options.add(config);
 
