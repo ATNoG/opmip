@@ -178,15 +178,10 @@ To get usage help, type at the command prompt: [^opmip-mag --help]
 [[--node-db [^arg]]       [Node database file. Defaults to [^node.db]]]
 [[--id [^arg]]            [This node identifier on the node database. Defaults
 to the hostname]]
-[[--link-addr [^arg]]     [Access link address]]
-[[--link-dev-id [^arg]]   [Access link device ID]]
 [[--link-local-ip [^arg]] [Link local IP address for all access links. Defaults
 to [^fe80::1], see [link manual.started.setup.mag MAG setup]]]
+[[--access-links [^arg]]  [List of access link interfaces. Default is none.]]
 ]
-
-[warning Has you can see from the command line options, only one access link is
-supported. In the future, a list of access link device names will be used,
-instead of a link address and device ID pair.]
 
 [endsect]
 
