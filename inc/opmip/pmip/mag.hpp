@@ -43,27 +43,24 @@ public:
 	typedef ll::mac_address mac_address;
 
 	struct attach_info {
-		attach_info(const ll::mac_address& mn_ll_address_,
-		            const ip::address_v6& poa_ip_address_,
-		            const ll::mac_address& poa_ll_address_,
-		            uint poa_dev_id_)
+		attach_info(uint poa_dev_id_,
+		            const ll::mac_address& poa_address_,
+		            const ll::mac_address& mn_address_)
 
-			: mn_ll_address(mn_ll_address_), poa_ip_address(poa_ip_address_),
-			  poa_ll_address(poa_ll_address_), poa_dev_id(poa_dev_id_)
+			: poa_dev_id(poa_dev_id_), poa_address(poa_address_),
+			  mn_address(mn_address_)
 		{ }
 
-
-		ll::mac_address  mn_ll_address;
-		ip::address_v6   poa_ip_address;
-		ll::mac_address  poa_ll_address;
 		uint             poa_dev_id;
+		ll::mac_address  poa_address;
+		ll::mac_address  mn_address;
 //		mobility_options mob_options;
 	};
 
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const char* id, const ip_address& mn_access_link);
+	void start(const char* id, const ip_address& link_local_ip);
 	void stop();
 
 	void mobile_node_attach(const attach_info& ai);
@@ -102,6 +99,7 @@ private:
 	ip::mproto::socket _mp_sock;
 
 	std::string       _identifier;
+	ip_address        _link_local_ip;
 	pmip::ip6_tunnels _tunnels;
 	sys::route_table  _route_table;
 	size_t            _concurrency;

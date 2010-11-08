@@ -41,16 +41,14 @@ static void interrupt(opmip::app::madwifi_driver& drv, opmip::pmip::mag& mag)
 ///////////////////////////////////////////////////////////////////////////////
 static void link_event(const boost::system::error_code& ec,
                        const opmip::app::madwifi_driver::event& ev,
-                       opmip::pmip::mag& mag,
-                       const opmip::ip::address_v6& ll_ip_address)
+                       opmip::pmip::mag& mag)
 {
 	if (ec)
 		return;
 
-	opmip::pmip::mag::attach_info ai(ev.mn_address,
-	                                 ll_ip_address,
+	opmip::pmip::mag::attach_info ai(ev.if_index,
 	                                 ev.if_address,
-	                                 ev.if_index);
+	                                 ev.mn_address);
 
 	switch (ev.which) {
 	case opmip::app::madwifi_driver_impl::attach:
@@ -98,8 +96,7 @@ int main(int argc, char** argv)
 
 		mag.start(opts.identifier.c_str(), opts.link_local_ip);
 		drv.start(opts.access_links, boost::bind(link_event, _1, _2,
-		                                         boost::ref(mag),
-		                                         boost::cref(opts.link_local_ip)));
+		                                         boost::ref(mag)));
 
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
 		                                                 boost::ref(drv),

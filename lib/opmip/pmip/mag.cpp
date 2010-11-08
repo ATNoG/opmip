@@ -81,19 +81,24 @@ void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 		_log(0, "ICMPv6 router advertisement send error: ", ec.message());
 }
 
-void mag::istart(const char* id, const ip_address& mn_access_link)
+void mag::istart(const char* id, const ip_address& link_local_ip)
 {
 	const router_node* node = _node_db.find_router(id);
 	if (!node)
 		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
 		                                 "MAG id not found in node database"));
 
-	_log(0, "Starting... [id = ", id, ", mn_access_link = ", mn_access_link, ", address = ", node->address(), "]");
+	if (!link_local_ip.is_link_local())
+		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
+		                                 "Invalid Link local address"));
+
+	_log(0, "Starting... [id = ", id, ", link_local_ip = ", link_local_ip, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
 
 	_identifier = id;
+	_link_local_ip = link_local_ip;
 
 	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
@@ -116,34 +121,35 @@ void mag::istop()
 
 void mag::imobile_node_attach(const attach_info& ai)
 {
-	bulist_entry* be = _bulist.find(ai.mn_ll_address);
+	bulist_entry* be = _bulist.find(ai.mn_address);
 	if (!be) {
-		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
+		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 		if (!mn) {
-			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_ll_address, "]");
+			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_address, "]");
 			return;
 		}
 
 		const router_node* lma = _node_db.find_router(mn->lma_id());
 		if (!lma) {
-			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", mn->lma_id(), "]");
+			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_address, "), lma = ", mn->lma_id(), "]");
 			return;
 		}
 
-		be = new bulist_entry(_service.get_io_service(), mn->id(), ai.mn_ll_address, mn->prefix_list(), lma->address(),
-		                      ai.poa_ip_address, ai.poa_ll_address, ai.poa_dev_id);
+		be = new bulist_entry(_service.get_io_service(), mn->id(),
+		                      ai.mn_address, mn->prefix_list(), lma->address(),
+		                      _link_local_ip, ai.poa_address, ai.poa_dev_id);
 
 		_bulist.insert(be);
 		setup_icmp_socket(*be);
 
-		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_ll_address, ")"
+		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_address, ")"
 		                          ", lma = ", mn->lma_id(), " (", be->lma_address(), ")]");
 	} else {
-		_log(0, "Mobile Node re-attach [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node re-attach [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
-		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
 
@@ -168,18 +174,18 @@ void mag::imobile_node_attach(const attach_info& ai)
 
 void mag::imobile_node_detach(const attach_info& ai)
 {
-	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
+	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 	if (!mn) {
-		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_ll_address, "]");
+		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_address, "]");
 		return;
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
-		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_ll_address, ")", "]");
+		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_address, ")", "]");
 		return;
 	}
-	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 
 	if (be->bind_status == bulist_entry::k_bind_ack)
 		del_route_entries(*be);
