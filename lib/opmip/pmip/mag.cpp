@@ -137,7 +137,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 
 		be = new bulist_entry(_service.get_io_service(), mn->id(),
 		                      ai.mn_address, mn->prefix_list(), lma->address(),
-		                      _link_local_ip, ai.poa_address, ai.poa_dev_id);
+		                      ai.poa_dev_id, ai.poa_address);
 
 		_bulist.insert(be);
 		setup_icmp_socket(*be);
@@ -228,7 +228,7 @@ void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_add
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = be->poa_ll_address();
+	rainfo.link_address = be->poa_address();
 	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
 	rainfo.destination = address;
@@ -255,7 +255,7 @@ void mag::irouter_advertisement(const boost::system::error_code& ec, const std::
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = be->poa_ll_address();
+	rainfo.link_address = be->poa_address();
 	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
@@ -401,8 +401,11 @@ void mag::del_route_entries(bulist_entry& be)
 
 void mag::setup_icmp_socket(bulist_entry& be)
 {
+	ip_address addr(_link_local_ip);
+
+	addr.scope_id(be.poa_dev_id());
 	be.icmp_sock.open(boost::asio::ip::icmp::v6());
-	be.icmp_sock.bind(boost::asio::ip::icmp::endpoint(be.poa_ip_address(), 0));
+	be.icmp_sock.bind(boost::asio::ip::icmp::endpoint(addr, 0));
 	be.icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
 	be.icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
 	be.icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
