@@ -62,6 +62,7 @@ struct router_advertisement_info {
 	ll::mac_address            link_address;
 	uint32                     mtu;
 	std::vector<ip::prefix_v6> prefix_list;
+	ip::address_v6             source;
 	ip::address_v6             destination;
 };
 

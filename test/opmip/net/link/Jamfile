@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : OPMIP Library Project Build
+# Brief   : OPMIP Library Unit Test Build
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,25 +15,7 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-lib opmip
-	: ip/prefix.cpp
-	  ll/mac_address.cpp
-	  net/link/ethernet.cpp
-	  pmip/node_db.cpp
-	  pmip/bcache.cpp
-	  pmip/bulist.cpp
-	  pmip/icmp_sender.cpp
-	  pmip/icmp_receiver.cpp
-	  pmip/mp_sender.cpp
-	  pmip/mp_receiver.cpp
-	  pmip/tunnels.cpp
-	  pmip/lma.cpp
-	  pmip/mag.cpp
-	  sys/ip6_tunnel_service.cpp
-	  sys/route_table.cpp
-	  sys/signals.cpp
-	  sys/signals_unix.cpp
-	  /boost//headers
-	  /boost//system
+exe ethernet-send-ip6
+	: ethernet-send-ip6.cpp
+	  ../../../../lib/opmip//opmip
 	;
-

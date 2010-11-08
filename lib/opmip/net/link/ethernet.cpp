@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP One's Complemente Checksum
+// Brief   : Ethernet Protocol
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,62 +15,40 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_IP_CHECKSUM__HPP_
-#define OPMIP_IP_CHECKSUM__HPP_
+#include <opmip/net/link/ethernet.hpp>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
-#include <opmip/base.hpp>
-#include <opmip/exception.hpp>
+template class boost::asio::basic_datagram_socket<opmip::net::link::ethernet>;
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ip {
+namespace opmip { namespace net { namespace link {
 
 ///////////////////////////////////////////////////////////////////////////////
-class checksum {
-public:
-	checksum()
-		: _sum(0)
-	{ }
+ethernet::endpoint::endpoint()
+	: _family(17/*AF_PACKET*/), _protocol(0), _ifindex(0),
+	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(0), _halen(0)
+{
+	std::fill(_addr, _addr + 8, 0);
+}
 
-	void update(const void* data, size_t len)
-	{
-		if (len % 2)
-			OPMIP_THROW_EXCEPTION(exception(boost::system::errc::invalid_argument,
-			                                boost::system::get_generic_category(),
-			                                __func__));
+ethernet::endpoint::endpoint(uint16 proto, uint ifindex)
+	: _family(AF_PACKET), _protocol(::htons(proto)), _ifindex(ifindex),
+	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(0), _halen(0)
+{
+	std::fill(_addr, _addr + 8, 0);
+}
 
-		update(reinterpret_cast<const uint16*>(data), len / 2);
-	}
-
-	void update(const uint16* data, size_t len)
-	{
-		uint32 sum = _sum;
-
-		for (size_t i = 0; i < len; ++i)
-			sum += data[i];
-
-		while (sum >> 16)
-			sum = (sum & 0xffff) + (sum >> 16);
-
-		_sum = static_cast<uint16>(sum);
-	}
-
-	uint16 final() const
-	{
-		return ~_sum;
-	}
-
-	void clear()
-	{
-		_sum = 0;
-	}
-
-private:
-	uint16 _sum;
-};
+ethernet::endpoint::endpoint(uint16 proto, uint ifindex, pk_type pktp, const ll::mac_address& destination)
+	: _family(AF_PACKET), _protocol(::htons(proto)), _ifindex(ifindex),
+	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(pktp), _halen(0)
+{
+	*reinterpret_cast<ll::mac_address::bytes_type*>(_addr) = destination.to_bytes();
+	_addr[6] = 0;
+	_addr[7] = 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ip */ } /* namespace opmip */
+} /* namespace link */ } /* namespace net */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_IP_CHECKSUM__HPP_ */

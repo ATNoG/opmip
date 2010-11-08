@@ -140,7 +140,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 		                      ai.poa_dev_id, ai.poa_address);
 
 		_bulist.insert(be);
-		setup_icmp_socket(*be);
+		setup_ra_socket(*be);
 
 		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_address, ")"
 		                          ", lma = ", mn->lma_id(), " (", be->lma_address(), ")]");
@@ -207,7 +207,7 @@ void mag::imobile_node_detach(const attach_info& ai)
 	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 }
-
+/*
 void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr)
 {
 	if (ec) {
@@ -237,7 +237,7 @@ void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_add
 
 	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 }
-
+*/
 void mag::irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id)
 {
 	if (ec) {
@@ -258,11 +258,12 @@ void mag::irouter_advertisement(const boost::system::error_code& ec, const std::
 	rainfo.link_address = be->poa_address();
 	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
+	rainfo.source = _link_local_ip;
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
-	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
+	ras->async_send(be->ra_sock, be->ra_ep, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::irouter_advertisement, this, _1, mn_id)));
 }
@@ -399,22 +400,13 @@ void mag::del_route_entries(bulist_entry& be)
 	_tunnels.del(be.lma_address());
 }
 
-void mag::setup_icmp_socket(bulist_entry& be)
+void mag::setup_ra_socket(bulist_entry& be)
 {
-	ip_address addr(_link_local_ip);
-
-	addr.scope_id(be.poa_dev_id());
-	be.icmp_sock.open(boost::asio::ip::icmp::v6());
-	be.icmp_sock.bind(boost::asio::ip::icmp::endpoint(addr, 0));
-	be.icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
-	be.icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
-	be.icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
-
-	for (size_t i = 0; i < _concurrency; ++i) {
-		icmp_rs_receiver_ptr rsr(new icmp_rs_receiver);
-
-		rsr->async_receive(be.icmp_sock, _service.wrap(boost::bind(&mag::irouter_solicitation, this, _1, _2, _3, _4)));
-	}
+	be.ra_sock.open(net::link::ethernet(net::link::ethernet::ipv6));
+	be.ra_ep = net::link::ethernet::endpoint(net::link::ethernet::ipv6,
+	                                         be.poa_dev_id(),
+	                                         net::link::ethernet::endpoint::outgoing,
+	                                         be.mn_link_address());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
