@@ -72,6 +72,9 @@ void madwifi_driver_impl::add_interface(const std::string& name, boost::system::
 	msg.mtype(sys::rtnl::link::m_get);
 	msg.flags(sys::nl::header::request | sys::nl::header::ack);
 
+	//TODO: drop support for kernels that can't handle this without
+	//the if index
+	msg->index = ::if_nametoindex(name.c_str());
 	msg.push_attribute(sys::rtnl::link::attr_ifname, name.c_str(), name.length() + 1);
 
 	_rtnl.send(msg.cbuffer(), 0, ec);
