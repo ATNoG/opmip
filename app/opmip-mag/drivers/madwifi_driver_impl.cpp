@@ -17,12 +17,9 @@
 
 #include "madwifi_driver_impl.hpp"
 #include <opmip/sys/netlink/message.hpp>
-#include <opmip/sys/netlink/utils.hpp>
+#include <opmip/sys/netlink/error.hpp>
 #include <opmip/sys/rtnetlink/link.hpp>
-#include <opmip/sys/error.hpp>
 #include <boost/bind.hpp>
-#include <ctime>
-#include <iostream>
 #include "wireless.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +40,7 @@ madwifi_driver_impl::~madwifi_driver_impl()
 {
 }
 
-void madwifi_driver_impl::start(boost::system::error_code& ec)
+void madwifi_driver_impl::start(const if_list& ifl, boost::system::error_code& ec)
 {
 	_rtnl.open(sys::netlink<0>(), ec);
 	if (ec)
@@ -52,6 +49,12 @@ void madwifi_driver_impl::start(boost::system::error_code& ec)
 	_rtnl.bind(sys::netlink<0>::endpoint(rt_link), ec);
 	if (ec)
 		return;
+
+	for (if_list::const_iterator i = ifl.begin(), e = ifl.end(); i != e; ++i) {
+		add_interface(*i, ec);
+		if (ec)
+			return;
+	}
 
 	_rtnl.async_receive(boost::asio::buffer(_buffer),
 	                    boost::bind(&madwifi_driver_impl::receive_handler, this, _1, _2));
@@ -62,13 +65,68 @@ void madwifi_driver_impl::stop(boost::system::error_code& ec)
 	_rtnl.close(ec);
 }
 
+void madwifi_driver_impl::add_interface(const std::string& name, boost::system::error_code& ec)
+{
+	sys::nl::message<sys::rtnl::link> msg;
+
+	msg.mtype(sys::rtnl::link::m_get);
+	msg.flags(sys::nl::header::request | sys::nl::header::ack);
+
+	msg.push_attribute(sys::rtnl::link::attr_ifname, name.c_str(), name.length() + 1);
+
+	_rtnl.send(msg.cbuffer(), 0, ec);
+	if (ec)
+		return;
+
+	size_t rbytes = _rtnl.receive(boost::asio::buffer(_buffer), 0, ec);
+	add_interface_h(ec, rbytes);
+}
+
+void madwifi_driver_impl::add_interface_h(boost::system::error_code& ec, size_t rbytes)
+{
+	if (ec)
+		return;
+
+	sys::nl::message_iterator mit(_buffer, rbytes);
+	sys::nl::message_iterator end;
+	int                       errc = 0;
+
+	for (; mit != end; ++mit) {
+		if (mit->type == sys::nl::header::m_error) {
+			sys::nl::message<sys::nl::error> err(mit);
+
+			errc = -err->error;
+			if (errc) {
+				ec = boost::system::error_code(errc, boost::system::get_system_category());
+			}
+			return;
+
+		} else {
+			sys::nl::message<sys::rtnl::link> lnk(mit);
+			sys::nl::message<sys::rtnl::link>::attr_iterator ai = lnk.abegin();
+			sys::nl::message<sys::rtnl::link>::attr_iterator aend;
+
+			for (; ai != aend; ++ai) {
+				switch (ai->type) {
+				case sys::rtnl::link::attr_address:
+					_address_map[lnk->index] = address_mac(*ai.get<address_mac::bytes_type>());
+					break;
+				}
+			}
+		}
+	}
+
+	rbytes = _rtnl.receive(boost::asio::buffer(_buffer), 0, ec);
+	add_interface_h(ec, rbytes);
+}
+
 void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t rbytes)
 {
 	if (ec) {
 		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
 			_event_handler.clear();
-		else
-			_event_handler(ec, event());
+
+		_event_handler(ec, event());
 		return;
 	}
 
@@ -81,70 +139,44 @@ void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t r
 			sys::nl::message<sys::nl::error> err(mit);
 
 			errc = -err->error;
-			if (errc)
+			if (errc) {
 				ec = boost::system::error_code(errc, boost::system::get_system_category());
-
-			_event_handler(ec, event());
+				_event_handler(ec, event());
+			}
 
 		} else {
 			sys::nl::message<sys::rtnl::link> lnk(mit);
+			address_map::iterator             idx = _address_map.find(lnk->index);
+
+			if (idx == _address_map.end())
+				continue;
+
 			sys::nl::message<sys::rtnl::link>::attr_iterator ai = lnk.abegin();
-			sys::nl::message<sys::rtnl::link>::attr_iterator aend;
-			event inf;
+			sys::nl::message<sys::rtnl::link>::attr_iterator ae;
+			event ev;
 
-			inf.which = static_cast<event_type>(mit->type - sys::rtnl::link::m_new + e_new);
-			inf.if_index = lnk->index;
-			inf.if_type = lnk->type;
-			inf.if_flags = lnk->flags;
-			inf.if_change = lnk->change;
+			ev.if_index = idx->first;
+			ev.if_address = idx->second;
 
-			for (; ai != aend; ++ai) {
-				switch (ai->type) {
-				case sys::rtnl::link::attr_address:
-					inf.if_address = address_mac(*ai.get<address_mac::bytes_type>());
-				break;
-
-				case sys::rtnl::link::attr_ifname:
-					inf.if_name.assign(ai.get<const char>(), ai.length());
-				break;
-
-				case sys::rtnl::link::attr_mtu:
-					inf.if_mtu = *ai.get<uint32>();
-				break;
-
-				case sys::rtnl::link::attr_wireless: {
+			for (; ai != ae; ++ai) {
+				if (ai->type == sys::rtnl::link::attr_wireless) {
 					::iw_event* we = ai.get< ::iw_event>();
 
 					switch (we->cmd) {
 					case IWEVREGISTERED:
-						inf.if_wireless.which = wevent_attach;
-						inf.if_wireless.address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
+						ev.which = attach;
+						ev.mn_address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
+						_event_handler(ec, ev);
 						break;
 
 					case IWEVEXPIRED:
-						inf.if_wireless.which = wevent_detach;
-						inf.if_wireless.address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
-						break;
-
-					default:
-//						std::cout << "unknown wireless event: "
-//						             "cmd = " << std::hex << uint(we->cmd) << std::dec << ", "
-//						             "length = " << uint(we->len) << std::endl;
+						ev.which = detach;
+						ev.mn_address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
+						_event_handler(ec, ev);
 						break;
 					}
-				} break;
-
-				case sys::rtnl::link::attr_operstate:
-					inf.if_state = *ai.get<uint32>();
-					break;
-
-				default:
-//					std::cout << "unknown attribute: type = "   << uint(ai->type)
-//					          <<                  ", length = " << uint(ai->length) << std::endl;
-					break;
 				}
 			}
-			_event_handler(ec, inf);
 		}
 	}
 

@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <vector>
 #include <string>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,14 +30,10 @@ namespace opmip { namespace app {
 
 ///////////////////////////////////////////////////////////////////////////////
 struct cmdline_options {
-	std::string identifier;
-	std::string node_db;
-	struct {
-		ll::mac_address address;
-		uint            device;
-		ip::address_v6  ip_local_addr;
-
-	}           access_link;
+	std::string              identifier;
+	std::string              node_db;
+	ip::address_v6           link_local_ip;
+	std::vector<std::string> access_links;
 
 
 	bool parse(int argc, char** argv);

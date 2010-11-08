@@ -31,33 +31,39 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt(opmip::app::madwifi_driver& ifs, opmip::pmip::mag& mag)
+static void interrupt(opmip::app::madwifi_driver& drv, opmip::pmip::mag& mag)
 {
 	std::cout << "\r";
-	ifs.stop();
+	drv.stop();
 	mag.stop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 static void link_event(const boost::system::error_code& ec,
-                       const opmip::app::madwifi_driver::event& event,
+                       const opmip::app::madwifi_driver::event& ev,
                        opmip::pmip::mag& mag,
-                       const opmip::ip::address_v6& ll_ip_address,
-                       const opmip::ll::mac_address& ll_mac_address)
+                       const opmip::ip::address_v6& ll_ip_address)
 {
-	if (ec || (event.if_wireless.which != opmip::app::madwifi_driver_impl::wevent_attach
-		       && event.if_wireless.which != opmip::app::madwifi_driver_impl::wevent_detach))
+	if (ec)
 		return;
 
-	opmip::pmip::mag::attach_info ai(event.if_wireless.address,
+	opmip::pmip::mag::attach_info ai(ev.mn_address,
 	                                 ll_ip_address,
-	                                 ll_mac_address,
-									 event.if_index);
+	                                 ev.if_address,
+	                                 ev.if_index);
 
-	if (event.if_wireless.which == opmip::app::madwifi_driver_impl::wevent_attach)
+	switch (ev.which) {
+	case opmip::app::madwifi_driver_impl::attach:
 		mag.mobile_node_attach(ai);
-	else
+		break;
+
+	case opmip::app::madwifi_driver_impl::detach:
 		mag.mobile_node_detach(ai);
+		break;
+
+	default:
+		break;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -86,19 +92,17 @@ int main(int argc, char** argv)
 		boost::asio::io_service    ios(concurrency);
 		opmip::pmip::node_db       ndb;
 		opmip::pmip::mag           mag(ios, ndb, concurrency);
-		opmip::app::madwifi_driver ifs(ios);
+		opmip::app::madwifi_driver drv(ios);
 
 		load_node_database(opts.node_db, ndb);
 
-		opts.access_link.ip_local_addr.scope_id(opts.access_link.device);
-		mag.start(opts.identifier.c_str(), opts.access_link.ip_local_addr);
-		ifs.start(boost::bind(link_event, _1, _2,
-		                      boost::ref(mag),
-		                      boost::cref(opts.access_link.ip_local_addr),
-		                      boost::cref(opts.access_link.address)));
+		mag.start(opts.identifier.c_str(), opts.link_local_ip);
+		drv.start(opts.access_links, boost::bind(link_event, _1, _2,
+		                                         boost::ref(mag),
+		                                         boost::cref(opts.link_local_ip)));
 
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
-		                                                 boost::ref(ifs),
+		                                                 boost::ref(drv),
 		                                                 boost::ref(mag)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);

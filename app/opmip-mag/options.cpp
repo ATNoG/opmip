@@ -35,19 +35,18 @@ bool cmdline_options::parse(int argc, char** argv)
 	po::variables_map vm;
 
 	options.add_options()
-		("help,h",        "display command line options");
+		("help,h", "display command line options");
 
 	config.add_options()
 		("node-db",       po::value<std::string>()->default_value("node.db"),
 		                  "node database")
 		("id",            po::value<std::string>()->default_value(boost::asio::ip::host_name()),
 		                  "MAG identifier on the node database")
-		("link-addr",     po::value<std::string>(),
-		                  "access-link address")
-		("link-dev-id",   po::value<uint>(),
-		                  "access-link device ID")
 		("link-local-ip", po::value<std::string>()->default_value("fe80::1"),
-		                  "link-local IP address for all access links");
+		                  "link local IP address for all access links")
+		("access-links",  po::value<std::vector<std::string> >()->multitoken(),
+		                  "list of access link interfaces");
+
 	options.add(config);
 
 	po::store(po::parse_command_line(argc, argv, options), vm);
@@ -56,24 +55,15 @@ bool cmdline_options::parse(int argc, char** argv)
 	if (vm.count("help")) {
 		std::cerr << options << std::endl;
 		return false;
-
-	}
-	if (!vm.count("link-addr")) {
-		std::cerr << options << std::endl;
-		boost::throw_exception(std::runtime_error("missing option link-addr"));
-
-	}
-	if (!vm.count("link-dev-id")) {
-		std::cerr << options << std::endl;
-		boost::throw_exception(std::runtime_error("missing option link-dev-id"));
 	}
 
 	identifier = vm["id"].as<std::string>();
 	node_db = vm["node-db"].as<std::string>();
 
-	access_link.address = ll::mac_address::from_string(vm["link-addr"].as<std::string>());
-	access_link.device = vm["link-dev-id"].as<uint>();
-	access_link.ip_local_addr = ip::address_v6::from_string(vm["link-local-ip"].as<std::string>());
+	link_local_ip = ip::address_v6::from_string(vm["link-local-ip"].as<std::string>());
+
+	if (vm.count("access-links"))
+		access_links = vm["access-links"].as<std::vector<std::string> >();
 
 	return true;
 }

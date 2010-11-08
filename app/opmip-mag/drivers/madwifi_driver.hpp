@@ -29,11 +29,11 @@ namespace opmip { namespace app {
 ////////////////////////////////////////////////////////////////////////////////
 class madwifi_driver : boost::noncopyable {
 public:
-	typedef madwifi_driver_impl::address_mac        address_mac;
-	typedef madwifi_driver_impl::event_type         event_type;
-	typedef madwifi_driver_impl::wireless_event     wireless_event;
-	typedef madwifi_driver_impl::event              event;
-	typedef madwifi_driver_impl::event_handler      event_handler;
+	typedef madwifi_driver_impl::address_mac   address_mac;
+	typedef madwifi_driver_impl::event_type    event_type;
+	typedef madwifi_driver_impl::event         event;
+	typedef madwifi_driver_impl::event_handler event_handler;
+	typedef madwifi_driver_impl::if_list       if_list;
 
 public:
 	madwifi_driver(boost::asio::io_service& ios)
@@ -41,12 +41,12 @@ public:
 	{ }
 
 	template<class EventHandler>
-	void start(EventHandler handler)
+	void start(const if_list& ifs, EventHandler handler)
 	{
 		boost::system::error_code ec;
 
 		implementation.set_event_handler(handler);
-		implementation.start(ec);
+		implementation.start(ifs, ec);
 		sys::throw_on_error(ec);
 	}
 

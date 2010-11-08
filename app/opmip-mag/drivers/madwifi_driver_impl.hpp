@@ -24,6 +24,9 @@
 #include <opmip/sys/netlink.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/function.hpp>
+#include <vector>
+#include <string>
+#include <map>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
@@ -31,44 +34,25 @@ namespace opmip { namespace app {
 ////////////////////////////////////////////////////////////////////////////////
 class madwifi_driver_impl : boost::noncopyable {
 public:
-	typedef ll::mac_address address_mac;
+	typedef ll::mac_address                 address_mac;
+	typedef std::map<uint, ll::mac_address> address_map;
+	typedef std::vector<std::string>        if_list;
 
 	enum event_type {
-		e_unknown,
-		e_new,
-		e_del,
-		e_get,
-		e_set,
-	};
-
-	enum wireless_event {
-		wevent_none,
-		wevent_attach,
-		wevent_detach,
+		unknown,
+		attach,
+		detach,
 	};
 
 	struct event {
 		event()
-			: which(e_unknown), if_index(0), if_type(0), if_flags(0),
-			  if_change(0), if_state(0), if_mtu(0)
-		{
-			if_wireless.which = wevent_none;
-		}
+			: which(unknown), if_index(0)
+		{ }
 
 		event_type  which;
 		uint        if_index;
-		uint        if_type;
-		uint        if_flags;
-		uint        if_change;
-		uint        if_state;
-		std::string if_name;
 		address_mac if_address;
-		uint        if_mtu;
-
-		struct {
-			wireless_event which;
-			address_mac    address;
-		} if_wireless;
+		address_mac mn_address;
 	};
 
 	typedef boost::function<void(const boost::system::error_code&,
@@ -78,7 +62,7 @@ public:
 	madwifi_driver_impl(boost::asio::io_service& ios);
 	~madwifi_driver_impl();
 
-	void start(boost::system::error_code& ec);
+	void start(const if_list& ifl, boost::system::error_code& ec);
 	void stop(boost::system::error_code& ec);
 
 	template<class EventHandler>
@@ -88,10 +72,14 @@ public:
 	}
 
 private:
-	void receive_handler(boost::system::error_code ec, size_t rbytes);
+	void add_interface(const std::string& name, boost::system::error_code& ec);
+
+	void add_interface_h(boost::system::error_code& ec, size_t rbytes);
+	void receive_handler(boost::system::error_code  ec, size_t rbytes);
 
 private:
 	sys::netlink<0>::socket _rtnl;
+	address_map             _address_map;
 	event_handler           _event_handler;
 	uchar                   _buffer[4096];
 };
