@@ -44,11 +44,11 @@ public:
 	ip6_tunnels(boost::asio::io_service& ios);
 	~ip6_tunnels();
 
+	void open(const ip::address_v6& address);
+	void close();
+
 	uint get(const ip::address_v6& remote);
 	void del(const ip::address_v6& remote);
-
-	void clear();
-	void set_local_address(const ip::address_v6& address);
 
 	const ip::address_v6& get_local_address() const { return _local; }
 

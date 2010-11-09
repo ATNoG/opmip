@@ -100,7 +100,7 @@ void mag::istart(const char* id, const ip_address& link_local_ip)
 	_identifier = id;
 	_link_local_ip = link_local_ip;
 
-	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pba_receiver_ptr pbar(new pba_receiver);
@@ -116,7 +116,7 @@ void mag::istop()
 	_bulist.clear();
 	_mp_sock.close();
 	_route_table.clear();
-	_tunnels.clear();
+	_tunnels.close();
 }
 
 void mag::imobile_node_attach(const attach_info& ai)

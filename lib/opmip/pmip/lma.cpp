@@ -80,7 +80,7 @@ void lma::istart(const char* id)
 
 	_identifier = id;
 
-	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		refcount_ptr<pbu_receiver> pbur(new pbu_receiver());
@@ -96,7 +96,7 @@ void lma::istop()
 	_bcache.clear();
 	_mp_sock.close();
 	_route_table.clear();
-	_tunnels.clear();
+	_tunnels.close();
 }
 
 void lma::proxy_binding_update(proxy_binding_info& pbinfo)
