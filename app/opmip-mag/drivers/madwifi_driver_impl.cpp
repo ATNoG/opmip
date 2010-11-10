@@ -126,10 +126,8 @@ void madwifi_driver_impl::add_interface_h(boost::system::error_code& ec, size_t 
 void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t rbytes)
 {
 	if (ec) {
-		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_event_handler.clear();
-
 		_event_handler(ec, event());
+		_event_handler.clear();
 		return;
 	}
 
@@ -139,13 +137,13 @@ void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t r
 
 	for (; mit != end; ++mit) {
 		if (mit->type == sys::nl::header::m_error) {
-			sys::nl::message<sys::nl::error> err(mit);
+//			sys::nl::message<sys::nl::error> err(mit);
 
-			errc = -err->error;
-			if (errc) {
-				ec = boost::system::error_code(errc, boost::system::get_system_category());
-				_event_handler(ec, event());
-			}
+//			errc = -err->error;
+//			if (errc) {
+//				ec = boost::system::error_code(errc, boost::system::get_system_category());
+//				_event_handler(ec, event());
+//			}
 
 		} else {
 			sys::nl::message<sys::rtnl::link> lnk(mit);
