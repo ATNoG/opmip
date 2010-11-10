@@ -72,7 +72,7 @@ public:
 
 public:
 	ethernet(uint16 proto)
-		: _protocol(::htons(proto))
+		: _protocol(htons(proto))
 	{ }
 
 	int family() const   { return 17/*AF_PACKET*/; }

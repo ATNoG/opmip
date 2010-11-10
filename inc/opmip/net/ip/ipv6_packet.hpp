@@ -46,7 +46,7 @@ public:
 		              uint32 payload_len,
 		              uint8 next_header)
 			: src(src_ip.to_bytes()), dst(dst_ip.to_bytes()),
-			  len(::htonl(payload_len)), next(next_header)
+			  len(htonl(payload_len)), next(next_header)
 		{
 			pad[0] = 0;
 			pad[1] = 0;
@@ -86,7 +86,7 @@ public:
 		uint8  nxh = PayloadPacket::ipv6_next_header;
 
 		_header.version = 0x60;
-		_header.payload_len = ::htons(len);
+		_header.payload_len = htons(len);
 		_header.next_header = nxh;
 		_header.hop_limit = hop_limit;
 		_header.src_addr = src.to_bytes();

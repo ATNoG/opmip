@@ -33,14 +33,14 @@ ethernet::endpoint::endpoint()
 }
 
 ethernet::endpoint::endpoint(uint16 proto, uint ifindex)
-	: _family(AF_PACKET), _protocol(::htons(proto)), _ifindex(ifindex),
+	: _family(AF_PACKET), _protocol(htons(proto)), _ifindex(ifindex),
 	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(0), _halen(0)
 {
 	std::fill(_addr, _addr + 8, 0);
 }
 
 ethernet::endpoint::endpoint(uint16 proto, uint ifindex, pk_type pktp, const ll::mac_address& destination)
-	: _family(AF_PACKET), _protocol(::htons(proto)), _ifindex(ifindex),
+	: _family(AF_PACKET), _protocol(htons(proto)), _ifindex(ifindex),
 	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(pktp), _halen(0)
 {
 	*reinterpret_cast<ll::mac_address::bytes_type*>(_addr) = destination.to_bytes();

@@ -164,7 +164,7 @@ public:
 		: _sequence(0), _flags1(0), _flags2(0), _lifetime(0)
 	{ }
 
-	uint16 sequence() const { return ::ntohs(_sequence); }
+	uint16 sequence() const { return ntohs(_sequence); }
 	bool   ack() const;
 	bool   h() const;
 	bool   l() const;
@@ -172,9 +172,9 @@ public:
 	bool   m() const;
 	bool   r() const;
 	bool   proxy_reg() const;
-	uint16 lifetime() const { return ::ntohs(_lifetime); }
+	uint16 lifetime() const { return ntohs(_lifetime); }
 
-	void sequence(uint16 value) { _sequence = ::htons(value); }
+	void sequence(uint16 value) { _sequence = htons(value); }
 	void ack(bool value);
 	void h(bool value);
 	void l(bool value);
@@ -182,7 +182,7 @@ public:
 	void m(bool value);
 	void r(bool value);
 	void proxy_reg(bool value);
-	void lifetime(uint16 value) { _lifetime = ::htons(value); }
+	void lifetime(uint16 value) { _lifetime = htons(value); }
 
 	const void* data() const
 	{
@@ -367,15 +367,15 @@ public:
 	bool        k() const;
 	bool        r() const;
 	bool        proxy_reg() const;
-	uint16      sequence() const { return ::ntohs(_sequence); }
-	uint16      lifetime() const { return ::ntohs(_lifetime); }
+	uint16      sequence() const { return ntohs(_sequence); }
+	uint16      lifetime() const { return ntohs(_lifetime); }
 
 	void status(status_type value) { _status = value; }
 	void k(bool value);
 	void r(bool value);
 	void proxy_reg(bool value);
-	void sequence(uint16 value)  { _sequence = ::htons(value); }
-	void lifetime(uint16 value)  { _lifetime = ::htons(value); }
+	void sequence(uint16 value)  { _sequence = htons(value); }
+	void lifetime(uint16 value)  { _lifetime = htons(value); }
 
 	const void* data() const
 	{
