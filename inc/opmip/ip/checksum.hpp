@@ -44,22 +44,25 @@ public:
 
 	void update(const uint16* data, size_t len)
 	{
-		uint sum = _sum;
+		uint32 sum = _sum;
 
 		for (size_t i = 0; i < len; ++i)
 			sum += data[i];
 
-		sum += (sum >> 16) & 0xffff;
-		sum += (sum >> 16);
-
-		BOOST_ASSERT(!((sum >> 16) & ~static_cast<uint>(0xffff)) && "BUG: unprocessed carry bits");
+		while (sum >> 16)
+			sum = (sum & 0xffff) + (sum >> 16);
 
 		_sum = static_cast<uint16>(sum);
 	}
 
-	uint16 final()
+	uint16 final() const
 	{
 		return ~_sum;
+	}
+
+	void clear()
+	{
+		_sum = 0;
 	}
 
 private:

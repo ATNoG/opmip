@@ -17,9 +17,15 @@
 
 exe opmip-mag
 	: main.cpp
-	  link_sap.cpp
-	  netlink.cpp
-	  rtnetlink.cpp
+	  options.cpp
+	  drivers/madwifi_driver_impl.cpp
 	  ../../lib/opmip
 	  /boost//thread
+	  /boost//program_options
+	;
+
+install install
+	: opmip-mag
+	  ../../node.db
+	: <location>../../dist
 	;

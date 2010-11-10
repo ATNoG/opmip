@@ -43,27 +43,24 @@ public:
 	typedef ll::mac_address mac_address;
 
 	struct attach_info {
-		attach_info(const ll::mac_address& mn_ll_address_,
-		            const ip::address_v6& poa_ip_address_,
-		            const ll::mac_address& poa_ll_address_,
-		            uint poa_dev_id_)
+		attach_info(uint poa_dev_id_,
+		            const ll::mac_address& poa_address_,
+		            const ll::mac_address& mn_address_)
 
-			: mn_ll_address(mn_ll_address_), poa_ip_address(poa_ip_address_),
-			  poa_ll_address(poa_ll_address_), poa_dev_id(poa_dev_id_)
+			: poa_dev_id(poa_dev_id_), poa_address(poa_address_),
+			  mn_address(mn_address_)
 		{ }
 
-
-		ll::mac_address  mn_ll_address;
-		ip::address_v6   poa_ip_address;
-		ll::mac_address  poa_ll_address;
 		uint             poa_dev_id;
+		ll::mac_address  poa_address;
+		ll::mac_address  mn_address;
 //		mobility_options mob_options;
 	};
 
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const char* id, const ip_address& mn_access_link);
+	void start(const char* id, const ip_address& link_local_ip);
 	void stop();
 
 	void mobile_node_attach(const attach_info& ai);
@@ -73,10 +70,7 @@ private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
 
-	void icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id);
 	void icmp_ra_send_handler(const boost::system::error_code& ec);
-
-	void proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo);
 
 private:
 	void istart(const char* id, const ip_address& mn_access_link);
@@ -86,15 +80,15 @@ private:
 	void imobile_node_detach(const attach_info& ai);
 
 	void irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
-	void irouter_advertisement(const std::string& mn_id);
+	void irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id);
 
 	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
-	void iproxy_binding_retry(proxy_binding_info& pbinfo);
+	void iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
 
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);
 
-	void setup_icmp_socket(bulist_entry& be);
+	void setup_ra_socket(bulist_entry& be);
 
 private:
 	strand   _service;
@@ -105,6 +99,7 @@ private:
 	ip::mproto::socket _mp_sock;
 
 	std::string       _identifier;
+	ip_address        _link_local_ip;
 	pmip::ip6_tunnels _tunnels;
 	sys::route_table  _route_table;
 	size_t            _concurrency;

@@ -29,3 +29,8 @@ exe t0003
 	: t0003.cpp
 	  ../../lib/opmip//opmip
 	;
+
+exe chrono
+	: chrono.cpp
+	  ../../lib/opmip//opmip
+	;

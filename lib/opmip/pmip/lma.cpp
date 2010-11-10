@@ -61,24 +61,13 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 		return;
 	}
 
-	_service.dispatch(boost::bind(&lma::iproxy_binding_update, this, pbinfo));
+	_service.dispatch(boost::bind(&lma::proxy_binding_update, this, pbinfo));
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
-}
-
-void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
-{
-	if (ec) {
-		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "Binding cache remove entry timer error: ", ec.message());
-		return;
-	}
-
-	_service.dispatch(boost::bind(&lma::ibcache_remove_entry, this, mn_id));
 }
 
 void lma::istart(const char* id)
 {
-	const lma_node* node = _node_db.find_lma(id);
+	const router_node* node = _node_db.find_router(id);
 	if (!node) {
 		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
 
@@ -91,7 +80,7 @@ void lma::istart(const char* id)
 
 	_identifier = id;
 
-	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		refcount_ptr<pbu_receiver> pbur(new pbu_receiver());
@@ -107,70 +96,113 @@ void lma::istop()
 	_bcache.clear();
 	_mp_sock.close();
 	_route_table.clear();
-	_tunnels.clear();
+	_tunnels.close();
 }
 
-void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
+void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 {
-	_log(0, "PBU [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+	if (pbinfo.status != ip::mproto::pba::status_ok)
+		return; //error
+
+	pbu_process(pbinfo);
+
+	pba_sender_ptr pbas(new pba_sender(pbinfo));
+
+	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
+}
+
+bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
+{
+	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
 
 	bcache_entry* be = _bcache.find(pbinfo.id);
-	if (!be) {
-		if (!pbinfo.lifetime) {
-			_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
+	if (be)
+		return be;
 
-		const mobile_node* mn = _node_db.find_mobile_node(pbinfo.id);
-		if (!mn) {
-			_log(0, "PBU registration error: unknown mobile node [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-
-		}
-		if (mn->lma_id() != _identifier) {
-			_log(0, "PBU registration error: not this LMA [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
-		}
-
-		be = new bcache_entry(_service.get_io_service(), pbinfo.id, mn->prefix_list());
-		_bcache.insert(be);
+	if (!_node_db.find_router(pbinfo.address)) {
+		_log(0, "PBU registration error: MAG not authorized [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
+		return nullptr;
 	}
 
-	if (be->care_of_address != pbinfo.address) {
-		const mag_node* mag = _node_db.find_mag(pbinfo.address);
+	const mobile_node* mn = _node_db.find_mobile_node(pbinfo.id);
+	if (!mn) {
+		_log(0, "PBU registration error: unknown mobile node [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		pbinfo.status = ip::mproto::pba::status_not_lma_for_this_mn;
+		return nullptr;
+	}
+
+	if (mn->lma_id() != _identifier) {
+		_log(0, "PBU registration error: not this LMA [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		pbinfo.status = ip::mproto::pba::status_not_lma_for_this_mn;
+		return nullptr;
+	}
+
+	if (!pbinfo.lifetime) {
+		_log(0, "PBU de-registration error: binding cache entry not found [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		return nullptr; //note: no error for this
+	}
+
+	be = new bcache_entry(_service.get_io_service(), pbinfo.id, mn->prefix_list());
+	_bcache.insert(be);
+
+	return be;
+}
+
+bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
+{
+	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
+
+	if (be.care_of_address != pbinfo.address) {
+		const router_node* mag = _node_db.find_router(pbinfo.address);
 		if (!mag) {
 			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
+			pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
+			return false;
 		}
-
 		if (!pbinfo.lifetime) {
 			_log(0, "PBU de-registration error: not this MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
-			return; //error
+			return false; //note: no error for this
 		}
-		_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
-		if (!be->care_of_address.is_unspecified())
-			del_route_entries(be);
-		be->care_of_address = pbinfo.address;
-		be->lifetime = pbinfo.lifetime;
-		be->sequence = pbinfo.sequence;
-		be->link_type = pbinfo.link_type;
-		be->bind_status = bcache_entry::k_bind_unknown;
+		if (!be.care_of_address.is_unspecified())
+			del_route_entries(&be);
+		be.care_of_address = pbinfo.address;
+		be.lifetime = pbinfo.lifetime;
+		be.sequence = pbinfo.sequence;
+		be.link_type = pbinfo.link_type;
+		be.bind_status = bcache_entry::k_bind_unknown;
 
 	} else {
-		if (!validate_sequence_number(be->sequence, pbinfo.sequence)) {
+		if (!validate_sequence_number(be.sequence, pbinfo.sequence)) {
 			_log(0, "PBU error: sequence not valid [id = ", pbinfo.id,
 			                                     ", mag = ", pbinfo.address,
-			                                     ", sequence = ", be->sequence, " <> ", pbinfo.sequence, "]");
-			return; //error
+			                                     ", sequence = ", be.sequence, " <> ", pbinfo.sequence, "]");
+			pbinfo.status = ip::mproto::pba::status_bad_sequence;
+			return false;
 		}
 
-		be->lifetime = pbinfo.lifetime;
-		be->sequence = pbinfo.sequence;
+		be.lifetime = pbinfo.lifetime;
+		be.sequence = pbinfo.sequence;
 	}
 
+	return true;
+}
+
+void lma::pbu_process(proxy_binding_info& pbinfo)
+{
+	bcache_entry* be = pbu_get_be(pbinfo);
+	if (!be)
+		return;
+
+	if (!pbu_mag_checkin(*be, pbinfo))
+		return;
+
 	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
-		_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		if (be->care_of_address == pbinfo.address)
+			_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+		else
+			_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
 		be->timer.cancel();
 		be->bind_status = bcache_entry::k_bind_registered;
@@ -188,17 +220,19 @@ void lma::iproxy_binding_update(proxy_binding_info& pbinfo)
 		be->care_of_address = ip::address_v6();
 
 		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
-		be->timer.async_wait(boost::bind(&lma::bcache_remove_entry, this, _1, be->id()));
+		be->timer.async_wait(_service.wrap(boost::bind(&lma::bcache_remove_entry, this, _1, be->id())));
 	}
-
-	pbinfo.status = ip::mproto::pba::status_ok;
-	pba_sender_ptr pbas(new pba_sender(pbinfo));
-
-	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
 }
 
-void lma::ibcache_remove_entry(const std::string& mn_id)
+void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
 {
+	if (ec) {
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "Binding cache remove entry timer error: ", ec.message());
+
+		return;
+	}
+
 	bcache_entry* be = _bcache.find(mn_id);
 	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
 		_log(0, "Binding cache remove entry error: not found [id = ", mn_id, "]");

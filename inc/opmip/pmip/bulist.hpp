@@ -20,10 +20,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/technology.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <opmip/net/link/ethernet.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/ip/icmp.hpp>
 #include <boost/intrusive/rbtree.hpp>
@@ -44,7 +46,6 @@ public:
 	typedef ip::prefix_v6           net_prefix;
 	typedef std::vector<net_prefix> net_prefix_list;
 	typedef ll::mac_address         link_address;
-	typedef uint                    nic_id;
 
 	enum bind_status_t {
 		k_bind_unknown,
@@ -56,43 +57,38 @@ public:
 
 public:
 	bulist_entry(boost::asio::io_service& ios, const std::string& mn_id,
-	                                           const link_address& mn_ll_address,
+	                                           const link_address& mn_link_address,
 	                                           const net_prefix_list& mn_prefix_list,
 	                                           const net_address& lma_address,
-	                                           const net_address& poa_ip_address,
-	                                           const link_address& poa_ll_address,
-	                                           uint poa_dev_id)
+	                                           uint poa_dev_id,
+	                                           const link_address& poa_address)
 
-		: _mn_id(mn_id), _mn_ll_addr(mn_ll_address),
+		: _mn_id(mn_id), _mn_link_addr(mn_link_address),
 		  _mn_prefix_list(mn_prefix_list), _lma_addr(lma_address),
-		  _poa_ip_addr(poa_ip_address), _poa_ll_addr(poa_ll_address),
-		  _poa_dev_id(poa_dev_id),
+		  _poa_dev_id(poa_dev_id), _poa_addr(poa_address),
 		  initial_lifetime(0), remaining_lifetime(0), sequence_number(std::time(nullptr)),
 		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
 		  bind_status(k_bind_unknown), retry_count(0), mtu(1460),
-		  timer(ios), icmp_sock(ios)
+		  timer(ios), ra_sock(ios)
 	{ }
 
-	const std::string&     mn_id() const              { return _mn_id; }
-	const link_address&    mn_link_address() const    { return _mn_ll_addr; }
-	const net_prefix_list& mn_prefix_list() const     { return _mn_prefix_list; }
-	const net_address&     lma_address() const        { return _lma_addr; }
-	const net_address&     poa_ip_address() const     { return _poa_ip_addr; }
-	const link_address&    poa_ll_address() const     { return _poa_ll_addr; }
-	uint                   poa_dev_id() const         { return _poa_dev_id; }
+	const std::string&     mn_id() const           { return _mn_id; }
+	const link_address&    mn_link_address() const { return _mn_link_addr; }
+	const net_prefix_list& mn_prefix_list() const  { return _mn_prefix_list; }
+	const net_address&     lma_address() const     { return _lma_addr; }
+	uint                   poa_dev_id() const      { return _poa_dev_id; }
+	const link_address&    poa_address() const     { return _poa_addr; }
 
 private:
 	boost::intrusive::set_member_hook<> _mn_id_hook;
 	boost::intrusive::set_member_hook<> _mn_link_addr_hook;
 
 	std::string     _mn_id;               ///MN Identifier
-	link_address    _mn_ll_addr;          ///MN Link Address for the MN access point
+	link_address    _mn_link_addr;        ///MN Link Address for the MN access point
 	net_prefix_list _mn_prefix_list;      ///MN List of Network Prefixes
-	nic_id          _mn_access_dev;       ///MAG Network Interface Identifier for the MN access point
 	net_address     _lma_addr;            ///LMA Address
-	net_address     _poa_ip_addr;         ///Point of Attachment link local address
-	link_address    _poa_ll_addr;         ///Point of Attachment link layer address
 	uint            _poa_dev_id;          ///Point of Attachment device identifier
+	link_address    _poa_addr;            ///Point of Attachment link layer address
 
 public:
 	uint64        initial_lifetime;    ///Initial Lifetime
@@ -105,7 +101,10 @@ public:
 	uint          mtu;
 
 	boost::asio::deadline_timer   timer;
-	boost::asio::ip::icmp::socket icmp_sock;
+	net::link::ethernet::socket   ra_sock;
+	net::link::ethernet::endpoint ra_ep;
+
+	chrono handover_delay;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -130,17 +129,17 @@ class bulist {
 	struct compare_mn_link_address {
 		bool operator()(const bulist_entry& rhs, const bulist_entry& lhs) const
 		{
-			return rhs._mn_ll_addr < lhs._mn_ll_addr;
+			return rhs._mn_link_addr < lhs._mn_link_addr;
 		}
 
 		bool operator()(const bulist_entry& rhs, const bulist_entry::link_address& key) const
 		{
-			return rhs._mn_ll_addr < key;
+			return rhs._mn_link_addr < key;
 		}
 
 		bool operator()(const bulist_entry::link_address& key, const bulist_entry& lhs) const
 		{
-			return key < lhs._mn_ll_addr;
+			return key < lhs._mn_link_addr;
 		}
 	};
 
@@ -167,7 +166,6 @@ public:
 	typedef bulist_entry::net_prefix      net_prefix;
 	typedef bulist_entry::net_prefix_list net_prefix_list;
 	typedef bulist_entry::link_address    link_address;
-	typedef bulist_entry::nic_id          nic_id;
 
 public:
 	bulist();

@@ -1,15 +1,11 @@
 {
-	"lma-nodes" :
+	"router-nodes" :
 	[
 		{
 			"id"          : "kenny",
 			"ip-address"  : "2001:690:2380:777a:20c:6eff:feda:195c",
 			"ip-scope-id" : "2"
-		}
-	],
-
-	"mag-nodes" :
-	[
+		},
 		{
 			"id"          : "kyle",
 			"ip-address"  : "2001:690:2380:778f:20c:6eff:fedc:2a16",
@@ -19,22 +15,123 @@
 			"id"          : "pathfinder",
 			"ip-address"  : "2001:690:2380:777c:20c:6eff:fef3:5dcf",
 			"ip-scope-id" : "2"
+		},
+		{
+			"id"          : "node6",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::6",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node7",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::7",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node8",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::8",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node9",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::9",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node10",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::10",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node11",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::11",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node12",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::12",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node13",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::13",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node14",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::14",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node15",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::15",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node16",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::16",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node17",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::17",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node18",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::18",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node19",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::19",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node20",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::20",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node21",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::21",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node22",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::22",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node23",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::23",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "node24",
+			"ip-address"  : "2001:aaaa:bbbb:cccc::24",
+			"ip-scope-id" : "4"
 		}
 	],
 
 	"mobile-nodes" :
 	[
 		{
-			"id"        : "patolas",
-			"ip-prefix" : "3001:bbbb:a::/64",
-			"mac"       : "00:18:de:10:87:2a",
+			"id"        : "butters",
+			"ip-prefix" : "2001:690:2380:7792::/64",
+			"mac"       : "00:13:e8:ef:6e:81",
 			"lma-id"    : "kenny"
 		},
 		{
-			"id"        : "butters",
-			"ip-prefix" : "3001:bbbb:b::/64",
-			"mac"       : "00:13:e8:ef:6e:81",
-			"lma-id"    : "kenny"
+			"id"        : "patolas",
+			"ip-prefix" : "3001:690:2380:7793::/64",
+			"mac"       : "00:18:de:10:87:2a",
+			"lma-id"    : "node6"
+		},
+		{
+			"id"        : "marcelo",
+			"ip-prefix" : "3001:690:2380:7794::/64",
+			"mac"       : "00:1c:bf:6e:7b:15",
+			"lma-id"    : "node6"
 		}
 	]
 }

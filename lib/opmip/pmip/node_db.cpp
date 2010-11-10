@@ -31,10 +31,11 @@ node_db::node_db()
 
 node_db::~node_db()
 {
-	_nodes.clear_and_dispose(disposer<void>()); //FIXME: tell rbtree to ignore unlinked nodes
-	_lmas.clear_and_dispose(disposer<route_node, lma_node>());
-	_mags.clear_and_dispose(disposer<route_node, lma_node>());
-	_mobile_nodes.clear_and_dispose(disposer<mobile_node>());
+	//FIXME: tell rbtree to ignore unlinked nodes
+	_router_nodes_by_id.clear_and_dispose(disposer<void>());
+	_mobile_nodes_by_id.clear_and_dispose(disposer<void>());
+	_router_nodes_by_key.clear_and_dispose(disposer<router_node>());
+	_mobile_nodes_by_key.clear_and_dispose(disposer<mobile_node>());
 }
 
 size_t node_db::load(std::istream& input)
@@ -45,8 +46,8 @@ size_t node_db::load(std::istream& input)
 
 	boost::property_tree::read_json(input, pt);
 
-	ptree& lmas = pt.get_child("lma-nodes");
-	for (ptree::iterator i = lmas.begin(), e = lmas.end(); i != e; ++i) {
+	ptree& routers = pt.get_child("router-nodes");
+	for (ptree::iterator i = routers.begin(), e = routers.end(); i != e; ++i) {
 		std::string id;
 		ip_address  addr;
 		uint        sid;
@@ -55,22 +56,7 @@ size_t node_db::load(std::istream& input)
 		id = i->second.get<std::string>("id");
 		addr = ip_address::from_string(i->second.get<std::string>("ip-address"));
 		sid = i->second.get<uint>("ip-scope-id");
-		res = insert_lma(id, addr, sid);
-		if (res)
-			++cnt;
-	}
-
-	ptree& mags = pt.get_child("mag-nodes");
-	for (ptree::iterator i = mags.begin(), e = mags.end(); i != e; ++i) {
-		std::string id;
-		ip_address  addr;
-		uint        sid;
-		bool        res;
-
-		id = i->second.get<std::string>("id");
-		addr = ip_address::from_string(i->second.get<std::string>("ip-address"));
-		sid = i->second.get<uint>("ip-scope-id");
-		res = insert_mag(id, addr, sid);
+		res = insert_router(id, addr, sid);
 		if (res)
 			++cnt;
 	}
@@ -95,106 +81,58 @@ size_t node_db::load(std::istream& input)
 	return cnt;
 }
 
-const lma_node* node_db::find_lma(const key& key) const
+const router_node* node_db::find_router(const key& key) const
 {
-	const node* nd = find(key);
+	node_tree::const_iterator i = _router_nodes_by_id.find(key, node::compare());
 
-	if (nd && nd->type() == node::lma)
-		return static_cast<const lma_node*>(nd);
-
-	return nullptr;
-}
-
-const mag_node* node_db::find_mag(const key& key) const
-{
-	const node* nd = find(key);
-
-	if (nd && nd->type() == node::mag)
-		return static_cast<const mag_node*>(nd);
+	if (i != _router_nodes_by_id.end())
+		return static_cast<const router_node*>(boost::addressof(*i));
 
 	return nullptr;
 }
 
 const mobile_node* node_db::find_mobile_node(const key& key) const
 {
-	const node* nd = find(key);
+	node_tree::const_iterator i = _mobile_nodes_by_id.find(key, node::compare());
 
-	if (nd && nd->type() == node::mobile)
-		return static_cast<const mobile_node*>(nd);
-
-	return nullptr;
-}
-
-const lma_node* node_db::find_lma(const lma_key& key) const
-{
-	route_node_tree::const_iterator i = _lmas.find(key, route_node::compare());
-
-	if (i != _lmas.end())
-		return static_cast<const lma_node*>(boost::addressof(*i));
+	if (i != _mobile_nodes_by_id.end())
+		return static_cast<const mobile_node*>(boost::addressof(*i));
 
 	return nullptr;
 }
 
-const mag_node* node_db::find_mag(const mag_key& key) const
+const router_node* node_db::find_router(const router_key& key) const
 {
-	route_node_tree::const_iterator i = _mags.find(key, route_node::compare());
+	router_node_tree::const_iterator i = _router_nodes_by_key.find(key, router_node::compare());
 
-	if (i != _mags.end())
-		return static_cast<const mag_node*>(boost::addressof(*i));
+	if (i != _router_nodes_by_key.end())
+		return boost::addressof(*i);
 
 	return nullptr;
 }
 
 const mobile_node* node_db::find_mobile_node(const mn_key& key) const
 {
-	mobile_node_tree::const_iterator i = _mobile_nodes.find(key, mobile_node::compare());
+	mobile_node_tree::const_iterator i = _mobile_nodes_by_key.find(key, mobile_node::compare());
 
-	if (i != _mobile_nodes.end())
+	if (i != _mobile_nodes_by_key.end())
 		return boost::addressof(*i);
 
 	return nullptr;
 }
 
-const node* node_db::find(const key& key) const
+bool node_db::insert_router(const std::string& id, const ip_address& addr, uint device_id)
 {
-	node_tree::const_iterator i = _nodes.find(key, node::compare());
-
-	if (i != _nodes.end())
-		return boost::addressof(*i);
-
-	return nullptr;
-}
-
-bool node_db::insert_lma(const std::string& id, const ip_address& addr, uint device_id)
-{
-	lma_node* lma = new lma_node(id, addr, device_id);
-	std::pair<node_tree::iterator, bool> ins = _nodes.insert_unique(*lma);
+	router_node* router = new router_node(id, addr, device_id);
+	std::pair<node_tree::iterator, bool> ins = _router_nodes_by_id.insert_unique(*router);
 
 	if (!ins.second) {
-		delete lma;
+		delete router;
 		return false;
 	}
 
-	if (!_lmas.insert_unique(*lma).second) {
-		_nodes.erase_and_dispose(ins.first, disposer<node, lma_node>());
-		return false;
-	}
-
-	return true;
-}
-
-bool node_db::insert_mag(const std::string& id, const ip_address& addr, uint device_id)
-{
-	mag_node* mag = new mag_node(id, addr, device_id);
-	std::pair<node_tree::iterator, bool> ins = _nodes.insert_unique(*mag);
-
-	if (!ins.second) {
-		delete mag;
-		return false;
-	}
-
-	if (!_mags.insert_unique(*mag).second) {
-		_nodes.erase_and_dispose(ins.first, disposer<node, mag_node>());
+	if (!_router_nodes_by_key.insert_unique(*router).second) {
+		_router_nodes_by_id.erase_and_dispose(ins.first, disposer<node, router_node>());
 		return false;
 	}
 
@@ -204,15 +142,15 @@ bool node_db::insert_mag(const std::string& id, const ip_address& addr, uint dev
 bool node_db::insert_mobile_node(const std::string& id, const ip_prefix_list& prefs, const link_address& link_addr, const std::string& lma_id)
 {
 	mobile_node* mn = new mobile_node(id, prefs, link_addr, lma_id);
-	std::pair<node_tree::iterator, bool> ins = _nodes.insert_unique(*mn);
+	std::pair<node_tree::iterator, bool> ins = _mobile_nodes_by_id.insert_unique(*mn);
 
 	if (!ins.second) {
 		delete mn;
 		return false;
 	}
 
-	if (!_mobile_nodes.insert_unique(*mn).second) {
-		_nodes.erase_and_dispose(ins.first, disposer<node, mobile_node>());
+	if (!_mobile_nodes_by_key.insert_unique(*mn).second) {
+		_mobile_nodes_by_id.erase_and_dispose(ins.first, disposer<node, mobile_node>());
 		return false;
 	}
 

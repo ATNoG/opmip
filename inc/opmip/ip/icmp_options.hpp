@@ -92,8 +92,8 @@ public:
 	bool      L() const       { return _flags & 0x80; }
 	bool      A() const       { return _flags & 0x40; }
 
-	void valid_lifetime(uint32 val)    { _valid_lifetime = ::htonl(val); }
-	void prefered_lifetime(uint32 val) { _prefered_lifetime = ::htonl(val); }
+	void valid_lifetime(uint32 val)    { _valid_lifetime = htonl(val); }
+	void prefered_lifetime(uint32 val) { _prefered_lifetime = htonl(val); }
 
 	void prefix(const prefix_v6& val)
 	{
@@ -137,8 +137,8 @@ public:
 		: option(type_value, static_size), _reserved(0)
 	{ }
 
-	void   set(uint32 val) { _mtu = ::htonl(val); }
-	uint32 get() const     { return ::ntohl(_mtu); }
+	void   set(uint32 val) { _mtu = htonl(val); }
+	uint32 get() const     { return ntohl(_mtu); }
 
 public:
 	uint16 _reserved;

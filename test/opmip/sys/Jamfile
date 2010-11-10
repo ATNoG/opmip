@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : OPMIP Library Node DB Unit Test
+# Brief   : OPMIP System Library Unit Tests
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,7 +15,17 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe t0000
-	: t0000.cpp
+exe ip6_tunnel
+	: ip6_tunnel.cpp
+	  ../../../lib/opmip//opmip
+	;
+
+exe route_table
+	: route_table.cpp
+	  ../../../lib/opmip//opmip
+	;
+
+exe if_service
+	: if_service.cpp
 	  ../../../lib/opmip//opmip
 	;

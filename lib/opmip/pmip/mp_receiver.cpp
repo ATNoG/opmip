@@ -21,31 +21,17 @@
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-bool pbu_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
+static bool parse_options(uchar* data, size_t length, proxy_binding_info& pbinfo)
 {
-	ip::mproto::header* hdr = ip::mproto::header::cast(_buffer, rbytes);
-
-	if (!hdr)
-		return false;
-
-
-	ip::mproto::pbu* pbu = ip::mproto::pbu::cast(hdr);
-	size_t           pos = sizeof(ip::mproto::pbu);
-
-	if (!pbu || !pbu->proxy_reg())
-		return false;
-
-	pbinfo.address  = _endpoint.address();
-	pbinfo.sequence = pbu->sequence();
-	pbinfo.lifetime = 4000 * pbu->lifetime();
+	ip::mproto::option*            opt;
+	ip::mproto::option::netprefix* npf;
+	ip::mproto::option::nai*       nai = nullptr;
+	ip::mproto::option::handoff*   hof = nullptr;
+	ip::mproto::option::att*       att = nullptr;
+	size_t                         pos = 0;
 
 
-	ip::mproto::option*          opt;
-	ip::mproto::option::nai*     nai = nullptr;
-	ip::mproto::option::handoff* hof = nullptr;
-	ip::mproto::option::att*     att = nullptr;
-
-	while ((pos < rbytes) && (opt = ip::mproto::option::cast(_buffer + pos, rbytes - pos))) {
+	while ((pos < length) && (opt = ip::mproto::option::cast(data + pos, length - pos))) {
 		pos += ip::mproto::option::size(opt);
 		switch (opt->type) {
 		case ip::mproto::option::nai::type_value:
@@ -58,6 +44,11 @@ bool pbu_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 				return false;
 
 			pbinfo.id.assign(nai->id, opt->length - 1);
+			break;
+
+		case ip::mproto::option::netprefix::type_value:
+			npf = opt->get<ip::mproto::option::netprefix>();
+			pbinfo.prefix_list.push_back(ip::prefix_v6(npf->prefix, npf->length));
 			break;
 
 		case ip::mproto::option::handoff::type_value:
@@ -82,6 +73,28 @@ bool pbu_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+bool pbu_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
+{
+	ip::mproto::header* hdr = ip::mproto::header::cast(_buffer, rbytes);
+
+	if (!hdr)
+		return false;
+
+
+	ip::mproto::pbu* pbu = ip::mproto::pbu::cast(hdr);
+	size_t           pos = sizeof(ip::mproto::pbu);
+
+	if (!pbu || !pbu->proxy_reg())
+		return false;
+
+	pbinfo.address  = _endpoint.address();
+	pbinfo.sequence = pbu->sequence();
+	pbinfo.lifetime = 4000 * pbu->lifetime();
+
+	return parse_options(_buffer + pos, rbytes - pos, pbinfo);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 bool pba_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 {
 	ip::mproto::header* hdr = ip::mproto::header::cast(_buffer, rbytes);
@@ -100,46 +113,7 @@ bool pba_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 	pbinfo.lifetime = 4000 * pba->lifetime();
 	pbinfo.status   = pba->status();
 
-
-	ip::mproto::option*          opt;
-	ip::mproto::option::nai*     nai = nullptr;
-	ip::mproto::option::handoff* hof = nullptr;
-	ip::mproto::option::att*     att = nullptr;
-
-	while ((pos < rbytes) && (opt = ip::mproto::option::cast(_buffer + pos, rbytes - pos))) {
-		pos += ip::mproto::option::size(opt);
-		switch (opt->type) {
-		case ip::mproto::option::nai::type_value:
-			if (nai)
-				return false;
-
-			nai = opt->get<ip::mproto::option::nai>();
-
-			if (nai->subtype != 1)
-				return false;
-
-			pbinfo.id.assign(nai->id, opt->length - 1);
-			break;
-
-		case ip::mproto::option::handoff::type_value:
-			if (hof)
-				return false;
-
-			hof = opt->get<ip::mproto::option::handoff>();
-			pbinfo.handoff = static_cast<ip::mproto::option::handoff::type>(hof->indicator);
-			break;
-
-		case ip::mproto::option::att::type_value:
-			if (att)
-				return false;
-
-			att = opt->get<ip::mproto::option::att>();
-			pbinfo.link_type = static_cast<ll::technology>(att->tech_type);
-			break;
-		}
-	}
-
-	return true;
+	return parse_options(_buffer + pos, rbytes - pos, pbinfo);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

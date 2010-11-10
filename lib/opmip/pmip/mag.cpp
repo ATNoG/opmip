@@ -15,6 +15,7 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
+#include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/mp_sender.hpp>
 #include <opmip/pmip/icmp_sender.hpp>
@@ -74,50 +75,32 @@ void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	}
 }
 
-void mag::icmp_ra_timer_handler(const boost::system::error_code& ec, const std::string& mn_id)
-{
-	if (ec) {
-		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
-
-	} else {
-		_service.dispatch(boost::bind(&mag::irouter_advertisement, this, mn_id));
-	}
-}
-
 void mag::icmp_ra_send_handler(const boost::system::error_code& ec)
 {
 	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
 		_log(0, "ICMPv6 router advertisement send error: ", ec.message());
 }
 
-void mag::proxy_binding_retry(const boost::system::error_code& ec, const proxy_binding_info& pbinfo)
+void mag::istart(const char* id, const ip_address& link_local_ip)
 {
-	if (ec) {
-		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
-			_log(0, "PBU retry timer error: ", ec.message());
+	const router_node* node = _node_db.find_router(id);
+	if (!node)
+		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
+		                                 "MAG id not found in node database"));
 
-	} else {
-		_service.dispatch(boost::bind(&mag::iproxy_binding_retry, this, pbinfo));
-	}
-}
+	if (!link_local_ip.is_link_local())
+		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
+		                                 "Invalid Link local address"));
 
-void mag::istart(const char* id, const ip_address& mn_access_link)
-{
-	const mag_node* node = _node_db.find_mag(id);
-	if (!node) {
-		error_code ec(boost::system::errc::invalid_argument, boost::system::get_generic_category());
-
-		throw_exception(exception(ec, "MAG id not found in node database"));
-	}
-	_log(0, "Starting... [id = ", id, ", mn_access_link = ", mn_access_link, ", address = ", node->address(), "]");
+	_log(0, "Starting... [id = ", id, ", link_local_ip = ", link_local_ip, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
 
 	_identifier = id;
+	_link_local_ip = link_local_ip;
 
-	_tunnels.set_local_address(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pba_receiver_ptr pbar(new pba_receiver);
@@ -133,49 +116,52 @@ void mag::istop()
 	_bulist.clear();
 	_mp_sock.close();
 	_route_table.clear();
-	_tunnels.clear();
+	_tunnels.close();
 }
 
 void mag::imobile_node_attach(const attach_info& ai)
 {
-	bulist_entry* be = _bulist.find(ai.mn_ll_address);
+	bulist_entry* be = _bulist.find(ai.mn_address);
 	if (!be) {
-		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
+		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 		if (!mn) {
-			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_ll_address, "]");
+			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_address, "]");
 			return;
 		}
 
-		const lma_node* lma = _node_db.find_lma(mn->lma_id());
+		const router_node* lma = _node_db.find_router(mn->lma_id());
 		if (!lma) {
-			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", mn->lma_id(), "]");
+			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_address, "), lma = ", mn->lma_id(), "]");
 			return;
 		}
 
-		be = new bulist_entry(_service.get_io_service(), mn->id(), ai.mn_ll_address, mn->prefix_list(), lma->address(),
-		                      ai.poa_ip_address, ai.poa_ll_address, ai.poa_dev_id);
+		be = new bulist_entry(_service.get_io_service(), mn->id(),
+		                      ai.mn_address, mn->prefix_list(), lma->address(),
+		                      ai.poa_dev_id, ai.poa_address);
 
 		_bulist.insert(be);
-		setup_icmp_socket(*be);
+		setup_ra_socket(*be);
 
-		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_ll_address, ")"
+		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_address, ")"
 		                          ", lma = ", mn->lma_id(), " (", be->lma_address(), ")]");
 	} else {
-		_log(0, "Mobile Node re-attach [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node re-attach [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
-		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
 
 	proxy_binding_info pbinfo;
 
+	be->handover_delay.start(); //begin chrono handover delay
 	be->last_ack_sequence = be->sequence_number;
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = ~0;
+	pbinfo.prefix_list = be->mn_prefix_list();
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
@@ -183,33 +169,35 @@ void mag::imobile_node_attach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(1.5)); //FIXME: set a proper timer
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 }
 
 void mag::imobile_node_detach(const attach_info& ai)
 {
-	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_ll_address);
+	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 	if (!mn) {
-		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_ll_address, "]");
+		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_address, "]");
 		return;
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
-		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_ll_address, ")", "]");
+		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_address, ")", "]");
 		return;
 	}
-	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_ll_address, "), lma = ", be->lma_address(), "]");
+	_log(0, "Mobile Node detach [id = ", mn->id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 
 	if (be->bind_status == bulist_entry::k_bind_ack)
 		del_route_entries(*be);
 
 	proxy_binding_info pbinfo;
 
+	be->handover_delay.start(); //begin chrono handover delay
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
 	pbinfo.lifetime = 0;
+	pbinfo.prefix_list = be->mn_prefix_list();
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
@@ -217,9 +205,9 @@ void mag::imobile_node_detach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 }
-
+/*
 void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr)
 {
 	if (ec) {
@@ -240,7 +228,7 @@ void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_add
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = be->poa_ll_address();
+	rainfo.link_address = be->poa_address();
 	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
 	rainfo.destination = address;
@@ -249,9 +237,16 @@ void mag::irouter_solicitation(const boost::system::error_code& ec, const ip_add
 
 	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 }
-
-void mag::irouter_advertisement(const std::string& mn_id)
+*/
+void mag::irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id)
 {
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "ICMPv6 router advertisement timer error: ", ec.message());
+
+		return;
+	}
+
 	bulist_entry* be = _bulist.find(mn_id);
 	if (!be || be->bind_status != bulist_entry::k_bind_ack) {
 		_log(0, "Router advertisement error: binding update list not found [id = ", be->mn_id(), "]");
@@ -260,16 +255,17 @@ void mag::irouter_advertisement(const std::string& mn_id)
 
 	router_advertisement_info rainfo;
 
-	rainfo.link_address = be->poa_ll_address();
+	rainfo.link_address = be->poa_address();
 	rainfo.mtu = be->mtu;
 	rainfo.prefix_list = be->mn_prefix_list();
+	rainfo.source = _link_local_ip;
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(rainfo));
 
-	ras->async_send(be->icmp_sock, boost::bind(&mag::icmp_ra_send_handler, this, _1));
+	ras->async_send(be->ra_sock, be->ra_ep, boost::bind(&mag::icmp_ra_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(3)); //FIXME: set a proper timer
-	be->timer.async_wait(boost::bind(&mag::icmp_ra_timer_handler, this, _1, mn_id));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::irouter_advertisement, this, _1, mn_id)));
 }
 
 void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
@@ -297,22 +293,30 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	be->last_ack_sequence = pbinfo.sequence;
 
 	if (pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_requested) {
-		_log(0, "PBA registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", pbinfo.status,"]");
-
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			add_route_entries(*be);
 			be->bind_status = bulist_entry::k_bind_ack;
-			irouter_advertisement(be->mn_id());
+			irouter_advertisement(boost::system::error_code(), be->mn_id());
 
 		} else {
 			be->bind_status = bulist_entry::k_bind_error;
 			be->timer.cancel();
 		}
+		be->handover_delay.stop();
+
+		_log(0, "PBA registration [delay = ", be->handover_delay.get(),
+		                        ", id = ", pbinfo.id,
+		                        ", lma = ", pbinfo.address,
+		                        ", status = ", pbinfo.status, "]");
 
 	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
-		_log(0, "PBA de-registration [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
-
 		be->timer.cancel();
+		be->handover_delay.stop();
+
+		_log(0, "PBA de-registration [delay = ", be->handover_delay.get(),
+		                           ", id = ", pbinfo.id,
+		                           ", lma = ", pbinfo.address, "]");
+
 		_bulist.remove(be);
 
 	} else {
@@ -320,8 +324,15 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	}
 }
 
-void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
+void mag::iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo)
 {
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "PBU retry timer error: ", ec.message());
+
+		return;
+	}
+
 	bulist_entry* be = _bulist.find(pbinfo.id);
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_detach)) {
 		_log(0, "PBU retry error: binding update list entry not found [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
@@ -343,7 +354,7 @@ void mag::iproxy_binding_retry(proxy_binding_info& pbinfo)
 
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(delay * 1000.f));
-	be->timer.async_wait(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
 
 	if (pbinfo.lifetime)
 		_log(0, "PBU register retry [id = ", pbinfo.id,
@@ -389,19 +400,13 @@ void mag::del_route_entries(bulist_entry& be)
 	_tunnels.del(be.lma_address());
 }
 
-void mag::setup_icmp_socket(bulist_entry& be)
+void mag::setup_ra_socket(bulist_entry& be)
 {
-	be.icmp_sock.open(boost::asio::ip::icmp::v6());
-	be.icmp_sock.bind(boost::asio::ip::icmp::endpoint(be.poa_ip_address(), 0));
-	be.icmp_sock.set_option(boost::asio::ip::multicast::hops(255));
-	be.icmp_sock.set_option(boost::asio::ip::multicast::join_group(boost::asio::ip::address_v6::from_string("ff02::2")));
-	be.icmp_sock.set_option(ip::icmp::filter(true, ip::icmp::router_solicitation::type_value));
-
-	for (size_t i = 0; i < _concurrency; ++i) {
-		icmp_rs_receiver_ptr rsr(new icmp_rs_receiver);
-
-		rsr->async_receive(be.icmp_sock, _service.wrap(boost::bind(&mag::irouter_solicitation, this, _1, _2, _3, _4)));
-	}
+	be.ra_sock.open(net::link::ethernet(net::link::ethernet::ipv6));
+	be.ra_ep = net::link::ethernet::endpoint(net::link::ethernet::ipv6,
+	                                         be.poa_dev_id(),
+	                                         net::link::ethernet::endpoint::outgoing,
+	                                         be.mn_link_address());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

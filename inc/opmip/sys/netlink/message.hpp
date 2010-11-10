@@ -44,11 +44,11 @@ class message : boost::noncopyable {
 		uint16 length;
 		uint16 type;
 
-		attr_header* cast(void* buffer, std::size_t length)
+		static attr_header* cast(void* buffer, size_t length)
 		{
 			attr_header* tmp = reinterpret_cast<attr_header*>(buffer);
 
-			if ((length < align_to_<4, sizeof(attr_header)>::value) || (length < tmp->length))
+			if ((length < align_to_<4, sizeof(attr_header)>::value) || !tmp->type || (length < tmp->length))
 				return nullptr;
 
 			return tmp;
@@ -65,10 +65,9 @@ public:
 		{ }
 
 		attr_iterator(void* buffer, size_t length)
-			: _header(header::cast(buffer, length)), _length(length)
+			: _header(attr_header::cast(buffer, length)), _length(length)
 		{ }
 
-		const attr_header& operator*()  const { return *_header; }
 		const attr_header* operator->() const { return _header; }
 
 		template<class T>
@@ -87,11 +86,11 @@ public:
 		attr_iterator& operator++()
 		{
 			uchar* next = reinterpret_cast<uchar*>(_header) + align_to<4>(_header->length);
-			size_t len  = _length - (std::min)(align_to<4, size_t>(_header->length), _length);
+			size_t len  = _length - std::min<size_t>(align_to<4>(_header->length), _length);
 
 			BOOST_ASSERT(_header);
 
-			_header = header::cast(next, len);
+			_header = attr_header::cast(next, len);
 			_length = len;
 
 			return *this;
@@ -134,8 +133,10 @@ public:
 	explicit message(message_iterator& mit)
 		: _frame(nullptr), _length(0), _capacity(0)
 	{
-		if (mit->type >= message_type::m_begin && mit->type < message_type::m_end)
+		if (mit->type >= message_type::m_begin && mit->type < message_type::m_end) {
 			_frame = reinterpret_cast<frame*>(mit.operator->());
+			_length = _frame->hdr.length;
+		}
 	}
 
 	~message()
@@ -177,7 +178,7 @@ public:
 	attr_iterator abegin()
 	{
 		void* buff = reinterpret_cast<uchar*>(_frame) + align_to_<4, sizeof(frame)>::value;
-		size_t len = _length - align_to_<4, sizeof(frame)>::value;
+		size_t len = _length - std::min<size_t>(size_t(align_to_<4, sizeof(frame)>::value), _length);
 
 		return attr_iterator(buff, len);
 	}
@@ -196,7 +197,7 @@ private:
 			mem = reinterpret_cast<uchar*>(std::realloc(mem, capacity));
 
 			if (!mem)
-				throw_exception(std::bad_alloc());
+				OPMIP_THROW_EXCEPTION(std::bad_alloc());
 
 			std::fill(mem + _capacity, mem + capacity, 0);
 			_frame = reinterpret_cast<frame*>(mem);

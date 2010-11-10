@@ -71,7 +71,7 @@ public:
 	enum attr_type {
 		attr_begin = 1,
 
-		attr_address,
+		attr_address = attr_begin,
 		attr_broadcast,
 		attr_ifname,
 		attr_mtu,

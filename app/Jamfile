@@ -1,5 +1,4 @@
 #==============================================================================
-# Brief   : opmio::sys::tunnel_service_base Unit Test Build
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,8 +14,10 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe t0000
-	: t0000.cpp
-	  ../../../lib/opmip//opmip
+xml manual
+	: opmip-manual.qbk
 	;
 
+boostbook manual-doc
+	: manual
+	;

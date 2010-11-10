@@ -16,8 +16,12 @@
 //=============================================================================
 
 #include <opmip/base.hpp>
+#include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/sys/signals.hpp>
+#include "drivers/madwifi_driver.hpp"
+#include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
@@ -25,83 +29,90 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <signal.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-void link_sap(opmip::pmip::mag& mag, const opmip::ip::address_v6& ll_ip_address, const opmip::ll::mac_address& ll_mac_address);
-static opmip::pmip::mag* main_service;
-
-void terminate(int)
+static void interrupt(opmip::app::madwifi_driver& drv, opmip::pmip::mag& mag)
 {
 	std::cout << "\r";
-	main_service->stop();
+	drv.stop();
+	mag.stop();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+static void link_event(const boost::system::error_code& ec,
+                       const opmip::app::madwifi_driver::event& ev,
+                       opmip::pmip::mag& mag)
+{
+	if (ec)
+		return;
+
+	opmip::pmip::mag::attach_info ai(ev.if_index,
+	                                 ev.if_address,
+	                                 ev.mn_address);
+
+	switch (ev.which) {
+	case opmip::app::madwifi_driver_impl::attach:
+		mag.mobile_node_attach(ai);
+		break;
+
+	case opmip::app::madwifi_driver_impl::detach:
+		mag.mobile_node_detach(ai);
+		break;
+
+	default:
+		break;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
+{
+	std::ifstream in(file_name);
+
+	if (!in)
+		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
+		                       "Failed to open \"" + file_name + "\" node database file");
+
+	size_t n = ndb.load(in);
+	std::cout << "app: loaded " << n << " nodes from database\n";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-	if (argc != 6) {
-		std::cerr << "usage: " << argv[0] << " id node-database mn-access-link-ip-address mn-access-link-mac-address mn-access-link-device-id\n"
-			         "\n"
-			         " id                         - this MAG identifier\n"
-			         " node-database              - path to node database file\n"
-			         " mn-access-link-ip-address  - mobile node(s) access link local ip6 address\n"
-			         " mn-access-link-mac-address - mobile node(s) access link mac address\n"
-			         " mn-access-link-device-id   - mobile node(s) access link device id\n";
-		return 1;
-	}
-
-	const char* id               = argv[1];
-	const char* node_database    = argv[2];
-	const char* access_link_addr = argv[3];
-	const char* access_link_mac  = argv[4];
-	const char* access_link_id   = argv[5];
-
 	try {
-		size_t                  concurrency = boost::thread::hardware_concurrency();
-		boost::asio::io_service ios(concurrency);
-		opmip::pmip::node_db    ndb;
-		opmip::pmip::mag        mag(ios, ndb, concurrency);
+		opmip::app::cmdline_options opts;
 
-		{
-			std::ifstream in(node_database);
+		if (!opts.parse(argc, argv))
+			return 1;
 
-			if (!in) {
-				std::cerr << "Failed to open \"" << node_database << " node database file\n";
-				return 1;
-			}
+		size_t                     concurrency = boost::thread::hardware_concurrency();
+		boost::asio::io_service    ios(concurrency);
+		opmip::pmip::node_db       ndb;
+		opmip::pmip::mag           mag(ios, ndb, concurrency);
+		opmip::app::madwifi_driver drv(ios);
 
-			size_t n = ndb.load(in);
-			std::cout << "Loaded " << n << " nodes from database\n";
-		}
+		load_node_database(opts.node_db, ndb);
 
-		{
-			struct ::sigaction sa;
+		mag.start(opts.identifier.c_str(), opts.link_local_ip);
+		drv.start(opts.access_links, boost::bind(link_event, _1, _2,
+		                                         boost::ref(mag)));
 
-			std::memset(&sa, 0, sizeof(sa));
-			main_service = &mag;
-			sa.sa_handler = terminate;
-			::sigaction(SIGINT, &sa, 0);
-		}
+		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
+		                                                 boost::ref(drv),
+		                                                 boost::ref(mag)));
 
-		opmip::ip::address_v6 lla(opmip::ip::address_v6::from_string(access_link_addr));
-		lla.scope_id(boost::lexical_cast<uint>(access_link_id));
-		mag.start(id, lla);
+		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));
 
-		opmip::ll::mac_address mac(opmip::ll::mac_address::from_string(access_link_mac));
-		boost::thread* td = tg.create_thread(boost::bind(link_sap, boost::ref(mag), boost::cref(lla), boost::cref(mac)));
-
 		ios.run();
-		td->interrupt();
-		td->detach();
 		tg.join_all();
 
 	} catch(std::exception& e) {
-		std::cerr << "Error: " << e.what() << std::endl;
+		std::cerr << "error: " << e.what() << std::endl;
 		return 1;
 	}
 

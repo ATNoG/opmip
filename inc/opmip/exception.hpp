@@ -34,9 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip {
 
-using boost::error_info;
-using boost::get_error_info;
-using boost::throw_exception;
+///////////////////////////////////////////////////////////////////////////////
+namespace errc { using namespace boost::system::errc; }
+
 using boost::system::error_code;
 using boost::system::error_category;
 
@@ -51,17 +51,18 @@ struct error_source_ {
 	uint        line;
 };
 
-typedef error_info<struct tag_error_source, error_source_> error_source;
+typedef boost::error_info<struct tag_error_source, error_source_> error_source;
 
 #ifndef NDEBUG
-#	define OPMIP_THROW_EXCEPTION(e)                                        \
-		opmip::throw_exception(e << opmip::error_source(                   \
-		                                opmip::error_source_(__FUNCTION__, \
-		                                                     __FILE__,     \
-		                                                     __LINE__)     \
-		                                ))
+#	define OPMIP_THROW_EXCEPTION(e) do {                                  \
+		boost::throw_exception(boost::enable_error_info(e)                \
+		                           << opmip::error_source(                \
+		                               opmip::error_source_(__FUNCTION__, \
+		                                                    __FILE__,     \
+		                                                    __LINE__)     \
+		                               )); } while(0)
 #else
-#	define OPMIP_THROW_EXCEPTION(e) opmip::throw_exception(e)
+#	define OPMIP_THROW_EXCEPTION(e) boost::throw_exception(e)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,7 +134,7 @@ inline std::string exception::get_error_information(const boost::exception& e)
 	const std::size_t prev = tmp.length();
 
 
-	const error_source_* src = get_error_info<error_source>(e);
+	const error_source_* src = boost::get_error_info<error_source>(e);
 	if (src) {
 		tmp.append("\n    error source : ")
 		   .append(src->function)
@@ -150,6 +151,12 @@ inline std::string exception::get_error_information(const boost::exception& e)
 		tmp.append("\n}");
 
 	return tmp;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+inline void throw_exception(error_code ec, const std::string & what)
+{
+	boost::throw_exception(exception(ec, what));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

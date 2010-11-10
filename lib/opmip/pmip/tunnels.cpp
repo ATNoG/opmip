@@ -30,6 +30,19 @@ ip6_tunnels::~ip6_tunnels()
 {
 }
 
+void ip6_tunnels::open(const ip::address_v6& address)
+{
+	if (!_tunnels.empty())
+		_tunnels.clear();
+	_local = address;
+}
+
+void ip6_tunnels::close()
+{
+	_local = ip::address_v6();
+	_tunnels.clear();
+}
+
 uint ip6_tunnels::get(const ip::address_v6& remote)
 {
 	auto i = _tunnels.find(remote);
@@ -60,18 +73,6 @@ void ip6_tunnels::del(const ip::address_v6& remote)
 		if (!(--i->second->refcount))
 			_tunnels.erase(i);
 	}
-}
-
-void ip6_tunnels::clear()
-{
-	_tunnels.clear();
-}
-
-void ip6_tunnels::set_local_address(const ip::address_v6& address)
-{
-	BOOST_ASSERT(_tunnels.empty());
-
-	_local = address;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

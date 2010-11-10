@@ -53,45 +53,37 @@ class node {
 public:
 	typedef ip::address_v6 ip_address;
 
-	enum etype {
-		lma,
-		mag,
-		mobile
-	};
-
 protected:
-	node(etype tp, const std::string& id)
-		: _type(tp), _id(id)
+	node(const std::string& id)
+		: _id(id)
 	{ }
 
 public:
-	etype              type() const { return _type; }
 	const std::string& id() const   { return _id; }
 
 private:
 	boost::intrusive::set_member_hook<> _hook;
 
 protected:
-	const etype _type;
 	std::string _id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class route_node : public node {
+class router_node : public node {
 	friend class node_db;
 
 	struct compare {
-		bool operator()(const route_node& rhs, const route_node& lhs) const
+		bool operator()(const router_node& rhs, const router_node& lhs) const
 		{
 			return rhs._address < lhs._address;
 		}
 
-		bool operator()(const route_node& rhs, const ip_address& key) const
+		bool operator()(const router_node& rhs, const ip_address& key) const
 		{
 			return rhs._address < key;
 		}
 
-		bool operator()(const ip_address& key, const route_node& lhs) const
+		bool operator()(const ip_address& key, const router_node& lhs) const
 		{
 			return key < lhs._address;
 		}
@@ -101,8 +93,8 @@ private:
 	boost::intrusive::set_member_hook<> _hook;
 
 protected:
-	route_node(etype tp, const std::string& id, const ip_address& addr, uint device_id)
-		: node(tp, id), _address(addr), _device_id(device_id)
+	router_node(const std::string& id, const ip_address& addr, uint device_id)
+		: node(id), _address(addr), _device_id(device_id)
 	{ }
 
 public:
@@ -114,22 +106,6 @@ protected:
 	uint       _device_id;
 
 	//hmac<sha1>::key _key;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-class mag_node : public route_node {
-public:
-	mag_node(const std::string& id, const ip_address& addr, uint device_id)
-		: route_node(node::mag, id, addr, device_id)
-	{ }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-class lma_node : public route_node {
-public:
-	lma_node(const std::string& id, const ip_address& addr, uint device_id)
-		: route_node(node::lma, id, addr, device_id)
-	{ }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,7 +137,7 @@ private:
 
 public:
 	mobile_node(const std::string& id, const ip_prefix_list& prefs, const link_address& link_addr, const std::string& lma_id)
-		: node(node::mobile, id), _prefixes(prefs), _link_addr(link_addr), _lma_id(lma_id)
+		: node(id), _prefixes(prefs), _link_addr(link_addr), _lma_id(lma_id)
 	{ }
 
 	const ip_prefix_list& prefix_list() const { return _prefixes; }
@@ -190,15 +166,15 @@ class node_db {
 	                                 node_compare_option> node_tree;
 
 
-	typedef boost::intrusive::compare<route_node::compare> route_node_compare_option;
+	typedef boost::intrusive::compare<router_node::compare> router_node_compare_option;
 
-	typedef boost::intrusive::member_hook<route_node,
+	typedef boost::intrusive::member_hook<router_node,
 	                                      boost::intrusive::set_member_hook<>,
-	                                      &route_node::_hook> route_node_member_hook_option;
+	                                      &router_node::_hook> router_node_member_hook_option;
 
-	typedef boost::intrusive::rbtree<route_node,
-	                                 route_node_member_hook_option,
-	                                 route_node_compare_option> route_node_tree;
+	typedef boost::intrusive::rbtree<router_node,
+	                                 router_node_member_hook_option,
+	                                 router_node_compare_option> router_node_tree;
 
 
 	typedef boost::intrusive::compare<mobile_node::compare> mobile_node_compare_option;
@@ -213,10 +189,9 @@ class node_db {
 
 public:
 	typedef std::string                 key;
-	typedef lma_node::ip_address        lma_key;
-	typedef mag_node::ip_address        mag_key;
+	typedef router_node::ip_address     router_key;
 	typedef mobile_node::link_address   mn_key;
-	typedef route_node::ip_address      ip_address;
+	typedef router_node::ip_address     ip_address;
 	typedef mobile_node::ip_prefix      ip_prefix;
 	typedef mobile_node::ip_prefix_list ip_prefix_list;
 	typedef mobile_node::link_address   link_address;
@@ -227,26 +202,21 @@ public:
 
 	size_t load(std::istream& input);
 
-	const lma_node*    find_lma(const key& key) const;
-	const mag_node*    find_mag(const key& key) const;
+	const router_node* find_router(const key& key) const;
 	const mobile_node* find_mobile_node(const key& key) const;
 
-	const lma_node*    find_lma(const lma_key& key) const;
-	const mag_node*    find_mag(const mag_key& key) const;
+	const router_node* find_router(const router_key& key) const;
 	const mobile_node* find_mobile_node(const mn_key& key) const;
 
 protected:
-	const node* find(const key& key) const;
-
-	bool insert_lma(const std::string& id, const ip_address& addr, uint device_id);
-	bool insert_mag(const std::string& id, const ip_address& addr, uint device_id);
+	bool insert_router(const std::string& id, const ip_address& addr, uint device_id);
 	bool insert_mobile_node(const std::string& id, const ip_prefix_list& prefs, const link_address& link_addr, const std::string& lma_id);
 
 private:
-	node_tree        _nodes;
-	route_node_tree  _lmas;
-	route_node_tree  _mags;
-	mobile_node_tree _mobile_nodes;
+	node_tree        _router_nodes_by_id;
+	node_tree        _mobile_nodes_by_id;
+	router_node_tree _router_nodes_by_key;
+	mobile_node_tree _mobile_nodes_by_key;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
