@@ -128,9 +128,9 @@
 			"lma-id"    : "node6"
 		},
 		{
-			"id"        : "marcelo",
+			"id"        : "tesbed",
 			"ip-prefix" : "3001:690:2380:7794::/64",
-			"mac"       : "00:1c:bf:6e:7b:15",
+			"mac"       : "00:80:48:62:4e:a0",
 			"lma-id"    : "node6"
 		}
 	]
