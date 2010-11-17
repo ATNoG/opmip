@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <boost/utility.hpp>
 #include <ostream>
 
@@ -31,7 +32,9 @@ class logger : boost::noncopyable {
 public:
 	logger(char const* const name, std::ostream* sink = nullptr)
 		: _name(name), _sink(sink), _level(~0)
-	{ }
+	{
+		_chrono.start();
+	}
 
 	void level(uint n)          { _level = n; }
 	void sink(std::ostream* os) { _sink = os; }
@@ -45,8 +48,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -56,8 +60,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -67,8 +72,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -78,8 +84,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -89,8 +96,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -100,8 +108,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -111,8 +120,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -122,8 +132,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -133,8 +144,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -144,8 +156,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -155,8 +168,9 @@ public:
 		if (level > _level)
 			return;
 
+		_chrono.stop();
 		if (_sink)
-			*_sink << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << arg11 << std::endl;
+			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << arg11 << std::endl;
 		std::flush(*_sink);
 	}
 
@@ -164,6 +178,7 @@ private:
 	char const* const _name;
 	std::ostream*     _sink;
 	uint              _level;
+	chrono            _chrono;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
