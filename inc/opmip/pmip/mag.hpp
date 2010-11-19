@@ -24,8 +24,8 @@
 #include <opmip/pmip/bulist.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/pmip/mp_receiver.hpp>
-#include <opmip/pmip/icmp_receiver.hpp>
 #include <opmip/pmip/tunnels.hpp>
+#include <opmip/pmip/addrconf_server.hpp>
 #include <opmip/sys/route_table.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
@@ -58,7 +58,7 @@ public:
 	};
 
 public:
-	mag(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
+	mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency);
 
 	void start(const char* id, const ip_address& link_local_ip);
 	void stop();
@@ -70,8 +70,6 @@ private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
 
-	void icmp_ra_send_handler(const boost::system::error_code& ec);
-
 private:
 	void istart(const char* id, const ip_address& mn_access_link);
 	void istop();
@@ -79,16 +77,11 @@ private:
 	void imobile_node_attach(const attach_info& ai);
 	void imobile_node_detach(const attach_info& ai);
 
-	void irouter_solicitation(const boost::system::error_code& ec, const ip_address& address, const mac_address& mac, icmp_rs_receiver_ptr& rsr);
-	void irouter_advertisement(const boost::system::error_code& ec, const std::string& mn_id);
-
 	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
 	void iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
 
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);
-
-	void setup_ra_socket(bulist_entry& be);
 
 private:
 	strand   _service;
@@ -96,6 +89,7 @@ private:
 	node_db& _node_db;
 	logger   _log;
 
+	addrconf_server&   _addrconf;
 	ip::mproto::socket _mp_sock;
 
 	std::string       _identifier;

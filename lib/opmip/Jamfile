@@ -29,6 +29,7 @@ lib opmip
 	  pmip/tunnels.cpp
 	  pmip/lma.cpp
 	  pmip/mag.cpp
+	  pmip/addrconf_server.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
 	  sys/signals.cpp

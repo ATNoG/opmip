@@ -86,11 +86,12 @@ int main(int argc, char** argv)
 		if (!opts.parse(argc, argv))
 			return 1;
 
-		size_t                     concurrency = boost::thread::hardware_concurrency();
-		boost::asio::io_service    ios(concurrency);
-		opmip::pmip::node_db       ndb;
-		opmip::pmip::mag           mag(ios, ndb, concurrency);
-		opmip::app::madwifi_driver drv(ios);
+		size_t                       concurrency = boost::thread::hardware_concurrency();
+		boost::asio::io_service      ios(concurrency);
+		opmip::pmip::node_db         ndb;
+		opmip::pmip::addrconf_server addrconf(ios);
+		opmip::pmip::mag             mag(ios, ndb, addrconf, concurrency);
+		opmip::app::madwifi_driver   drv(ios);
 
 		load_node_database(opts.node_db, ndb);
 

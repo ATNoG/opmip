@@ -60,6 +60,7 @@ struct router_advertisement_info {
 	uint8                      hop_limit;
 	uint16                     lifetime;
 	ll::mac_address            link_address;
+	ll::mac_address            dst_link_address;
 	uint32                     mtu;
 	std::vector<ip::prefix_v6> prefix_list;
 	ip::address_v6             source;
