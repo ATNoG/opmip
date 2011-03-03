@@ -15,17 +15,32 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+obj common
+	: drivers/madwifi_driver_impl.cpp
+	  /boost//headers
+	;
+
 exe opmip-mag
 	: main.cpp
 	  options.cpp
-	  drivers/madwifi_driver_impl.cpp
+	  common
 	  ../../lib/opmip
+	  /boost//headers
 	  /boost//thread
+	  /boost//program_options
+	;
+
+exe l2event
+	: l2event.cpp
+	  common
+	  ../../lib/opmip
+	  /boost//headers
 	  /boost//program_options
 	;
 
 install install
 	: opmip-mag
+	  l2event
 	  ../../node.db
 	: <location>../../dist
 	;
