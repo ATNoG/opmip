@@ -155,7 +155,7 @@ protected:
 			mem = reinterpret_cast<uint8*>(std::realloc(mem, capacity));
 
 			if (!mem)
-				throw_exception(std::bad_alloc());
+				boost::throw_exception(std::bad_alloc());
 
 			std::fill(mem + _capacity, mem + capacity, 0);
 			_header = reinterpret_cast<header*>(mem);
