@@ -109,7 +109,8 @@ inline void mproto::endpoint::address(const address_v6& addr)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-struct mproto::header {
+class mproto::header {
+public:
 	static header* cast(void* buff, size_t len)
 	{
 		header* hdr = reinterpret_cast<header*>(buff);

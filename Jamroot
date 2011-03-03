@@ -24,7 +24,7 @@ project opmip
 	: build-dir bin.v2
 	;
 
-boost.use-project 1.42 ;
+boost.use-project ;
 
 build-project app/opmip-mag ;
 build-project app/opmip-lma ;

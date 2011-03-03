@@ -25,7 +25,7 @@
 namespace opmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace unix {
+namespace posix {
 
 struct timeval {
 	::time_t      sec;
@@ -46,7 +46,7 @@ inline timeval gettimeofday()
 	return tmp;
 }
 
-} /* namespace unix */
+} /* namespace posix */
 
 ///////////////////////////////////////////////////////////////////////////////
 class chrono {
@@ -61,12 +61,12 @@ public:
 
 	void start()
 	{
-		_start = unix::gettimeofday();
+		_start = posix::gettimeofday();
 	}
 
 	void stop()
 	{
-		_stop = unix::gettimeofday();
+		_stop = posix::gettimeofday();
 	}
 
 	double get()
@@ -77,8 +77,8 @@ public:
 	}
 
 private:
-	unix::timeval _start;
-	unix::timeval _stop;
+	posix::timeval _start;
+	posix::timeval _stop;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

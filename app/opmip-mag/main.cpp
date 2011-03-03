@@ -67,7 +67,7 @@ static void link_event(const boost::system::error_code& ec,
 ///////////////////////////////////////////////////////////////////////////////
 static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
 {
-	std::ifstream in(file_name);
+	std::ifstream in(file_name.c_str());
 
 	if (!in)
 		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
