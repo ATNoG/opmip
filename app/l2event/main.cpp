@@ -18,7 +18,7 @@
 #include <opmip/base.hpp>
 #include <opmip/exception.hpp>
 #include <opmip/sys/signals.hpp>
-#include "drivers/madwifi_driver.hpp"
+#include <opmip/linux/nl80211.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/program_options.hpp>
@@ -27,30 +27,35 @@
 #include <ctime>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt(opmip::app::madwifi_driver& drv)
+static void interrupt(opmip::linux::nl80211& drv)
 {
-	drv.stop();
+	drv.close();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-static void link_event(const boost::system::error_code& ec,
-                       const opmip::app::madwifi_driver::event& ev)
+void link_event(const boost::system::error_code& ec, const opmip::linux::nl80211::event& ev)
 {
-	if (ec)
-		return;
-
 	switch (ev.which) {
-	case opmip::app::madwifi_driver_impl::attach:
-		std::cout << "attach " << std::time(0) << std::endl;
-		break;
-
-	case opmip::app::madwifi_driver_impl::detach:
-		std::cout << "detach " << std::time(0) << std::endl;
-		break;
-
-	default:
-		break;
+	case opmip::linux::nl80211::event::new_sta:      std::cout << "new_sta - "; break;
+	case opmip::linux::nl80211::event::associate:    std::cout << "associate - "; break;
+	case opmip::linux::nl80211::event::disassociate: std::cout << "disassociate - "; break;
+	default: break;
 	}
+
+	std::cout << "event = {\n"
+				 "    .phy = " << ev.phy_id << "\n"
+				 "    .if_index = " << ev.if_index << "\n"
+				 "    .generation = " << ev.generation << "\n"
+				 "    .mac = " << ev.mac << "\n"
+				 "    .frame = {\n"
+				 "        .da       = " << ev.dst_addr << "\n"
+				 "        .sa       = " << ev.src_addr << "\n"
+				 "        .bssid    = " << ev.bssid << "\n"
+				 "     }\n"
+				 "}\n";
+
+	std::time_t tm = std::time(0);
+	std::cout << "Time: " << std::ctime(&tm) << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,12 +78,12 @@ int main(int argc, char** argv)
 
 			access_links = vm["access-links"].as<std::vector<std::string> >();
 		}
-		boost::asio::io_service    ios;
-		opmip::app::madwifi_driver drv(ios);
+		boost::asio::io_service ios;
+		opmip::linux::nl80211   nl80211(ios);
 
-		drv.start(access_links, boost::bind(link_event, _1, _2));
+		nl80211.open(link_event);
 
-		opmip::sys::interrupt_signal.connect(boost::bind(interrupt, boost::ref(drv)));
+		opmip::sys::interrupt_signal.connect(boost::bind(interrupt, boost::ref(nl80211)));
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
 		ios.run();

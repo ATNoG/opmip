@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : OPMIP MAG Binary Build
+# Brief   : OPMIP L2Event For Ploting Purposes
 # Authors : Bruno Santos <bsantos@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
@@ -15,18 +15,19 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe opmip-mag
+project opmip/l2event
+	;
+
+exe opmip-l2event
 	: main.cpp
-	  options.cpp
-	  drivers/madwifi_driver_impl.cpp
-	  ../../lib/opmip
 	  /boost//headers
 	  /boost//thread
 	  /boost//program_options
+	  ../../lib/opmip
 	;
 
 install install
-	: opmip-mag
+	: opmip-l2event
 	  ../../node.db
 	: <location>../../dist
 	;
