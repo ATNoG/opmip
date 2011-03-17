@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <boost/assert.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip {
@@ -28,13 +29,38 @@ namespace opmip {
 namespace posix {
 
 struct timeval {
+	timeval()
+		: sec(0), usec(0)
+	{}
+
 	::time_t      sec;
-	::suseconds_t microsec;
+	::suseconds_t usec;
+};
+
+struct timespec {
+	timespec()
+		: sec(0), nsec(0)
+	{}
+
+	::time_t sec;
+	long     nsec;
+};
+
+enum clock_kind {
+	k_clock_realtime,
+	k_clock_monotonic,
+	k_clock_process_cpu_time_id,
+	k_clock_thread_cpu_time_id,
+	k_clock_monotonic_raw,
+	k_clock_realtime_coarse,
+	k_clock_monotonic_coarse,
 };
 
 namespace detail {
 
-extern "C" int gettimeofday(timeval* tp, void* tzp = nullptr);
+extern "C" int gettimeofday(timeval*, void* = nullptr) throw();
+extern "C" int clock_gettime(int, const timespec*) throw();
+extern "C" int clock_getres(int, const timespec*) throw();
 
 } /* namespace detail */
 
@@ -46,39 +72,67 @@ inline timeval gettimeofday()
 	return tmp;
 }
 
+inline timespec clock_gettime(clock_kind kind)
+{
+	timespec tmp;
+
+	int er = detail::clock_gettime(kind, &tmp);
+	BOOST_ASSERT(!er);
+
+	return tmp;
+}
+
+inline timespec clock_getres(clock_kind kind)
+{
+	timespec tmp;
+
+	int er = detail::clock_getres(kind, &tmp);
+	BOOST_ASSERT(!er && tmp.sec < 0);
+
+	return tmp;
+}
+
 } /* namespace posix */
 
 ///////////////////////////////////////////////////////////////////////////////
 class chrono {
+	//
+	// FIXME: this should be configurable has: default, raw or coarse
+	// NOTE: CLOK_MONOTONIC_RAW does not give the resolution
+	//
+	static const posix::clock_kind k_clock_kind = posix::k_clock_monotonic;
+
+public:
+	static double get_resolution()
+	{
+		posix::timespec tmp = posix::clock_getres(k_clock_kind);
+
+		return tmp.sec + tmp.nsec / 1.0e9;
+	}
+
 public:
 	chrono()
-	{
-		_start.sec = 0;
-		_start.microsec = 0;
-		_stop.sec = 0;
-		_stop.microsec = 0;
-	}
+	{ }
 
 	void start()
 	{
-		_start = posix::gettimeofday();
+		_start = posix::clock_gettime(k_clock_kind);
 	}
 
 	void stop()
 	{
-		_stop = posix::gettimeofday();
+		_stop = posix::clock_gettime(k_clock_kind);
 	}
 
 	double get()
 	{
-		double usec = _stop.microsec - _start.microsec;
-
-		return usec / 1000000 + (_stop.sec - _start.sec);
+		return (_stop.sec - _start.sec)
+			   + (_stop.nsec - _start.nsec) / 1.0e9;
 	}
 
 private:
-	posix::timeval _start;
-	posix::timeval _stop;
+	posix::timespec _start;
+	posix::timespec _stop;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
