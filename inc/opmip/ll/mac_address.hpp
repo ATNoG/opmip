@@ -48,6 +48,13 @@ public:
 		std::copy(address, address + 6, _address.begin());
 	}
 
+	explicit mac_address(const void* address, size_t len)
+	{
+		const uint8* src = static_cast<const uint8*>(address);
+
+		std::copy(src, src + std::min<size_t>(len, bytes_type::static_size), _address.begin());
+	}
+
 	explicit mac_address(const bytes_type& address)
 	{
 		std::copy(address.begin(), address.end(), _address.begin());

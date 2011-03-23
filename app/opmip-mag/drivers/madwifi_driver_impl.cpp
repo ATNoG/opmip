@@ -133,7 +133,7 @@ void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t r
 
 	sys::nl::message_iterator mit(_buffer, rbytes);
 	sys::nl::message_iterator end;
-	int                  errc = 0;
+//	int                  errc = 0;
 
 	for (; mit != end; ++mit) {
 		if (mit->type == sys::nl::header::m_error) {
@@ -166,13 +166,13 @@ void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t r
 					switch (we->cmd) {
 					case IWEVREGISTERED:
 						ev.which = attach;
-						ev.mn_address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
+						ev.mn_address = address_mac(we->u.ap_addr.sa_data, 6);
 						_event_handler(ec, ev);
 						break;
 
 					case IWEVEXPIRED:
 						ev.which = detach;
-						ev.mn_address = address_mac(*reinterpret_cast<opmip::ll::mac_address::bytes_type*>(we->u.ap_addr.sa_data));
+						ev.mn_address = address_mac(we->u.ap_addr.sa_data, 6);
 						_event_handler(ec, ev);
 						break;
 					}

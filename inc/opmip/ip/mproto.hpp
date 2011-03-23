@@ -86,25 +86,30 @@ inline mproto::endpoint::endpoint()
 
 inline mproto::endpoint::endpoint(const address_v6& addr)
 {
-	address_v6::bytes_type& tmp = reinterpret_cast<address_v6::bytes_type&>(_addr.sin6_addr.s6_addr);
+	const address_v6::bytes_type& src = addr.to_bytes();
 
 	_addr.sin6_family = AF_INET6;
 	_addr.sin6_port = 0;
 	_addr.sin6_flowinfo = 0;
-	tmp = addr.to_bytes();
+	std::copy(src.begin(), src.end(), _addr.sin6_addr.s6_addr);
 	_addr.sin6_scope_id = addr.scope_id();
 }
 
 inline address_v6 mproto::endpoint::address() const
 {
-	return address_v6(reinterpret_cast<const address_v6::bytes_type&>(_addr.sin6_addr.s6_addr), _addr.sin6_scope_id);
+	address_v6::bytes_type tmp;
+
+	std::copy(_addr.sin6_addr.s6_addr, _addr.sin6_addr.s6_addr + address_v6::bytes_type::static_size,
+	          tmp.elems);
+
+	return address_v6(tmp, _addr.sin6_scope_id);
 }
 
 inline void mproto::endpoint::address(const address_v6& addr)
 {
-	address_v6::bytes_type& tmp = reinterpret_cast<address_v6::bytes_type&>(_addr.sin6_addr.s6_addr);
+	const address_v6::bytes_type& src = addr.to_bytes();
 
-	tmp = addr.to_bytes();
+	std::copy(src.begin(), src.end(), _addr.sin6_addr.s6_addr);
 	_addr.sin6_scope_id = addr.scope_id();
 }
 

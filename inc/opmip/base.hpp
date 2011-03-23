@@ -28,6 +28,8 @@
 #define OPMIP_SCOPED(def)     switch(def) case 0: default:
 #define OPMIP_COUNT_OF(array) (sizeof(array) / sizeof(array[0]))
 
+#define OPMIP_NOT_USED(x) (void)x;
+
 #ifdef BOOST_HAS_STATIC_ASSERT
 #	define OPMIP_STATIC_ASSERT(exp, reason) static_assert(exp, reason)
 #else

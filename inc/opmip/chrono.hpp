@@ -78,6 +78,7 @@ inline timespec clock_gettime(clock_kind kind)
 
 	int er = detail::clock_gettime(kind, &tmp);
 	BOOST_ASSERT(!er);
+	OPMIP_NOT_USED(er);
 
 	return tmp;
 }
@@ -88,6 +89,7 @@ inline timespec clock_getres(clock_kind kind)
 
 	int er = detail::clock_getres(kind, &tmp);
 	BOOST_ASSERT(!er && tmp.sec >= 0);
+	OPMIP_NOT_USED(er);
 
 	return tmp;
 }
@@ -98,7 +100,7 @@ inline timespec clock_getres(clock_kind kind)
 class chrono {
 	//
 	// FIXME: this should be configurable has: default, raw or coarse
-	// NOTE: CLOK_MONOTONIC_RAW does not give the resolution
+	// NOTE: CLOK_MONOTONIC_RAW seems to not give a resolution
 	//
 	static const posix::clock_kind k_clock_kind = posix::k_clock_monotonic;
 
