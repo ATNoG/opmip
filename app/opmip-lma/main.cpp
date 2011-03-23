@@ -73,6 +73,9 @@ int main(int argc, char** argv)
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
+		std::cout << std::setprecision(9)
+		          << "chrono resolution: " << opmip::chrono::get_resolution() << std::endl;
+
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
 			tg.create_thread(boost::bind(&boost::asio::io_service::run, &ios));

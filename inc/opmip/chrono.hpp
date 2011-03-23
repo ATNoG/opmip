@@ -87,7 +87,7 @@ inline timespec clock_getres(clock_kind kind)
 	timespec tmp;
 
 	int er = detail::clock_getres(kind, &tmp);
-	BOOST_ASSERT(!er && tmp.sec < 0);
+	BOOST_ASSERT(!er && tmp.sec >= 0);
 
 	return tmp;
 }
