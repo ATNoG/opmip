@@ -20,7 +20,7 @@
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
 #include <opmip/sys/signals.hpp>
-#include "drivers/madwifi_driver.hpp"
+#include "driver.hpp"
 #include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
@@ -31,37 +31,11 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt(opmip::app::madwifi_driver& drv, opmip::pmip::mag& mag)
+static void interrupt(opmip::app::driver_ptr& drv, opmip::pmip::mag& mag)
 {
 	std::cout << "\r";
-	drv.stop();
+	drv->stop();
 	mag.stop();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-static void link_event(const boost::system::error_code& ec,
-                       const opmip::app::madwifi_driver::event& ev,
-                       opmip::pmip::mag& mag)
-{
-	if (ec)
-		return;
-
-	opmip::pmip::mag::attach_info ai(ev.if_index,
-	                                 ev.if_address,
-	                                 ev.mn_address);
-
-	switch (ev.which) {
-	case opmip::app::madwifi_driver_impl::attach:
-		mag.mobile_node_attach(ai);
-		break;
-
-	case opmip::app::madwifi_driver_impl::detach:
-		mag.mobile_node_detach(ai);
-		break;
-
-	default:
-		break;
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,16 +65,18 @@ int main(int argc, char** argv)
 		opmip::pmip::node_db         ndb;
 		opmip::pmip::addrconf_server addrconf(ios);
 		opmip::pmip::mag             mag(ios, ndb, addrconf, concurrency);
-		opmip::app::madwifi_driver   drv(ios);
+		opmip::app::driver_ptr       drv;
 
 		load_node_database(opts.node_db, ndb);
 
+
 		mag.start(opts.identifier.c_str(), opts.link_local_ip);
-		drv.start(opts.access_links, boost::bind(link_event, _1, _2,
-		                                         boost::ref(mag)));
+
+		drv = opmip::app::make_driver(ios, "madwifi");
+		drv->start(mag, opts.access_links);
 
 		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
-		                                                 boost::ref(drv),
+		                                                 drv,
 		                                                 boost::ref(mag)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
