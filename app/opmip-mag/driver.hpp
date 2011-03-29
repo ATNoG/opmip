@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/pmip/mag.hpp>
+#include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +30,7 @@ namespace opmip { namespace app {
 ////////////////////////////////////////////////////////////////////////////////
 class driver {
 public:
-	virtual void start(pmip::mag& mag, const std::vector<std::string>& interfaces) = 0;
+	virtual void start(pmip::mag& mag, const boost::any& parameter) = 0;
 	virtual void stop() = 0;
 };
 

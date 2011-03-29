@@ -54,8 +54,10 @@ public:
 		: _drv(ios)
 	{ }
 
-	virtual void start(pmip::mag& mag, const std::vector<std::string>& interfaces)
+	virtual void start(pmip::mag& mag, const boost::any& parameter)
 	{
+		auto interfaces = boost::any_cast<const std::vector<std::string>&>(parameter);
+
 		_drv.start(interfaces, boost::bind(&madwifi_drv::link_event, _1, _2, boost::ref(mag)));
 	}
 
