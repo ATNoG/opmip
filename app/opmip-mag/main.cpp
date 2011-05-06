@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/base.hpp>
+#include <opmip/debug.hpp>
 #include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
@@ -80,6 +81,8 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
+	opmip::setup_crash_handler();
+
 	try {
 		opmip::app::cmdline_options opts;
 
