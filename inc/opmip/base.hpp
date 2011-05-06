@@ -36,6 +36,12 @@
 #	define OPMIP_STATIC_ASSERT(exp, reason) BOOST_STATIC_ASSERT(exp)
 #endif
 
+#ifdef __GNUC__
+#	define OPMIP_ATTR_NO_RETURN __attribute__((noreturn))
+#else
+#	define OPMIP_ATTR_NO_RETURN
+#endif
+
 #define OPMIP_UNDEFINED_BOOL                           \
 	struct undefined_bool_t {                          \
 		void true_() {}                                \

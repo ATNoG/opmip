@@ -16,7 +16,8 @@
 #==============================================================================
 
 lib opmip
-	: ip/prefix.cpp
+	: debug_linux.cpp
+	  ip/prefix.cpp
 	  linux/nl80211.cpp
 	  ll/mac_address.cpp
 	  net/link/ethernet.cpp
