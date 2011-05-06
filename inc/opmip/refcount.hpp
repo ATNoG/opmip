@@ -46,14 +46,14 @@ public:
 	refcount_impl(refcount_base* p)
 		: _ptr(p)
 	{
-		BOOST_ASSERT(p != nullptr);
+		BOOST_ASSERT(p);
 		++_ptr->_refcnt;
 	}
 
 	refcount_impl(const refcount_impl& app)
 		: _ptr(const_cast<refcount_impl&>(app)._ptr)
 	{
-		BOOST_ASSERT(_ptr != nullptr);
+		BOOST_ASSERT(_ptr);
 		BOOST_ASSERT(_ptr->_refcnt > 0);
 		++_ptr->_refcnt;
 	}
@@ -61,7 +61,7 @@ public:
 	refcount_impl(refcount_impl&& app)
 		: _ptr(app._ptr)
 	{
-		BOOST_ASSERT(_ptr != nullptr);
+		BOOST_ASSERT(_ptr);
 		BOOST_ASSERT(_ptr->_refcnt > 0);
 		app._ptr = nullptr;
 	}

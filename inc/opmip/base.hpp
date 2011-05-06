@@ -74,8 +74,8 @@ typedef boost::int64_t     sint64;
 typedef boost::intmax_t    sintmax;
 typedef boost::uintmax_t   uintmax;
 
-typedef std::size_t        size_t;
-typedef std::ptrdiff_t     ptrdiff_t;
+typedef std::size_t        ptrsint;
+typedef std::ptrdiff_t     ptruint;
 
 ///////////////////////////////////////////////////////////////////////////////
 struct nullptr_t { template<class T> operator T*() const { return 0; } };
