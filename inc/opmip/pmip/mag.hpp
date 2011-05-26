@@ -37,6 +37,7 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 class mag {
 	typedef boost::asio::io_service::strand strand;
+	typedef boost::function<void(uint)>     completion_functor;
 
 public:
 	typedef ip::address_v6  ip_address;
@@ -57,28 +58,46 @@ public:
 //		mobility_options mob_options;
 	};
 
+	enum error_code {
+		ec_success,
+		ec_not_authorized,
+		ec_unknown_lma,
+		ec_invalid_state,
+		ec_canceled,
+		ec_timeout,
+		ec_error
+	};
+
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency);
 
-	void start(const char* id, const ip_address& link_local_ip);
+	void start(const std::string& id, const ip_address& link_local_ip);
 	void stop();
 
 	void mobile_node_attach(const attach_info& ai);
 	void mobile_node_detach(const attach_info& ai);
+
+	template<class CompletionHandler>
+	void mobile_node_attach(const attach_info& ai, CompletionHandler handler);
+
+	template<class CompletionHandler>
+	void mobile_node_detach(const attach_info& ai, CompletionHandler handler);
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
 
 private:
-	void istart(const char* id, const ip_address& mn_access_link);
-	void istop();
+	void start_(const std::string& id, const ip_address& mn_access_link);
+	void stop_();
 
-	void imobile_node_attach(const attach_info& ai);
-	void imobile_node_detach(const attach_info& ai);
+	void mobile_node_attach_(const attach_info& ai);
+	void mobile_node_detach_(const attach_info& ai);
+	void mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler);
+	void mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler);
 
-	void iproxy_binding_ack(const proxy_binding_info& pbinfo);
-	void iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
+	void proxy_binding_ack(const proxy_binding_info& pbinfo);
+	void proxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
 
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);
@@ -98,6 +117,22 @@ private:
 	sys::route_table  _route_table;
 	size_t            _concurrency;
 };
+
+template<class CompletionHandler>
+inline void mag::mobile_node_attach(const attach_info& ai, CompletionHandler handler)
+{
+	_service.dispatch([this, ai, handler]() {
+		this->mobile_node_attach_(ai, handler);
+	});
+}
+
+template<class CompletionHandler>
+inline void mag::mobile_node_detach(const attach_info& ai, CompletionHandler handler)
+{
+	_service.dispatch([this, ai, handler]() {
+		this->mobile_node_detach_(ai, handler);
+	});
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace pmip */ } /* namespace opmip */

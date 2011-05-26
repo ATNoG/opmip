@@ -29,6 +29,7 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/ip/icmp.hpp>
 #include <boost/intrusive/rbtree.hpp>
+#include <boost/function.hpp>
 #include <string>
 #include <vector>
 #include <ctime>
@@ -104,6 +105,7 @@ public:
 	net::link::ethernet::socket   ra_sock;
 	net::link::ethernet::endpoint ra_ep;
 
+	boost::function<void(uint)> completion;
 	chrono handover_delay;
 };
 

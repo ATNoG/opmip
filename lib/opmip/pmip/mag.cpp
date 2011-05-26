@@ -30,6 +30,17 @@
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
+inline void report_completion(boost::asio::io_service::strand& srv,
+                              boost::function<void(uint)>& handler,
+                              mag::error_code ec)
+{
+	if (handler) {
+		srv.post(boost::bind(std::move(handler), ec));
+		handler.clear();
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 mag::mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency)
 	: _service(ios), _node_db(ndb), _log("MAG", &std::cout), _addrconf(asrv),
 	  _mp_sock(ios), _tunnels(ios), _route_table(ios),
@@ -37,24 +48,24 @@ mag::mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size
 {
 }
 
-void mag::start(const char* id, const ip_address& mn_access_link)
+void mag::start(const std::string& id, const ip_address& mn_access_link)
 {
-	_service.dispatch(boost::bind(&mag::istart, this, id, mn_access_link));
+	_service.dispatch(boost::bind(&mag::start_, this, id, mn_access_link));
 }
 
 void mag::stop()
 {
-	_service.dispatch(boost::bind(&mag::istop, this));
+	_service.dispatch(boost::bind(&mag::stop_, this));
 }
 
 void mag::mobile_node_attach(const attach_info& ai)
 {
-	_service.dispatch(boost::bind(&mag::imobile_node_attach, this, ai));
+	_service.dispatch(boost::bind(&mag::mobile_node_attach_, this, ai));
 }
 
 void mag::mobile_node_detach(const attach_info& ai)
 {
-	_service.dispatch(boost::bind(&mag::imobile_node_detach, this, ai));
+	_service.dispatch(boost::bind(&mag::mobile_node_detach_, this, ai));
 }
 
 void mag::mp_send_handler(const boost::system::error_code& ec)
@@ -70,12 +81,12 @@ void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 			_log(0, "PBA receive error: ", ec.message());
 
 	} else {
-		_service.dispatch(boost::bind(&mag::iproxy_binding_ack, this, pbinfo));
+		_service.dispatch(boost::bind(&mag::proxy_binding_ack, this, pbinfo));
 		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3));
 	}
 }
 
-void mag::istart(const char* id, const ip_address& link_local_ip)
+void mag::start_(const std::string& id, const ip_address& link_local_ip)
 {
 	const router_node* node = _node_db.find_router(id);
 	if (!node)
@@ -103,7 +114,7 @@ void mag::istart(const char* id, const ip_address& link_local_ip)
 	}
 }
 
-void mag::istop()
+void mag::stop_()
 {
 	_log(0, "Stoping...");
 
@@ -113,18 +124,30 @@ void mag::istop()
 	_tunnels.close();
 }
 
-void mag::imobile_node_attach(const attach_info& ai)
+void mag::mobile_node_attach_(const attach_info& ai)
+{
+	mobile_node_attach_(ai, completion_functor());
+}
+
+void mag::mobile_node_detach_(const attach_info& ai)
+{
+	mobile_node_detach_(ai, completion_functor());
+}
+
+void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler)
 {
 	bulist_entry* be = _bulist.find(ai.mn_address);
 	if (!be) {
 		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 		if (!mn) {
+			report_completion(_service, completion_handler, ec_not_authorized);
 			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_address, "]");
 			return;
 		}
 
 		const router_node* lma = _node_db.find_router(mn->lma_id());
 		if (!lma) {
+			report_completion(_service, completion_handler, ec_unknown_lma);
 			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_address, "), lma = ", mn->lma_id(), "]");
 			return;
 		}
@@ -141,6 +164,7 @@ void mag::imobile_node_attach(const attach_info& ai)
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
+		report_completion(_service, completion_handler, ec_invalid_state);
 		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
@@ -161,19 +185,24 @@ void mag::imobile_node_attach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::seconds(1.5)); //FIXME: set a proper timer
-	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
+
+	report_completion(_service, be->completion, ec_canceled);
+	be->completion = std::move(completion_handler);
 }
 
-void mag::imobile_node_detach(const attach_info& ai)
+void mag::mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler)
 {
 	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 	if (!mn) {
+		report_completion(_service, completion_handler, ec_not_authorized);
 		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_address, "]");
 		return;
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
+		report_completion(_service, completion_handler, ec_invalid_state);
 		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_address, ")", "]");
 		return;
 	}
@@ -197,10 +226,13 @@ void mag::imobile_node_detach(const attach_info& ai)
 	be->retry_count = 0;
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
-	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
+
+	report_completion(_service, be->completion, ec_canceled);
+	be->completion = std::move(completion_handler);
 }
 
-void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
+void mag::proxy_binding_ack(const proxy_binding_info& pbinfo)
 {
 	bulist_entry* be = _bulist.find(pbinfo.id);
 	if (!be) {
@@ -225,25 +257,32 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	be->last_ack_sequence = pbinfo.sequence;
 
 	if (pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_requested) {
+		uint ec = ec_success;
+
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			be->bind_status = bulist_entry::k_bind_ack;
 			add_route_entries(*be);
 
 		} else {
 			be->bind_status = bulist_entry::k_bind_error;
+			ec = pbinfo.status + ec_error;
 		}
 		be->timer.cancel();
 		be->handover_delay.stop();
 
+		report_completion(_service, be->completion, static_cast<error_code>(ec));
 		_log(0, "PBA registration [delay = ", be->handover_delay.get(),
 		                        ", id = ", pbinfo.id,
 		                        ", lma = ", pbinfo.address,
 		                        ", status = ", pbinfo.status, "]");
 
 	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
+		uint ec = (pbinfo.status == ip::mproto::pba::status_ok) ? ec_success : pbinfo.status + ec_error;
+
 		be->timer.cancel();
 		be->handover_delay.stop();
 
+		report_completion(_service, be->completion, static_cast<error_code>(ec));
 		_log(0, "PBA de-registration [delay = ", be->handover_delay.get(),
 		                           ", id = ", pbinfo.id,
 		                           ", lma = ", pbinfo.address, "]");
@@ -255,7 +294,7 @@ void mag::iproxy_binding_ack(const proxy_binding_info& pbinfo)
 	}
 }
 
-void mag::iproxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo)
+void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo)
 {
 	if (ec) {
 		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
@@ -273,6 +312,7 @@ void mag::iproxy_binding_retry(const boost::system::error_code& ec, proxy_bindin
 	++be->retry_count;
 
 	if (be->bind_status == bulist_entry::k_bind_detach && be->retry_count > 3) {
+		report_completion(_service, be->completion, ec_timeout);
 		_log(0, "PBU retry error: max retry count [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 		_bulist.remove(be);
 		return;
@@ -285,7 +325,7 @@ void mag::iproxy_binding_retry(const boost::system::error_code& ec, proxy_bindin
 
 	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
 	be->timer.expires_from_now(boost::posix_time::milliseconds(delay * 1000.f));
-	be->timer.async_wait(_service.wrap(boost::bind(&mag::iproxy_binding_retry, this, _1, pbinfo)));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
 	if (pbinfo.lifetime)
 		_log(0, "PBU register retry [id = ", pbinfo.id,
