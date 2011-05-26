@@ -58,16 +58,6 @@ void mag::stop()
 	_service.dispatch(boost::bind(&mag::stop_, this));
 }
 
-void mag::mobile_node_attach(const attach_info& ai)
-{
-	_service.dispatch(boost::bind(&mag::mobile_node_attach_, this, ai));
-}
-
-void mag::mobile_node_detach(const attach_info& ai)
-{
-	_service.dispatch(boost::bind(&mag::mobile_node_detach_, this, ai));
-}
-
 void mag::mp_send_handler(const boost::system::error_code& ec)
 {
 	if (ec && ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
@@ -122,16 +112,6 @@ void mag::stop_()
 	_mp_sock.close();
 	_route_table.clear();
 	_tunnels.close();
-}
-
-void mag::mobile_node_attach_(const attach_info& ai)
-{
-	mobile_node_attach_(ai, completion_functor());
-}
-
-void mag::mobile_node_detach_(const attach_info& ai)
-{
-	mobile_node_detach_(ai, completion_functor());
 }
 
 void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler)

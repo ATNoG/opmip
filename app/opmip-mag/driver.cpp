@@ -17,11 +17,16 @@
 
 #include "driver.hpp"
 #include "drivers/madwifi_driver.hpp"
+#include <opmip/logger.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
+#include <iostream>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+opmip::logger log_("madwifi", &std::cout);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class madwifi_drv : public driver {
@@ -37,11 +42,15 @@ class madwifi_drv : public driver {
 
 		switch (ev.which) {
 		case opmip::app::madwifi_driver_impl::attach:
-			mag.mobile_node_attach(ai);
+			mag.mobile_node_attach(ai, [ev](uint ec) {
+				log_(0, "node ", ev.mn_address, " attachment completed with code ", ec);
+			});
 			break;
 
 		case opmip::app::madwifi_driver_impl::detach:
-			mag.mobile_node_detach(ai);
+			mag.mobile_node_detach(ai, [ev](uint ec) {
+				log_(0, "node ", ev.mn_address, " detachment completed with code ", ec);
+			});
 			break;
 
 		default:

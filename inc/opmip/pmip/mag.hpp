@@ -74,9 +74,6 @@ public:
 	void start(const std::string& id, const ip_address& link_local_ip);
 	void stop();
 
-	void mobile_node_attach(const attach_info& ai);
-	void mobile_node_detach(const attach_info& ai);
-
 	template<class CompletionHandler>
 	void mobile_node_attach(const attach_info& ai, CompletionHandler handler);
 
@@ -91,8 +88,6 @@ private:
 	void start_(const std::string& id, const ip_address& mn_access_link);
 	void stop_();
 
-	void mobile_node_attach_(const attach_info& ai);
-	void mobile_node_detach_(const attach_info& ai);
 	void mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler);
 	void mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler);
 
