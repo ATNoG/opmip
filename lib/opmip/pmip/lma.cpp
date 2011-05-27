@@ -53,7 +53,7 @@ void lma::mp_send_handler(const boost::system::error_code& ec)
 		_log(0, "PBA sender error: ", ec.message());
 }
 
-void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur)
+void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur, chrono& delay)
 {
 	if (ec) {
 		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
@@ -61,8 +61,8 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 		return;
 	}
 
-	_service.dispatch(boost::bind(&lma::proxy_binding_update, this, pbinfo));
-	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
+	_service.dispatch(boost::bind(&lma::proxy_binding_update, this, pbinfo, delay));
+	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3, _4));
 }
 
 void lma::istart(const char* id)
@@ -85,7 +85,7 @@ void lma::istart(const char* id)
 	for (size_t i = 0; i < _concurrency; ++i) {
 		refcount_ptr<pbu_receiver> pbur(new pbu_receiver());
 
-		pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3));
+		pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3, _4));
 	}
 }
 
@@ -99,7 +99,7 @@ void lma::istop()
 	_tunnels.close();
 }
 
-void lma::proxy_binding_update(proxy_binding_info& pbinfo)
+void lma::proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay)
 {
 	if (pbinfo.status != ip::mproto::pba::status_ok)
 		return; //error
@@ -109,6 +109,9 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo)
 	pba_sender_ptr pbas(new pba_sender(pbinfo));
 
 	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
+
+	delay.stop();
+	_log(0, "PBU processing delay ", delay.get());
 }
 
 bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)

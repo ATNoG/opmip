@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/refcount.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/types.hpp>
@@ -63,13 +64,15 @@ struct pbu_receiver::asio_handler {
 	void operator()(boost::system::error_code ec, size_t rbytes)
 	{
 		proxy_binding_info pbinfo;
+		chrono delay;
 
+		delay.start();
 		if (!ec) {
 			if (!_pbur->parse(rbytes, pbinfo))
 				ec = boost::system::errc::make_error_code(boost::system::errc::bad_message);
 		}
 
-		_handler(ec, pbinfo, _pbur);
+		_handler(ec, pbinfo, _pbur, delay);
 	}
 
 	pbu_receiver_ptr _pbur;

@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/logger.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/bcache.hpp>
@@ -58,13 +59,13 @@ public:
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
-	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur);
+	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur, chrono& delay);
 
 private:
 	void istart(const char* id);
 	void istop();
 
-	void          proxy_binding_update(proxy_binding_info& pbinfo);
+	void          proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay);
 	bcache_entry* pbu_get_be(proxy_binding_info& pbinfo);
 	bool          pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo);
 	void          pbu_process(proxy_binding_info& pbinfo);
