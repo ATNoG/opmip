@@ -36,6 +36,12 @@
 #	define OPMIP_STATIC_ASSERT(exp, reason) BOOST_STATIC_ASSERT(exp)
 #endif
 
+#ifdef __GNUC__
+#	define OPMIP_ATTR_NO_RETURN __attribute__((noreturn))
+#else
+#	define OPMIP_ATTR_NO_RETURN
+#endif
+
 #define OPMIP_UNDEFINED_BOOL                           \
 	struct undefined_bool_t {                          \
 		void true_() {}                                \
@@ -74,8 +80,8 @@ typedef boost::int64_t     sint64;
 typedef boost::intmax_t    sintmax;
 typedef boost::uintmax_t   uintmax;
 
-typedef std::size_t        size_t;
-typedef std::ptrdiff_t     ptrdiff_t;
+typedef std::size_t        ptrsint;
+typedef std::ptrdiff_t     ptruint;
 
 ///////////////////////////////////////////////////////////////////////////////
 struct nullptr_t { template<class T> operator T*() const { return 0; } };
