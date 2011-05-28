@@ -16,13 +16,14 @@
 //=============================================================================
 
 #include <opmip/pmip/tunnels.hpp>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 ip6_tunnels::ip6_tunnels(boost::asio::io_service& ios)
-	: _io_service(ios)
+	: _io_service(ios), _gc(0)
 {
 }
 
@@ -32,14 +33,17 @@ ip6_tunnels::~ip6_tunnels()
 
 void ip6_tunnels::open(const ip::address_v6& address)
 {
-	if (!_tunnels.empty())
+	if (!_tunnels.empty()) {
+		_gc.clear();
 		_tunnels.clear();
+	}
 	_local = address;
 }
 
 void ip6_tunnels::close()
 {
 	_local = ip::address_v6();
+	_gc.clear();
 	_tunnels.clear();
 }
 
@@ -69,9 +73,17 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 void ip6_tunnels::del(const ip::address_v6& remote)
 {
 	auto i = _tunnels.find(remote);
-	if (i != _tunnels.end()) {
-		if (!(--i->second->refcount))
-			_tunnels.erase(i);
+	if (i != _tunnels.end() && i->second->refcount) {
+		if (!--i->second->refcount)
+			_gc.push_back(i);
+	}
+
+	if (_gc.size() >= k_gc_threshold) {
+		std::for_each(_gc.begin(), _gc.end(), [this](map::iterator& i) {
+			if (!i->second->refcount)
+				_tunnels.erase(i);
+		});
+		_gc.clear();
 	}
 }
 

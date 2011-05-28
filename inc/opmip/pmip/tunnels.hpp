@@ -39,6 +39,9 @@ class ip6_tunnels {
 	};
 
 	typedef boost::ptr_map<ip::address_v6, entry> map;
+	typedef std::vector<map::iterator>            map_gc;
+
+	static const uint k_gc_threshold = 128;
 
 public:
 	ip6_tunnels(boost::asio::io_service& ios);
@@ -56,6 +59,7 @@ private:
 	boost::asio::io_service& _io_service;
 	ip::address_v6           _local;
 	map                      _tunnels;
+	map_gc                   _gc;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
