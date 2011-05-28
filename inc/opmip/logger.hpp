@@ -20,7 +20,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/chrono.hpp>
 #include <boost/utility.hpp>
 #include <ostream>
 
@@ -29,156 +28,44 @@ namespace opmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class logger : boost::noncopyable {
-public:
-	logger(char const* const name, std::ostream* sink = nullptr)
-		: _name(name), _sink(sink), _level(~0)
+	template<class T, class ...Args>
+	static void print_args(std::ostream& os, const T& arg, const Args& ...args)
 	{
-		_chrono.start();
+		os << arg;
+		print_args(os, args...);
 	}
 
-	void level(uint n)          { _level = n; }
-	void sink(std::ostream* os) { _sink = os; }
+	template<class T>
+	static void print_args(std::ostream& os, const T& arg)
+	{
+		os << arg << std::endl;
+	}
+
+public:
+	logger(char const* const name, std::ostream& sink)
+		: _name(name), _sink(sink), _level(~0)
+	{ }
+
+	void level(uint n) { _level = n; }
 
 	uint          level() const { return _level; }
-	std::ostream* sink() const  { return _sink; }
+	std::ostream& sink() const  { return _sink; }
 
-	template<class T1>
-	void operator()(uint level, const T1& arg1)
+	template<class ...T>
+	void operator()(uint level, const T& ...args)
 	{
-		if (level > _level)
+		if ((level > _level) || !_sink)
 			return;
 
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2>
-	void operator()(uint level, const T1& arg1, const T2& arg2)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6, const T7& arg7)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6, const T7& arg7, const T8& arg8)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6, const T7& arg7, const T8& arg8, const T9& arg9)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6, const T7& arg7, const T8& arg8, const T9& arg9, const T10& arg10)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << std::endl;
-		std::flush(*_sink);
-	}
-
-	template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10, class T11>
-	void operator()(uint level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5, const T6& arg6, const T7& arg7, const T8& arg8, const T9& arg9, const T10& arg10, const T11& arg11)
-	{
-		if (level > _level)
-			return;
-
-		_chrono.stop();
-		if (_sink)
-			*_sink << "[" << _chrono.get() << "]\t " << _name << ": " << arg1 << arg2 << arg3 << arg4 << arg5 << arg6 << arg7 << arg8 << arg9 << arg10 << arg11 << std::endl;
-		std::flush(*_sink);
+		_sink << _name << ": ";
+		print_args(_sink, args...);
+		std::flush(_sink);
 	}
 
 private:
 	char const* const _name;
-	std::ostream*     _sink;
+	std::ostream&     _sink;
 	uint              _level;
-	chrono            _chrono;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

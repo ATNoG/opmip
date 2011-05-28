@@ -32,7 +32,7 @@ bool validate_sequence_number(uint16 prev, uint16 current)
 
 ///////////////////////////////////////////////////////////////////////////////
 lma::lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
-	: _service(ios), _node_db(ndb), _log("LMA", &std::cout), _mp_sock(ios),
+	: _service(ios), _node_db(ndb), _log("LMA", std::cout), _mp_sock(ios),
 	  _tunnels(ios), _route_table(ios), _concurrency(concurrency)
 {
 }

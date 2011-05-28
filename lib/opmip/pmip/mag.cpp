@@ -42,7 +42,7 @@ inline void report_completion(boost::asio::io_service::strand& srv,
 
 ///////////////////////////////////////////////////////////////////////////////
 mag::mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency)
-	: _service(ios), _node_db(ndb), _log("MAG", &std::cout), _addrconf(asrv),
+	: _service(ios), _node_db(ndb), _log("MAG", std::cout), _addrconf(asrv),
 	  _mp_sock(ios), _tunnels(ios), _route_table(ios),
 	  _concurrency(concurrency)
 {
