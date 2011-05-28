@@ -72,6 +72,7 @@ int main(int argc, char** argv)
 
 		load_node_database(opts.node_db, ndb);
 
+		std::cout << "chrono resolution: " << opmip::chrono::get_resolution() << std::endl;
 
 		mag.start(opts.identifier.c_str(), opts.link_local_ip);
 
@@ -83,9 +84,6 @@ int main(int argc, char** argv)
 		                                                 boost::ref(mag)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
-
-		std::cout << std::setprecision(9)
-		          << "chrono resolution: " << opmip::chrono::get_resolution() << std::endl;
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
