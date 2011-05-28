@@ -111,7 +111,7 @@ void lma::proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay)
 	pbas->async_send(_mp_sock, boost::bind(&lma::mp_send_handler, this, _1));
 
 	delay.stop();
-	_log(0, "PBU processing delay ", delay.get());
+	_log(0, "PBU ", !pbinfo.lifetime ? "de-" : "", "register processing delay ", delay.get());
 }
 
 bcache_entry* lma::pbu_get_be(proxy_binding_info& pbinfo)
@@ -248,6 +248,10 @@ void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::st
 
 void lma::add_route_entries(bcache_entry* be)
 {
+	chrono delay;
+
+	delay.start();
+
 	const bcache::net_prefix_list& npl = be->prefix_list();
 	uint tdev = _tunnels.get(be->care_of_address);
 
@@ -255,10 +259,17 @@ void lma::add_route_entries(bcache_entry* be)
 
 	for (bcache::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_dst(*i, tdev);
+
+	delay.stop();
+	_log(0, "Add route entries delay ", delay.get());
 }
 
 void lma::del_route_entries(bcache_entry* be)
 {
+	chrono delay;
+
+	delay.start();
+
 	const bcache::net_prefix_list& npl = be->prefix_list();
 
 	_log(0, "Remove route entries [id = ", be->id(), ", CoA = ", be->care_of_address, "]");
@@ -267,6 +278,9 @@ void lma::del_route_entries(bcache_entry* be)
 		_route_table.remove_by_dst(*i);
 
 	_tunnels.del(be->care_of_address);
+
+	delay.stop();
+	_log(0, "Remove route entries delay ", delay.get());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -64,15 +64,15 @@ void mag::mp_send_handler(const boost::system::error_code& ec)
 		_log(0, "PBU send error: ", ec.message());
 }
 
-void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar)
+void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar, chrono& delay)
 {
 	if (ec) {
 		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
 			_log(0, "PBA receive error: ", ec.message());
 
 	} else {
-		_service.dispatch(boost::bind(&mag::proxy_binding_ack, this, pbinfo));
-		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3));
+		_service.dispatch(boost::bind(&mag::proxy_binding_ack, this, pbinfo, delay));
+		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3, _4));
 	}
 }
 
@@ -100,7 +100,7 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pba_receiver_ptr pbar(new pba_receiver);
 
-		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3));
+		pbar->async_receive(_mp_sock, boost::bind(&mag::mp_receive_handler, this, _1, _2, _3, _4));
 	}
 }
 
@@ -116,6 +116,10 @@ void mag::stop_()
 
 void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler)
 {
+	chrono delay;
+
+	delay.start();
+
 	bulist_entry* be = _bulist.find(ai.mn_address);
 	if (!be) {
 		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
@@ -169,10 +173,17 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& comple
 
 	report_completion(_service, be->completion, ec_canceled);
 	be->completion = std::move(completion_handler);
+
+	delay.stop();
+	_log(0, "PBU register send process delay ", delay.get());
 }
 
 void mag::mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler)
 {
+	chrono delay;
+
+	delay.start();
+
 	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 	if (!mn) {
 		report_completion(_service, completion_handler, ec_not_authorized);
@@ -210,9 +221,12 @@ void mag::mobile_node_detach_(const attach_info& ai, completion_functor&& comple
 
 	report_completion(_service, be->completion, ec_canceled);
 	be->completion = std::move(completion_handler);
+
+	delay.stop();
+	_log(0, "PBU de-register send process delay ", delay.get());
 }
 
-void mag::proxy_binding_ack(const proxy_binding_info& pbinfo)
+void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 {
 	bulist_entry* be = _bulist.find(pbinfo.id);
 	if (!be) {
@@ -256,6 +270,9 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo)
 		                        ", lma = ", pbinfo.address,
 		                        ", status = ", pbinfo.status, "]");
 
+		delay.stop();
+		_log(0, "PBA register process delay ", delay.get());
+
 	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
 		uint ec = (pbinfo.status == ip::mproto::pba::status_ok) ? ec_success : pbinfo.status + ec_error;
 
@@ -268,6 +285,9 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo)
 		                           ", lma = ", pbinfo.address, "]");
 
 		_bulist.remove(be);
+
+		delay.stop();
+		_log(0, "PBA de-register process delay ", delay.get());
 
 	} else {
 		_log(0, "PBA ignored [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
@@ -323,6 +343,10 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding
 
 void mag::add_route_entries(bulist_entry& be)
 {
+	chrono delay;
+
+	delay.start();
+
 	const bulist::net_prefix_list& npl = be.mn_prefix_list();
 	uint adev = be.poa_dev_id();
 	uint tdev = _tunnels.get(be.lma_address());
@@ -346,10 +370,17 @@ void mag::add_route_entries(bulist_entry& be)
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
 	_addrconf.add(be.poa_dev_id(), rainfo);
+
+	delay.stop();
+	_log(0, "Add route entries delay ", delay.get());
 }
 
 void mag::del_route_entries(bulist_entry& be)
 {
+	chrono delay;
+
+	delay.start();
+
 	const bulist::net_prefix_list& npl = be.mn_prefix_list();
 
 	_log(0, "Remove route entries [id = ", be.mn_id(), ", LMA = ", be.lma_address(), "]");
@@ -362,6 +393,9 @@ void mag::del_route_entries(bulist_entry& be)
 
 	_tunnels.del(be.lma_address());
 	_addrconf.del(be.mn_link_address());
+
+	delay.stop();
+	_log(0, "Remove route entries delay ", delay.get());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

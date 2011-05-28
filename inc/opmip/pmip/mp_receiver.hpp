@@ -115,13 +115,15 @@ struct pba_receiver::asio_handler {
 	void operator()(boost::system::error_code ec, size_t rbytes)
 	{
 		proxy_binding_info pbinfo;
+		chrono delay;
 
+		delay.start();
 		if (!ec) {
 			if (!_pbar->parse(rbytes, pbinfo))
 				ec = boost::system::errc::make_error_code(boost::system::errc::bad_message);
 		}
 
-		_handler(ec, pbinfo, _pbar);
+		_handler(ec, pbinfo, _pbar, delay);
 	}
 
 	pba_receiver_ptr _pbar;

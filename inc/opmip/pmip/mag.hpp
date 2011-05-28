@@ -82,7 +82,7 @@ public:
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
-	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar);
+	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar, chrono& delay);
 
 private:
 	void start_(const std::string& id, const ip_address& mn_access_link);
@@ -91,7 +91,7 @@ private:
 	void mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler);
 	void mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler);
 
-	void proxy_binding_ack(const proxy_binding_info& pbinfo);
+	void proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay);
 	void proxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
 
 	void add_route_entries(bulist_entry& be);
