@@ -17,6 +17,7 @@
 
 #include <opmip/base.hpp>
 #include <opmip/debug.hpp>
+#include <opmip/logger.hpp>
 #include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
@@ -32,12 +33,7 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt(opmip::app::driver_ptr& drv, opmip::pmip::mag& mag)
-{
-	std::cout << "\r";
-	drv->stop();
-	mag.stop();
-}
+static opmip::logger log_("opmip-mag", std::cout);
 
 ///////////////////////////////////////////////////////////////////////////////
 static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
@@ -49,7 +45,7 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 		                       "Failed to open \"" + file_name + "\" node database file");
 
 	size_t n = ndb.load(in);
-	std::cout << "app: loaded " << n << " nodes from database\n";
+	log_(0, "loaded ", n, " nodes from database");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,16 +68,18 @@ int main(int argc, char** argv)
 
 		load_node_database(opts.node_db, ndb);
 
-		std::cout << "chrono resolution: " << opmip::chrono::get_resolution() << std::endl;
+		log_(0, "chrono resolution ", opmip::chrono::get_resolution());
 
 		mag.start(opts.identifier.c_str(), opts.link_local_ip);
 
 		drv = opmip::app::make_driver(ios, "madwifi");
 		drv->start(mag, opts.access_links);
 
-		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
-		                                                 drv,
-		                                                 boost::ref(mag)));
+		opmip::sys::interrupt_signal.connect([drv, &mag]() {
+			std::cout << "\r";
+			drv->stop();
+			mag.stop();
+		});
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
@@ -92,8 +90,12 @@ int main(int argc, char** argv)
 		ios.run();
 		tg.join_all();
 
+	} catch(opmip::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+
 	} catch(std::exception& e) {
-		std::cerr << "error: " << e.what() << std::endl;
+		std::cerr << "exception: " << e.what() << std::endl;
 		return 1;
 	}
 

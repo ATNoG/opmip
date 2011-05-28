@@ -31,11 +31,7 @@
 #include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt(opmip::pmip::lma& lma)
-{
-	std::cout << "\r";
-	lma.stop();
-}
+static opmip::logger log_("opmip-lma", std::cout);
 
 ///////////////////////////////////////////////////////////////////////////////
 static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
@@ -47,7 +43,7 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 		                       "Failed to open \"" + file_name + "\" node database file");
 
 	size_t n = ndb.load(in);
-	std::cout << "app: loaded " << n << " nodes from database\n";
+	log_(0, "loaded ", n, " nodes from database");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,14 +62,16 @@ int main(int argc, char** argv)
 		opmip::pmip::node_db    ndb;
 		opmip::pmip::lma        lma(ios, ndb, concurrency);
 
-		std::cout << "chrono resolution: " << opmip::chrono::get_resolution() << std::endl;
+		log_(0, "chrono resolution ", opmip::chrono::get_resolution());
 
 		load_node_database(opts.node_db, ndb);
 
 		lma.start(opts.identifier.c_str());
 
-		opmip::sys::interrupt_signal.connect(boost::bind(interrupt,
-		                                                 boost::ref(lma)));
+		opmip::sys::interrupt_signal.connect([&lma]() {
+			std::cout << "\r";
+			lma.stop();
+		});
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
@@ -84,8 +82,12 @@ int main(int argc, char** argv)
 		ios.run();
 		tg.join_all();
 
+	} catch(opmip::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+
 	} catch(std::exception& e) {
-		std::cerr << "error: " << e.what() << std::endl;
+		std::cerr << "exception: " << e.what() << std::endl;
 		return 1;
 	}
 
