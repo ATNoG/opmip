@@ -38,13 +38,16 @@ bool cmdline_options::parse(int argc, char** argv)
 		("help,h", "display command line options");
 
 	config.add_options()
-		("node-db",        po::value<std::string>()->default_value("node.db"),
+		("id,i",           po::value<std::string>()->default_value(boost::asio::ip::host_name()),
+		                   "router identifier on the node database")
+		("database,d",     po::value<std::string>()->default_value("node.db"),
 		                   "node database")
-		("id",             po::value<std::string>()->default_value(boost::asio::ip::host_name()),
-		                   "MAG identifier on the node database")
+		("log,l",          "optional log file, defaults to the standard output")
+		("driver,e",       po::value<std::string>()->default_value("madwifi"),
+		                   "event driver to be used, available: madwifi, 802.11")
 		("link-local-ip",  po::value<std::string>()->default_value("fe80::1"),
 		                   "link local IP address for all access links")
-		("access-links,a", po::value<std::vector<std::string> >()->multitoken(),
+		("access-links", po::value<std::vector<std::string> >()->multitoken(),
 		                   "list of access link interfaces");
 
 	options.add(config);
@@ -58,7 +61,7 @@ bool cmdline_options::parse(int argc, char** argv)
 	}
 
 	identifier = vm["id"].as<std::string>();
-	node_db = vm["node-db"].as<std::string>();
+	node_db = vm["database"].as<std::string>();
 
 	link_local_ip = ip::address_v6::from_string(vm["link-local-ip"].as<std::string>());
 
