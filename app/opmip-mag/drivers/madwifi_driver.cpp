@@ -64,13 +64,12 @@ madwifi_driver::~madwifi_driver()
 {
 }
 
-void madwifi_driver::start(pmip::mag& mag, const boost::any& parameter)
+void madwifi_driver::start(pmip::mag& mag, const std::vector<std::string>& options)
 {
-	auto interfaces = boost::any_cast<const std::vector<std::string>&>(parameter);
 	boost::system::error_code ec;
 
 	_impl.set_event_handler(boost::bind(link_event, _1, _2, boost::ref(mag)));
-	_impl.start(interfaces, ec);
+	_impl.start(options, ec);
 	sys::throw_on_error(ec);
 }
 

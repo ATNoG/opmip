@@ -39,7 +39,7 @@ public:
 	madwifi_driver(boost::asio::io_service& ios);
 	~madwifi_driver();
 
-	virtual void start(pmip::mag& mag, const boost::any& parameter);
+	virtual void start(pmip::mag& mag, const std::vector<std::string>& options);
 	virtual void stop();
 
 private:
