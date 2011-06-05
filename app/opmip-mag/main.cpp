@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 	try {
 		opmip::app::cmdline_options opts;
 
-		if (!opts.parse(argc, argv))
+		if (!opts.parse(argc, argv, std::cerr))
 			return 1;
 
 		size_t                       concurrency = boost::thread::hardware_concurrency();
@@ -66,14 +66,14 @@ int main(int argc, char** argv)
 		opmip::pmip::mag             mag(ios, ndb, addrconf, concurrency);
 		opmip::app::driver_ptr       drv;
 
-		load_node_database(opts.node_db, ndb);
+		load_node_database(opts.database, ndb);
 
 		log_(0, "chrono resolution ", opmip::chrono::get_resolution());
 
 		mag.start(opts.identifier.c_str(), opts.link_local_ip);
 
-		drv = opmip::app::make_driver(ios, "madwifi");
-		drv->start(mag, opts.access_links);
+		drv = opmip::app::make_driver(ios, opts.driver);
+		drv->start(mag, opts.driver_options);
 
 		opmip::sys::interrupt_signal.connect([drv, &mag]() {
 			std::cout << "\r";

@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <ostream>
 #include <vector>
 #include <string>
 
@@ -31,12 +32,13 @@ namespace opmip { namespace app {
 ///////////////////////////////////////////////////////////////////////////////
 struct cmdline_options {
 	std::string              identifier;
-	std::string              node_db;
-	ip::address_v6           link_local_ip;
-	std::vector<std::string> access_links;
+	std::string              database;
+	std::string              driver;
+	std::vector<std::string> driver_options;
+	ip::address_v6           link_local_ip; //TODO: deprecate
 
 
-	bool parse(int argc, char** argv);
+	bool parse(int argc, char** argv, std::ostream& out);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
