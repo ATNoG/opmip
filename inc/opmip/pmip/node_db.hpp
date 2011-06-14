@@ -59,7 +59,7 @@ protected:
 	{ }
 
 public:
-	const std::string& id() const   { return _id; }
+	const std::string& id() const { return _id; }
 
 private:
 	boost::intrusive::set_member_hook<> _hook;
@@ -195,6 +195,7 @@ public:
 	typedef mobile_node::ip_prefix      ip_prefix;
 	typedef mobile_node::ip_prefix_list ip_prefix_list;
 	typedef mobile_node::link_address   link_address;
+	typedef mobile_node_tree::iterator  mobile_node_iterator;
 
 public:
 	node_db();
@@ -207,6 +208,9 @@ public:
 
 	const router_node* find_router(const router_key& key) const;
 	const mobile_node* find_mobile_node(const mn_key& key) const;
+
+	mobile_node_iterator mobile_node_begin() { return _mobile_nodes_by_key.begin(); }
+	mobile_node_iterator mobile_node_end()   { return _mobile_nodes_by_key.end(); }
 
 protected:
 	bool insert_router(const std::string& id, const ip_address& addr, uint device_id);

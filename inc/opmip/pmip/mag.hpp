@@ -80,6 +80,8 @@ public:
 	template<class CompletionHandler>
 	void mobile_node_detach(const attach_info& ai, CompletionHandler handler);
 
+	node_db& get_node_database() { return _node_db; }
+
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar, chrono& delay);
