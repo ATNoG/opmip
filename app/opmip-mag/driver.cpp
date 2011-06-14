@@ -17,6 +17,7 @@
 
 #include "driver.hpp"
 #include "drivers/madwifi_driver.hpp"
+#include "drivers/dummy.hpp"
 #include <boost/make_shared.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,6 +28,8 @@ driver_ptr make_driver(boost::asio::io_service& ios, const std::string& name)
 {
 	if (name == "madwifi")
 		return boost::make_shared<madwifi_driver>(ios);
+	else if (name == "dummy")
+		return boost::make_shared<dummy_driver>(ios);
 
 	return driver_ptr();
 }
