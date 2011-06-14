@@ -28,8 +28,8 @@ namespace po = boost::program_options;
 bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 {
 	po::options_description options("opmip-mag command line options");
-	po::options_description config;
-	po::options_description hiden;
+	po::positional_options_description po;
+
 	po::variables_map vm;
 
 	options.add_options()
@@ -43,14 +43,12 @@ bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 		("driver,e",       po::value<std::string>()->default_value("madwifi"),
 		                   "event driver to be used, available: madwifi, 802.11, dummy")
 		("link-local-ip",  po::value<std::string>()->default_value("fe80::1"),
-		                   "link local IP address for all access links");
+		                   "link local IP address for all access links")
+		("driver-options",  po::value<std::vector<std::string>>(), "driver specific options");
 
-	hiden.add_options()
-		("driver-options", po::value<std::vector<std::string>>(), "driver options");
+	po.add("driver-options", -1);
 
-	config.add(options).add(hiden);
-
-	po::store(po::parse_command_line(argc, argv, config), vm);
+	po::store(po::command_line_parser(argc, argv).options(options).positional(po).run(), vm);
 	po::notify(vm);
 
 	if (vm.count("help")) {
