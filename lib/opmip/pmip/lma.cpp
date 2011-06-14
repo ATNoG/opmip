@@ -73,7 +73,7 @@ void lma::istart(const char* id)
 
 		throw_exception(exception(ec, "LMA id not found in node database"));
 	}
-	_log(0, "Starting... [id = ", id, ", address = ", node->address(), "]");
+	_log(0, "Started [id = ", id, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
@@ -91,8 +91,6 @@ void lma::istart(const char* id)
 
 void lma::istop()
 {
-	_log(0, "Stoping...");
-
 	_bcache.clear();
 	_mp_sock.close();
 	_route_table.clear();

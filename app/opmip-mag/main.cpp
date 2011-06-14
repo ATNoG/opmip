@@ -77,7 +77,9 @@ int main(int argc, char** argv)
 
 		opmip::sys::interrupt_signal.connect([drv, &mag]() {
 			std::cout << "\r";
+			log_(0, "stopping driver");
 			drv->stop();
+			log_(0, "stopping the MAG service");
 			mag.stop();
 		});
 

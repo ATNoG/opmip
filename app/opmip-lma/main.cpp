@@ -70,6 +70,7 @@ int main(int argc, char** argv)
 
 		opmip::sys::interrupt_signal.connect([&lma]() {
 			std::cout << "\r";
+			log_(0, "stopping the LMA service");
 			lma.stop();
 		});
 

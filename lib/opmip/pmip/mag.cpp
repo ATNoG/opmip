@@ -87,7 +87,7 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 		boost::throw_exception(exception(errc::make_error_code(errc::invalid_argument),
 		                                 "Invalid Link local address"));
 
-	_log(0, "Starting... [id = ", id, ", link_local_ip = ", link_local_ip, ", address = ", node->address(), "]");
+	_log(0, "Started [id = ", id, ", link_local_ip = ", link_local_ip, ", address = ", node->address(), "]");
 
 	_mp_sock.open(ip::mproto());
 	_mp_sock.bind(ip::mproto::endpoint(node->address()));
@@ -106,8 +106,6 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 
 void mag::stop_()
 {
-	_log(0, "Stoping...");
-
 	_bulist.clear();
 	_mp_sock.close();
 	_route_table.clear();
