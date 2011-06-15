@@ -44,6 +44,7 @@ public:
 
 	void add(uint device_id, const router_advertisement_info& ai);
 	void del(const link_address& addr);
+	void clear();
 
 private:
 	boost::asio::io_service& _io_service;

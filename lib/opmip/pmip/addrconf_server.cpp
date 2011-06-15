@@ -70,7 +70,7 @@ void addrconf_server::add(uint device_id, const router_advertisement_info& ai)
 	                                 ai.dst_link_address);
 
 	router_advertisement(boost::system::error_code(), ras, sock, ep, timer);
-	_clients[ai.link_address] = timer;
+	_clients[ai.dst_link_address] = timer;
 }
 
 void addrconf_server::del(const link_address& addr)
@@ -82,6 +82,14 @@ void addrconf_server::del(const link_address& addr)
 
 	i->second->cancel();
 	_clients.erase(i);
+}
+
+void addrconf_server::clear()
+{
+	std::for_each(_clients.begin(), _clients.end(), [](client_map::value_type& c) {
+		c.second->cancel();
+	});
+	_clients.clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

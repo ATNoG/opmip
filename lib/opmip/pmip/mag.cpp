@@ -107,6 +107,7 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 void mag::stop_()
 {
 	_bulist.clear();
+	_addrconf.clear();
 	_mp_sock.close();
 	_route_table.clear();
 	_tunnels.close();
