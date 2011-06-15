@@ -17,29 +17,20 @@
 
 #include "dummy.hpp"
 #include <boost/date_time/local_time/local_time.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/bind.hpp>
+#include <ctime>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static opmip::logger log_("dummy", std::cout);
-static boost::mt19937 rand_generator;
-
-static uint roll_the_dice(uint count)
-{
-    boost::uniform_int<uint> dist(0, count - 1);
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<uint>> dice(rand_generator, dist);
-    return dice();
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 dummy_driver::dummy_driver(boost::asio::io_service& ios)
-	: _strand(ios), _timer(ios)
+	: _strand(ios), _timer(ios), _rand(std::time(0))
 {
 }
 
@@ -81,11 +72,14 @@ void dummy_driver::stop()
 
 void dummy_driver::timer_handler(const boost::system::error_code& ec)
 {
+	typedef boost::variate_generator<rand_engine&, rand_distribution> rand_generator;
+
 	_chrono.stop();
 	if (ec)
 		return;
 
-	auto n = roll_the_dice(_clients.size());
+	rand_generator dice(_rand, rand_distribution(0, _clients.size() - 1));
+	auto n = dice();
 
 	log_(0, "after ", _chrono.get(), " seconds we rolled the dice and got ", n);
 

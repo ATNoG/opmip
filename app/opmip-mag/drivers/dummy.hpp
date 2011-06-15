@@ -22,6 +22,8 @@
 #include "../driver.hpp"
 #include <opmip/chrono.hpp>
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +31,8 @@ namespace opmip { namespace app {
 
 ////////////////////////////////////////////////////////////////////////////////
 class dummy_driver : public driver {
+	typedef boost::mt19937                   rand_engine;
+	typedef boost::uniform_int<uint>         rand_distribution;
 	typedef std::pair<ll::mac_address, bool> client_state;
 
 public:
@@ -45,6 +49,7 @@ private:
 private:
 	boost::asio::strand         _strand;
 	boost::asio::deadline_timer _timer;
+	rand_engine                 _rand;
 	std::vector<client_state>   _clients;
 	pmip::mag*                  _mag;
 	uint                        _frequency;
