@@ -15,14 +15,19 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/disposer.hpp>
 #include <opmip/pmip/node_db.hpp>
+#include <opmip/logger.hpp>
+#include <opmip/disposer.hpp>
 #include <boost/utility.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
+
+///////////////////////////////////////////////////////////////////////////////
+static logger log_("node-db", std::cout);
 
 ///////////////////////////////////////////////////////////////////////////////
 node_db::node_db()
@@ -38,10 +43,11 @@ node_db::~node_db()
 	_mobile_nodes_by_key.clear_and_dispose(disposer<mobile_node>());
 }
 
-size_t node_db::load(std::istream& input)
+std::pair<size_t, size_t> node_db::load(std::istream& input)
 {
 	using boost::property_tree::ptree;
-	size_t cnt = 0;
+	size_t rcnt = 0;
+	size_t mcnt = 0;
 	ptree  pt;
 
 	boost::property_tree::read_json(input, pt);
@@ -51,14 +57,13 @@ size_t node_db::load(std::istream& input)
 		std::string id;
 		ip_address  addr;
 		uint        sid;
-		bool        res;
 
 		id = i->second.get<std::string>("id");
 		addr = ip_address::from_string(i->second.get<std::string>("ip-address"));
 		sid = i->second.get<uint>("ip-scope-id");
-		res = insert_router(id, addr, sid);
-		if (res)
-			++cnt;
+
+		if (insert_router(id, addr, sid))
+			++rcnt;
 	}
 
 	ptree& mns = pt.get_child("mobile-nodes");
@@ -67,18 +72,17 @@ size_t node_db::load(std::istream& input)
 		ip_prefix_list prefs;
 		link_address   laddr;
 		std::string    lma_id;
-		bool        res;
 
 		id = i->second.get<std::string>("id");
 		prefs.push_back(ip_prefix::from_string(i->second.get<std::string>("ip-prefix")));
 		laddr = link_address::from_string(i->second.get<std::string>("mac"));
 		lma_id = i->second.get<std::string>("lma-id");
-		res = insert_mobile_node(id, prefs, laddr, lma_id);
-		if (res)
-			++cnt;
+
+		if (insert_mobile_node(id, prefs, laddr, lma_id))
+			++mcnt;
 	}
 
-	return cnt;
+	return std::make_pair(rcnt, mcnt);
 }
 
 const router_node* node_db::find_router(const key& key) const
@@ -128,11 +132,13 @@ bool node_db::insert_router(const std::string& id, const ip_address& addr, uint 
 
 	if (!ins.second) {
 		delete router;
+		log_(0, "cound not insert router node due to duplicate id");
 		return false;
 	}
 
 	if (!_router_nodes_by_key.insert_unique(*router).second) {
 		_router_nodes_by_id.erase_and_dispose(ins.first, disposer<node, router_node>());
+		log_(0, "cound not insert router node due to duplicate key");
 		return false;
 	}
 
@@ -146,11 +152,13 @@ bool node_db::insert_mobile_node(const std::string& id, const ip_prefix_list& pr
 
 	if (!ins.second) {
 		delete mn;
+		log_(0, "cound not insert mobile node due to duplicate id");
 		return false;
 	}
 
 	if (!_mobile_nodes_by_key.insert_unique(*mn).second) {
 		_mobile_nodes_by_id.erase_and_dispose(ins.first, disposer<node, mobile_node>());
+		log_(0, "cound not insert mobile node due to duplicate key");
 		return false;
 	}
 

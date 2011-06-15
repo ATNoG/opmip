@@ -201,7 +201,7 @@ public:
 	node_db();
 	~node_db();
 
-	size_t load(std::istream& input);
+	std::pair<size_t, size_t> load(std::istream& input);
 
 	const router_node* find_router(const key& key) const;
 	const mobile_node* find_mobile_node(const key& key) const;
