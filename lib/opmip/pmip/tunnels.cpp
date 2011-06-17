@@ -23,7 +23,7 @@ namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 ip6_tunnels::ip6_tunnels(boost::asio::io_service& ios)
-	: _io_service(ios), _gc(0)
+	: _io_service(ios)
 {
 }
 
@@ -51,7 +51,9 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 {
 	auto i = _tunnels.find(remote);
 	if (i != _tunnels.end()) {
-		++i->second->refcount;
+		if (++i->second->refcount == 1)
+			_gc.erase(remote);
+
 		return i->second->tunnel.get_device_id();
 	}
 
@@ -75,13 +77,14 @@ void ip6_tunnels::del(const ip::address_v6& remote)
 	auto i = _tunnels.find(remote);
 	if (i != _tunnels.end() && i->second->refcount) {
 		if (!--i->second->refcount)
-			_gc.push_back(i);
+			_gc.insert(i->first);
 	}
 
 	if (_gc.size() >= k_gc_threshold) {
-		std::for_each(_gc.begin(), _gc.end(), [this](map::iterator& i) {
-			if (!i->second->refcount)
-				_tunnels.erase(i);
+		std::for_each(_gc.begin(), _gc.end(), [this](const ip::address_v6& key) {
+			auto i = _tunnels.find(key);
+			if (i != _tunnels.end() && !i->second->refcount)
+				_tunnels.erase(key);
 		});
 		_gc.clear();
 	}

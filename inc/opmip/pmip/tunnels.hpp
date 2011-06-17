@@ -23,6 +23,7 @@
 #include <opmip/ip/address.hpp>
 #include <opmip/sys/ip6_tunnel.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
+#include <set>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -39,7 +40,7 @@ class ip6_tunnels {
 	};
 
 	typedef boost::ptr_map<ip::address_v6, entry> map;
-	typedef std::vector<map::iterator>            map_gc;
+	typedef std::set<ip::address_v6>              map_gc;
 
 	static const uint k_gc_threshold = 128;
 
