@@ -42,7 +42,7 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
 		                       "Failed to open \"" + file_name + "\" node database file");
 
-	auto n = ndb.load(in);
+	std::pair<size_t, size_t> n = ndb.load(in);
 	log_(0, "loaded ", n.first, " router nodes and ", n.second, " mobile nodes from database");
 }
 

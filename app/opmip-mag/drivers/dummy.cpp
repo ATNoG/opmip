@@ -40,7 +40,7 @@ dummy_driver::~dummy_driver()
 
 void dummy_driver::start(pmip::mag& mag, const std::vector<std::string>& options)
 {
-	auto frequency = boost::lexical_cast<uint>(options.at(0));
+	uint frequency = boost::lexical_cast<uint>(options.at(0));
 
 	BOOST_ASSERT(0 < frequency || frequency <= 1000);
 
@@ -79,7 +79,7 @@ void dummy_driver::timer_handler(const boost::system::error_code& ec)
 		return;
 
 	rand_generator dice(_rand, rand_distribution(0, _clients.size() - 1));
-	auto n = dice();
+	uint n = dice();
 
 	log_(0, "after ", _chrono.get(), " seconds we rolled the dice and got ", n);
 

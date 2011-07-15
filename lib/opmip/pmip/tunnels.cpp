@@ -49,7 +49,7 @@ void ip6_tunnels::close()
 
 uint ip6_tunnels::get(const ip::address_v6& remote)
 {
-	auto i = _tunnels.find(remote);
+	map::iterator i = _tunnels.find(remote);
 	if (i != _tunnels.end()) {
 		if (++i->second->refcount == 1)
 			_gc.erase(remote);
@@ -58,7 +58,7 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 	}
 
 	std::auto_ptr<entry> tun(new entry(_io_service));
-	auto res = _tunnels.insert(remote, tun);
+	std::pair<map::iterator, bool> res = _tunnels.insert(remote, tun);
 
 	try {
 		res.first->second->tunnel.open("", _local.scope_id(), _local, remote);
@@ -74,7 +74,7 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 
 void ip6_tunnels::del(const ip::address_v6& remote)
 {
-	auto i = _tunnels.find(remote);
+	map::iterator i = _tunnels.find(remote);
 	if (i != _tunnels.end() && i->second->refcount) {
 		if (!--i->second->refcount)
 			_gc.insert(i->first);
@@ -82,7 +82,7 @@ void ip6_tunnels::del(const ip::address_v6& remote)
 
 	if (_gc.size() >= k_gc_threshold) {
 		std::for_each(_gc.begin(), _gc.end(), [this](const ip::address_v6& key) {
-			auto i = _tunnels.find(key);
+			map::iterator i = _tunnels.find(key);
 			if (i != _tunnels.end() && !i->second->refcount)
 				_tunnels.erase(key);
 		});

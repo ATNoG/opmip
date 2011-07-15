@@ -47,7 +47,7 @@ static size_t append_options(uchar* buffer, size_t len, const proxy_binding_info
 		len += ip::mproto::option::size(opt);
 
 	} else {
-		for (auto i = pbinfo.prefix_list.begin(), e = pbinfo.prefix_list.end(); i != e; ++i) {
+		for (std::vector<ip::prefix_v6>::const_iterator i = pbinfo.prefix_list.begin(), e = pbinfo.prefix_list.end(); i != e; ++i) {
 			opt = new(buffer + len) ip::mproto::option(ip::mproto::option::netprefix());
 			npf = opt->get<ip::mproto::option::netprefix>();
 			npf->length = i->length();
