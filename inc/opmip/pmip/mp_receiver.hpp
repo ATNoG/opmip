@@ -21,15 +21,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/chrono.hpp>
-#include <opmip/refcount.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/types.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class pbu_receiver : public refcount_base {
+class pbu_receiver : public boost::enable_shared_from_this<pbu_receiver> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -53,7 +54,7 @@ private:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pbu_receiver> pbu_receiver_ptr;
+typedef boost::shared_ptr<pbu_receiver> pbu_receiver_ptr;
 
 template<class Handler>
 struct pbu_receiver::asio_handler {
@@ -80,7 +81,7 @@ struct pbu_receiver::asio_handler {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class pba_receiver : public refcount_base {
+class pba_receiver : public  boost::enable_shared_from_this<pba_receiver> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -104,7 +105,7 @@ private:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pba_receiver> pba_receiver_ptr;
+typedef boost::shared_ptr<pba_receiver> pba_receiver_ptr;
 
 template<class Handler>
 struct pba_receiver::asio_handler {

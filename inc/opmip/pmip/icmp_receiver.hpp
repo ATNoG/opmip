@@ -20,16 +20,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/refcount.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ll/mac_address.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/asio/ip/icmp.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class icmp_rs_receiver : public refcount_base {
+class icmp_rs_receiver : public boost::enable_shared_from_this<icmp_rs_receiver> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -53,7 +54,7 @@ public:
 	uchar                           _buffer[1460];
 };
 
-typedef refcount_ptr<icmp_rs_receiver> icmp_rs_receiver_ptr;
+typedef boost::shared_ptr<icmp_rs_receiver> icmp_rs_receiver_ptr;
 
 template<class Handler>
 struct icmp_rs_receiver::asio_handler {

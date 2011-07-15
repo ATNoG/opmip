@@ -83,7 +83,7 @@ void lma::istart(const char* id)
 	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
 	for (size_t i = 0; i < _concurrency; ++i) {
-		refcount_ptr<pbu_receiver> pbur(new pbu_receiver());
+		pbu_receiver_ptr pbur(new pbu_receiver());
 
 		pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3, _4));
 	}

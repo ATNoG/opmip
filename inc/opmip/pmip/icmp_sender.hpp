@@ -20,18 +20,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/refcount.hpp>
 #include <opmip/pmip/types.hpp>
 #include <opmip/net/ip/ipv6_packet.hpp>
 #include <opmip/net/ip/icmp6_ra_packet.hpp>
 #include <opmip/net/link/ethernet.hpp>
 #include <boost/asio/ip/icmp.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class icmp_ra_sender : public refcount_base {
+class icmp_ra_sender : public boost::enable_shared_from_this<icmp_ra_sender> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -63,7 +64,7 @@ public:
 	net::ip::icmp6_ra_packet        _ra_pkt;
 };
 
-typedef refcount_ptr<icmp_ra_sender> icmp_ra_sender_ptr;
+typedef boost::shared_ptr<icmp_ra_sender> icmp_ra_sender_ptr;
 
 template<class Handler>
 struct icmp_ra_sender::asio_handler {
