@@ -35,7 +35,7 @@ inline void report_completion(boost::asio::io_service::strand& srv,
                               mag::error_code ec)
 {
 	if (handler) {
-		srv.post(boost::bind(std::move(handler), ec));
+		srv.post(boost::bind(handler, ec));
 		handler.clear();
 	}
 }
@@ -113,7 +113,7 @@ void mag::stop_()
 	_tunnels.close();
 }
 
-void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler)
+void mag::mobile_node_attach_(const attach_info& ai, completion_functor& completion_handler)
 {
 	chrono delay;
 
@@ -171,13 +171,13 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor&& comple
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
 	report_completion(_service, be->completion, ec_canceled);
-	be->completion = std::move(completion_handler);
+	std::swap(be->completion, completion_handler);
 
 	delay.stop();
 	_log(0, "PBU register send process delay ", delay.get());
 }
 
-void mag::mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler)
+void mag::mobile_node_detach_(const attach_info& ai, completion_functor& completion_handler)
 {
 	chrono delay;
 
@@ -219,7 +219,7 @@ void mag::mobile_node_detach_(const attach_info& ai, completion_functor&& comple
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
 	report_completion(_service, be->completion, ec_canceled);
-	be->completion = std::move(completion_handler);
+	std::swap(be->completion, completion_handler);
 
 	delay.stop();
 	_log(0, "PBU de-register send process delay ", delay.get());

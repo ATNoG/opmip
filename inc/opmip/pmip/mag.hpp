@@ -30,6 +30,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/ip/icmp.hpp>
+#include <boost/bind.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -90,8 +91,8 @@ private:
 	void start_(const std::string& id, const ip_address& mn_access_link);
 	void stop_();
 
-	void mobile_node_attach_(const attach_info& ai, completion_functor&& completion_handler);
-	void mobile_node_detach_(const attach_info& ai, completion_functor&& completion_handler);
+	void mobile_node_attach_(const attach_info& ai, completion_functor& completion_handler);
+	void mobile_node_detach_(const attach_info& ai, completion_functor& completion_handler);
 
 	void proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay);
 	void proxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
@@ -118,17 +119,17 @@ private:
 template<class CompletionHandler>
 inline void mag::mobile_node_attach(const attach_info& ai, CompletionHandler handler)
 {
-	_service.dispatch([this, ai, handler]() {
-		this->mobile_node_attach_(ai, handler);
-	});
+	completion_functor ch(handler);
+
+	_service.dispatch(boost::bind(&mag::mobile_node_attach_, this, ai, ch));
 }
 
 template<class CompletionHandler>
 inline void mag::mobile_node_detach(const attach_info& ai, CompletionHandler handler)
 {
-	_service.dispatch([this, ai, handler]() {
-		this->mobile_node_detach_(ai, handler);
-	});
+	completion_functor ch(handler);
+
+	_service.dispatch(boost::bind(&mag::mobile_node_detach_, this, ai, ch));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
