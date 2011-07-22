@@ -36,7 +36,7 @@ static opmip::logger log_("opmip-lma", std::cout);
 ///////////////////////////////////////////////////////////////////////////////
 static void load_node_database(const std::string& file_name, opmip::pmip::node_db& ndb)
 {
-	std::ifstream in(file_name);
+	std::ifstream in(file_name.c_str());
 
 	if (!in)
 		opmip::throw_exception(opmip::errc::make_error_code(opmip::errc::no_such_file_or_directory),
@@ -44,6 +44,13 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 
 	std::pair<size_t, size_t> n = ndb.load(in);
 	log_(0, "loaded ", n.first, " router nodes and ", n.second, " mobile nodes from database");
+}
+
+void signal_handler(opmip::pmip::lma& lma)
+{
+	std::cout << "\r";
+	log_(0, "stopping the LMA service");
+	lma.stop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,11 +75,7 @@ int main(int argc, char** argv)
 
 		lma.start(opts.identifier.c_str());
 
-		opmip::sys::interrupt_signal.connect([&lma]() {
-			std::cout << "\r";
-			log_(0, "stopping the LMA service");
-			lma.stop();
-		});
+		opmip::sys::interrupt_signal.connect(boost::bind(signal_handler, boost::ref(lma)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
