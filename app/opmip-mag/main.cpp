@@ -48,6 +48,15 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 	log_(0, "loaded ", n.first, " router nodes and ", n.second, " mobile nodes from database");
 }
 
+static void signal_handler(opmip::app::driver_ptr& drv, opmip::pmip::mag& mag)
+{
+	std::cout << "\r";
+	log_(0, "stopping driver");
+	drv->stop();
+	log_(0, "stopping the MAG service");
+	mag.stop();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
@@ -75,13 +84,7 @@ int main(int argc, char** argv)
 		drv = opmip::app::make_driver(ios, opts.driver);
 		drv->start(mag, opts.driver_options);
 
-		opmip::sys::interrupt_signal.connect([drv, &mag]() {
-			std::cout << "\r";
-			log_(0, "stopping driver");
-			drv->stop();
-			log_(0, "stopping the MAG service");
-			mag.stop();
-		});
+		opmip::sys::interrupt_signal.connect(boost::bind(signal_handler, drv, boost::ref(mag)));
 
 		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
 
