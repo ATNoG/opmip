@@ -44,7 +44,7 @@ bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 		                   "event driver to be used, available: madwifi, 802.11, dummy")
 		("link-local-ip",  po::value<std::string>()->default_value("fe80::1"),
 		                   "link local IP address for all access links")
-		("driver-options",  po::value<std::vector<std::string>>(), "driver specific options");
+		("driver-options",  po::value<std::vector<std::string> >(), "driver specific options");
 
 	po.add("driver-options", -1);
 
@@ -61,7 +61,7 @@ bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 	driver = vm["driver"].as<std::string>();
 
 	if (vm.count("driver-options"))
-		driver_options = vm["driver-options"].as<std::vector<std::string>>();
+		driver_options = vm["driver-options"].as<std::vector<std::string> >();
 
 	link_local_ip = ip::address_v6::from_string(vm["link-local-ip"].as<std::string>());
 
