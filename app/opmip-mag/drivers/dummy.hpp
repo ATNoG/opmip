@@ -43,6 +43,8 @@ public:
 	virtual void stop();
 
 private:
+	void start_(uint frequency, pmip::mag& mag);
+	void stop_();
 	void timer_handler(const boost::system::error_code& ec);
 	void schedule();
 

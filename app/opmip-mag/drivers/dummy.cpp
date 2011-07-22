@@ -29,6 +29,10 @@ namespace opmip { namespace app {
 static opmip::logger log_("dummy", std::cout);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void dummy()
+{
+}
+
 dummy_driver::dummy_driver(boost::asio::io_service& ios)
 	: _strand(ios), _timer(ios), _rand(std::time(0))
 {
@@ -44,30 +48,35 @@ void dummy_driver::start(pmip::mag& mag, const std::vector<std::string>& options
 
 	BOOST_ASSERT(0 < frequency || frequency <= 1000);
 
-	_strand.dispatch([this, frequency, &mag]() {
-		pmip::node_db& db = mag.get_node_database();
+	_strand.dispatch(boost::bind(&dummy_driver::start_, this, frequency, boost::ref(mag)));
+}
 
-		_timer.cancel();
-		_clients.clear();
-		_mag = boost::addressof(mag);
-		_frequency = frequency;
+void dummy_driver::start_(uint frequency, pmip::mag& mag)
+{
+	pmip::node_db& db = mag.get_node_database();
 
-		std::for_each(db.mobile_node_begin(), db.mobile_node_end(), [this](pmip::mobile_node& mn) {
-			_clients.push_back(client_state(mn.mac_address(), false));
-		});
+	_timer.cancel();
+	_clients.clear();
+	_mag = boost::addressof(mag);
+	_frequency = frequency;
 
-		log_(0, "using ", _clients.size(), " mobile node(s), about to generate ", frequency, " message(s) per second");
+	for (pmip::node_db::mobile_node_iterator i = db.mobile_node_begin(), e = db.mobile_node_end(); i != e; ++i)
+		_clients.push_back(client_state(i->mac_address(), false));
 
-		schedule();
-	});
+	log_(0, "using ", _clients.size(), " mobile node(s), about to generate ", frequency, " message(s) per second");
+
+	schedule();
 }
 
 void dummy_driver::stop()
 {
-	_strand.dispatch([this]() {
-		_timer.cancel();
-		_clients.clear();
-	});
+	_strand.dispatch(boost::bind(&dummy_driver::stop_, this));
+}
+
+void dummy_driver::stop_()
+{
+	_timer.cancel();
+	_clients.clear();
 }
 
 void dummy_driver::timer_handler(const boost::system::error_code& ec)
@@ -84,12 +93,10 @@ void dummy_driver::timer_handler(const boost::system::error_code& ec)
 	log_(0, "after ", _chrono.get(), " seconds we rolled the dice and got ", n);
 
 	if (!_clients[n].second) {
-		_mag->mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), [](uint ec) {
-		});
+		_mag->mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = true;
 	} else {
-		_mag->mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), [](uint ec) {
-		});
+		_mag->mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = false;
 	}
 
