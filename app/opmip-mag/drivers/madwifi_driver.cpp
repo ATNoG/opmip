@@ -28,6 +28,16 @@ namespace opmip { namespace app {
 static opmip::logger log_("madwifi", std::cout);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void attach_result(const ll::mac_address& mn_address, uint ec)
+{
+	log_(0, "node ", mn_address, " attachment completed with code ", ec);
+}
+
+static void detach_result(const ll::mac_address& mn_address, uint ec)
+{
+	log_(0, "node ", mn_address, " detachment completed with code ", ec);
+}
+
 static void link_event(const boost::system::error_code& ec, const madwifi_driver::event& ev, pmip::mag& mag)
 {
 	if (ec)
@@ -39,15 +49,11 @@ static void link_event(const boost::system::error_code& ec, const madwifi_driver
 
 	switch (ev.which) {
 	case opmip::app::madwifi_driver_impl::attach:
-		mag.mobile_node_attach(ai, [ev](uint ec) {
-			log_(0, "node ", ev.mn_address, " attachment completed with code ", ec);
-		});
+		mag.mobile_node_attach(ai, boost::bind(attach_result, ev.mn_address, _1));
 		break;
 
 	case opmip::app::madwifi_driver_impl::detach:
-		mag.mobile_node_detach(ai, [ev](uint ec) {
-			log_(0, "node ", ev.mn_address, " detachment completed with code ", ec);
-		});
+		mag.mobile_node_detach(ai, boost::bind(detach_result, ev.mn_address, _1));
 		break;
 
 	default:
