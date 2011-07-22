@@ -60,9 +60,9 @@ addrconf_server::addrconf_server(boost::asio::io_service& ios)
 
 void addrconf_server::add(uint device_id, const router_advertisement_info& ai)
 {
-	socket_ptr sock(boost::make_shared<net::link::ethernet::socket>(_io_service,
+	socket_ptr sock(boost::make_shared<net::link::ethernet::socket>(boost::ref(_io_service),
 	                                                                net::link::ethernet(net::link::ethernet::ipv6)));
-	timer_ptr timer(boost::make_shared<boost::asio::deadline_timer>(_io_service));
+	timer_ptr timer(boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io_service)));
 	icmp_ra_sender_ptr ras(new icmp_ra_sender(ai));
 	net::link::ethernet::endpoint ep(net::link::ethernet::ipv6,
 	                                 device_id,
@@ -86,9 +86,9 @@ void addrconf_server::del(const link_address& addr)
 
 void addrconf_server::clear()
 {
-	std::for_each(_clients.begin(), _clients.end(), [](client_map::value_type& c) {
-		c.second->cancel();
-	});
+	for (client_map::iterator i = _clients.begin(), e = _clients.end(); i != e; ++i)
+		i->second->cancel();
+
 	_clients.clear();
 }
 
