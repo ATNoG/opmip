@@ -27,9 +27,9 @@ namespace opmip { namespace app {
 driver_ptr make_driver(boost::asio::io_service& ios, const std::string& name)
 {
 	if (name == "madwifi")
-		return boost::make_shared<madwifi_driver>(ios);
+		return boost::make_shared<madwifi_driver>(boost::ref(ios));
 	else if (name == "dummy")
-		return boost::make_shared<dummy_driver>(ios);
+		return boost::make_shared<dummy_driver>(boost::ref(ios));
 
 	return driver_ptr();
 }
