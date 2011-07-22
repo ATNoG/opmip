@@ -81,11 +81,11 @@ void ip6_tunnels::del(const ip::address_v6& remote)
 	}
 
 	if (_gc.size() >= k_gc_threshold) {
-		std::for_each(_gc.begin(), _gc.end(), [this](const ip::address_v6& key) {
-			map::iterator i = _tunnels.find(key);
-			if (i != _tunnels.end() && !i->second->refcount)
-				_tunnels.erase(key);
-		});
+		for (map_gc::iterator i = _gc.begin(), e = _gc.end(); i!= e; ++i) {
+			map::iterator j = _tunnels.find(*i);
+			if (j != _tunnels.end() && !j->second->refcount)
+				_tunnels.erase(*i);
+		}
 		_gc.clear();
 	}
 }
