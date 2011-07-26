@@ -70,7 +70,8 @@ private:
 	bool          pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo);
 	void          pbu_process(proxy_binding_info& pbinfo);
 
-	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
+	void expired_entry(const boost::system::error_code& ec, const std::string& mn_id);
+	void remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 	void add_route_entries(bcache_entry* be);
 	void del_route_entries(bcache_entry* be);

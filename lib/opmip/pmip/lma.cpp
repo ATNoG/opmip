@@ -200,15 +200,21 @@ void lma::pbu_process(proxy_binding_info& pbinfo)
 	if (!pbu_mag_checkin(*be, pbinfo))
 		return;
 
-	if (pbinfo.lifetime && be->bind_status != bcache_entry::k_bind_registered) {
+	if (pbinfo.lifetime) {
 		if (be->care_of_address == pbinfo.address)
-			_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			if (be->bind_status == bcache_entry::k_bind_registered)
+				_log(0, "PBU re-registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			else
+				_log(0, "PBU registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 		else
-			_log(0, "PBU new registration [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
+			_log(0, "PBU handoff [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
 
 		be->timer.cancel();
 		be->bind_status = bcache_entry::k_bind_registered;
 		add_route_entries(be);
+
+		be->timer.expires_from_now(boost::posix_time::seconds(pbinfo.lifetime));
+		be->timer.async_wait(_service.wrap(boost::bind(&lma::expired_entry, this, _1, be->id())));
 	}
 
 	BOOST_ASSERT((be->bind_status != bcache_entry::k_bind_unknown));
@@ -222,11 +228,31 @@ void lma::pbu_process(proxy_binding_info& pbinfo)
 		be->care_of_address = ip::address_v6();
 
 		be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
-		be->timer.async_wait(_service.wrap(boost::bind(&lma::bcache_remove_entry, this, _1, be->id())));
+		be->timer.async_wait(_service.wrap(boost::bind(&lma::remove_entry, this, _1, be->id())));
 	}
 }
 
-void lma::bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
+void lma::expired_entry(const boost::system::error_code& ec, const std::string& mn_id)
+{
+	if (ec) {
+		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "Binding cache expired entry timer error: ", ec.message());
+
+		return;
+	}
+
+	bcache_entry* be = _bcache.find(mn_id);
+	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
+		_log(0, "Binding cache expired entry error: not found [id = ", mn_id, "]");
+		return;
+	}
+	_log(0, "Binding expired entry [id = ", mn_id, "]");
+
+	be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
+	be->timer.async_wait(_service.wrap(boost::bind(&lma::remove_entry, this, _1, be->id())));
+}
+
+void lma::remove_entry(const boost::system::error_code& ec, const std::string& mn_id)
 {
 	if (ec) {
 		if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
