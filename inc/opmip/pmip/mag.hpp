@@ -96,6 +96,7 @@ private:
 
 	void proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay);
 	void proxy_binding_retry(const boost::system::error_code& ec, proxy_binding_info& pbinfo);
+	void proxy_binding_renew(const boost::system::error_code& ec, const std::string& id);
 
 	void add_route_entries(bulist_entry& be);
 	void del_route_entries(bulist_entry& be);

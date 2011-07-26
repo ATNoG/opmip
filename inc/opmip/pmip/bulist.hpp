@@ -50,6 +50,7 @@ public:
 	enum bind_status_t {
 		k_bind_unknown,
 		k_bind_requested,
+		k_bind_renewing,
 		k_bind_ack,
 		k_bind_detach,
 		k_bind_error,
@@ -66,7 +67,7 @@ public:
 		: _mn_id(mn_id), _mn_link_addr(mn_link_address),
 		  _mn_prefix_list(mn_prefix_list), _lma_addr(lma_address),
 		  _poa_dev_id(poa_dev_id), _poa_addr(poa_address),
-		  initial_lifetime(0), remaining_lifetime(0), sequence_number(std::time(nullptr)),
+		  lifetime(60), sequence_number(std::time(nullptr)),
 		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
 		  bind_status(k_bind_unknown), retry_count(0), mtu(1460),
 		  timer(ios), ra_sock(ios)
@@ -91,8 +92,7 @@ private:
 	link_address    _poa_addr;            ///Point of Attachment link layer address
 
 public:
-	uint64        initial_lifetime;    ///Initial Lifetime
-	uint64        remaining_lifetime;  ///Remaining Lifetime
+	uint64        lifetime;            ///Initial Lifetime
 	uint16        sequence_number;     ///Last Sequence Number
 	uint16        last_ack_sequence;   ///Last Sequence Number
 	uint64        timestamp;           ///Timestamp to limit the send rate

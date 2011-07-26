@@ -159,7 +159,7 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
-	pbinfo.lifetime = ~0;
+	pbinfo.lifetime = be->lifetime;
 	pbinfo.prefix_list = be->mn_prefix_list();
 	pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
@@ -269,25 +269,42 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 
 	be->last_ack_sequence = pbinfo.sequence;
 
-	if (pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_requested) {
+	if (pbinfo.lifetime && (be->bind_status == bulist_entry::k_bind_requested
+		                    || be->bind_status == bulist_entry::k_bind_renewing)) {
 		uint ec = ec_success;
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			be->bind_status = bulist_entry::k_bind_ack;
-			add_route_entries(*be);
+			if (be->bind_status == bulist_entry::k_bind_requested)
+				add_route_entries(*be);
 
 		} else {
-			be->bind_status = bulist_entry::k_bind_error;
 			ec = pbinfo.status + ec_error;
 		}
 		be->timer.cancel();
 		be->handover_delay.stop();
 
-		report_completion(_service, be->completion, static_cast<error_code>(ec));
-		_log(0, "PBA registration [delay = ", be->handover_delay.get(),
-		                        ", id = ", pbinfo.id,
-		                        ", lma = ", pbinfo.address,
-		                        ", status = ", pbinfo.status, "]");
+		if (be->bind_status == bulist_entry::k_bind_requested) {
+			report_completion(_service, be->completion, static_cast<error_code>(ec));
+			_log(0, "PBA registration [delay = ", be->handover_delay.get(),
+			                        ", id = ", pbinfo.id,
+			                        ", lma = ", pbinfo.address,
+			                        ", status = ", pbinfo.status, "]");
+		} else {
+			_log(0, "PBA re-registration [delay = ", be->handover_delay.get(),
+			                           ", id = ", pbinfo.id,
+			                           ", lma = ", pbinfo.address,
+			                           ", status = ", pbinfo.status, "]");
+		}
+
+		if (pbinfo.status == ip::mproto::pba::status_ok) {
+			uint expire = (pbinfo.lifetime < 6) ? pbinfo.lifetime - 3 : 6; //FIXME
+
+			be->timer.expires_from_now(boost::posix_time::milliseconds(expire));
+			be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_renew, this, _1, pbinfo.id)));
+		} else {
+			_bulist.remove(be);
+		}
 
 		delay.stop();
 		_log(0, "PBA register process delay ", delay.get());
@@ -323,7 +340,9 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding
 	}
 
 	bulist_entry* be = _bulist.find(pbinfo.id);
-	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_detach)) {
+	if (!be || (be->bind_status != bulist_entry::k_bind_requested
+		        && be->bind_status != bulist_entry::k_bind_renewing
+			    && be->bind_status != bulist_entry::k_bind_detach)) {
 		_log(0, "PBU retry error: binding update list entry not found [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 		return;
 	}
@@ -358,6 +377,39 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding
 			                         ", sequence = ", pbinfo.sequence,
 			                         ", retry_count = ", uint(be->retry_count),
 			                         ", delay = ", delay, "]");
+}
+
+void mag::proxy_binding_renew(const boost::system::error_code& ec, const std::string& id)
+{
+	if (ec) {
+		 if (ec != boost::system::errc::make_error_condition(boost::system::errc::operation_canceled))
+			_log(0, "PBU renew timer error: ", ec.message());
+
+		return;
+	}
+
+	bulist_entry* be = _bulist.find(id);
+	if (!be) {
+		_log(0, "PBU renew timer error: binding update list entry not found [id = ", id, "]");
+		return;
+	}
+
+	proxy_binding_info pbinfo;
+
+	be->handover_delay.start(); //begin chrono handover delay
+	pbinfo.id = be->mn_id();
+	pbinfo.address = be->lma_address();
+	pbinfo.sequence = ++be->sequence_number;
+	pbinfo.lifetime = be->lifetime;
+	pbinfo.prefix_list = be->mn_prefix_list();
+	pbinfo.handoff = ip::mproto::option::handoff::k_not_changed;
+	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
+
+	be->bind_status = bulist_entry::k_bind_renewing;
+	be->retry_count = 0;
+	pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
+	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
+	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 }
 
 void mag::add_route_entries(bulist_entry& be)
