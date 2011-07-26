@@ -54,7 +54,7 @@ public:
 public:
 	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const char* id);
+	void start(const std::string& id);
 	void stop();
 
 private:
@@ -62,8 +62,8 @@ private:
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur, chrono& delay);
 
 private:
-	void istart(const char* id);
-	void istop();
+	void start_(const std::string& id);
+	void stop_();
 
 	void          proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay);
 	bcache_entry* pbu_get_be(proxy_binding_info& pbinfo);

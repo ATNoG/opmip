@@ -37,14 +37,14 @@ lma::lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 {
 }
 
-void lma::start(const char* id)
+void lma::start(const std::string& id)
 {
-	_service.dispatch(boost::bind(&lma::istart, this, id));
+	_service.dispatch(boost::bind(&lma::start_, this, id));
 }
 
 void lma::stop()
 {
-	_service.dispatch(boost::bind(&lma::istop, this));
+	_service.dispatch(boost::bind(&lma::stop_, this));
 }
 
 void lma::mp_send_handler(const boost::system::error_code& ec)
@@ -65,7 +65,7 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3, _4));
 }
 
-void lma::istart(const char* id)
+void lma::start_(const std::string& id)
 {
 	const router_node* node = _node_db.find_router(id);
 	if (!node) {
@@ -89,7 +89,7 @@ void lma::istart(const char* id)
 	}
 }
 
-void lma::istop()
+void lma::stop_()
 {
 	_bcache.clear();
 	_mp_sock.close();
