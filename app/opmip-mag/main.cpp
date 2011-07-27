@@ -21,12 +21,12 @@
 #include <opmip/exception.hpp>
 #include <opmip/pmip/mag.hpp>
 #include <opmip/pmip/node_db.hpp>
-#include <opmip/sys/signals.hpp>
 #include "driver.hpp"
 #include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <fstream>
@@ -48,7 +48,7 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 	log_(0, "loaded ", n.first, " router nodes and ", n.second, " mobile nodes from database");
 }
 
-static void signal_handler(opmip::app::driver_ptr& drv, opmip::pmip::mag& mag)
+static void signal_handler(const boost::system::error_code& error, opmip::app::driver_ptr& drv, opmip::pmip::mag& mag)
 {
 	std::cout << "\r";
 	log_(0, "stopping driver");
@@ -70,6 +70,7 @@ int main(int argc, char** argv)
 
 		size_t                       concurrency = boost::thread::hardware_concurrency();
 		boost::asio::io_service      ios(concurrency);
+		boost::asio::signal_set      sigs(ios, SIGINT, SIGTERM);
 		opmip::pmip::node_db         ndb;
 		opmip::pmip::addrconf_server addrconf(ios);
 		opmip::pmip::mag             mag(ios, ndb, addrconf, concurrency);
@@ -84,9 +85,7 @@ int main(int argc, char** argv)
 		drv = opmip::app::make_driver(ios, opts.driver);
 		drv->start(mag, opts.driver_options);
 
-		opmip::sys::interrupt_signal.connect(boost::bind(signal_handler, drv, boost::ref(mag)));
-
-		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
+		sigs.async_wait(boost::bind(signal_handler, _1, drv, boost::ref(mag)));
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
