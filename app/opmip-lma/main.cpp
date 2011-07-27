@@ -20,11 +20,11 @@
 #include <opmip/exception.hpp>
 #include <opmip/pmip/lma.hpp>
 #include <opmip/pmip/node_db.hpp>
-#include <opmip/sys/signals.hpp>
 #include "options.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <fstream>
@@ -46,7 +46,7 @@ static void load_node_database(const std::string& file_name, opmip::pmip::node_d
 	log_(0, "loaded ", n.first, " router nodes and ", n.second, " mobile nodes from database");
 }
 
-void signal_handler(opmip::pmip::lma& lma)
+void signal_handler(const boost::system::error_code& error, opmip::pmip::lma& lma)
 {
 	std::cout << "\r";
 	log_(0, "stopping the LMA service");
@@ -66,6 +66,7 @@ int main(int argc, char** argv)
 
 		size_t                  concurrency = boost::thread::hardware_concurrency();
 		boost::asio::io_service ios(concurrency);
+		boost::asio::signal_set sigs(ios, SIGINT, SIGTERM);
 		opmip::pmip::node_db    ndb;
 		opmip::pmip::lma        lma(ios, ndb, concurrency);
 
@@ -75,9 +76,7 @@ int main(int argc, char** argv)
 
 		lma.start(opts.identifier.c_str());
 
-		opmip::sys::interrupt_signal.connect(boost::bind(signal_handler, boost::ref(lma)));
-
-		opmip::sys::init_signals(opmip::sys::signal_mask::interrupt);
+		sigs.async_wait(boost::bind(signal_handler, _1, boost::ref(lma)));
 
 		boost::thread_group tg;
 		for (size_t i = 1; i < concurrency; ++i)
