@@ -252,6 +252,7 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
 		pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
+		be->timer.cancel();
 		be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
 		be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
@@ -326,7 +327,7 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		_log(0, "PBA de-register process delay ", delay.get());
 
 	} else {
-		_log(0, "PBA ignored [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
+		_log(0, "PBA ignored [id = ", pbinfo.id, ", lma = ", pbinfo.address, ", status = ", be->bind_status, "]");
 	}
 }
 

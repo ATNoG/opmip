@@ -110,7 +110,7 @@ typedef boost::shared_ptr<pba_receiver> pba_receiver_ptr;
 template<class Handler>
 struct pba_receiver::asio_handler {
 	asio_handler(pba_receiver* pbar, Handler handler)
-		: _pbar(pbar), _handler(handler)
+		: _pbar(pbar->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(boost::system::error_code ec, size_t rbytes)

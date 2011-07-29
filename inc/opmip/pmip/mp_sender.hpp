@@ -95,7 +95,7 @@ typedef boost::shared_ptr<pba_sender> pba_sender_ptr;
 template<class Handler>
 struct pba_sender::asio_handler {
 	asio_handler(pba_sender* pbas, Handler handler)
-		: _pbas(pbas), _handler(handler)
+		: _pbas(pbas->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(const boost::system::error_code& ec, size_t wbytes)
