@@ -55,7 +55,7 @@ typedef boost::shared_ptr<pbu_sender> pbu_sender_ptr;
 template<class Handler>
 struct pbu_sender::asio_handler {
 	asio_handler(pbu_sender* pbus, Handler handler)
-		: _pbus(pbus), _handler(handler)
+		: _pbus(pbus->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(const boost::system::error_code& ec, size_t wbytes)
