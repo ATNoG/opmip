@@ -19,9 +19,27 @@
 #include "drivers/madwifi_driver.hpp"
 #include "drivers/dummy.hpp"
 #include <boost/make_shared.hpp>
+#include <dlfcn.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class delete_dl_driver {
+public:
+	delete_dl_driver(void* dl)
+		: _dl(dl)
+	{ }
+
+	void operator()(plugins::mag_driver* drv)
+	{
+		delete drv;
+		::dlclose(_dl);
+	}
+
+private:
+	void* _dl;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 driver_ptr make_driver(boost::asio::io_service& ios, const std::string& name)
@@ -31,7 +49,21 @@ driver_ptr make_driver(boost::asio::io_service& ios, const std::string& name)
 	else if (name == "dummy")
 		return boost::make_shared<dummy_driver>(boost::ref(ios));
 
-	return driver_ptr();
+	void* dl = ::dlopen(name.c_str(), RTLD_NOW);
+	if (!dl) {
+		std::cerr << ::dlerror() << std::endl;
+		return driver_ptr();
+	}
+
+	void* sm = ::dlsym(dl, "opmip_mag_make_driver");
+	if (!sm) {
+		::dlclose(dl);
+		return driver_ptr();
+	}
+
+	plugins::mag_driver* drv = reinterpret_cast<plugins::mag_driver* (*)(boost::asio::io_service&)>(sm)(ios);
+
+	return driver_ptr(drv, delete_dl_driver(dl));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@ exe opmip-mag
 	  ../../lib/opmip
 	  /boost//thread
 	  /boost//program_options
+	: <linkflags>-ldl
 	;
 
 install install
