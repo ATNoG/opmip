@@ -20,6 +20,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/pmip/mag.hpp>
 #include "madwifi_driver_impl.hpp"
 #include "../driver.hpp"
 
@@ -27,7 +28,7 @@
 namespace opmip { namespace app {
 
 ////////////////////////////////////////////////////////////////////////////////
-class madwifi_driver : public driver {
+class madwifi_driver : public plugins::mag_driver {
 public:
 	typedef madwifi_driver_impl::address_mac   address_mac;
 	typedef madwifi_driver_impl::event_type    event_type;

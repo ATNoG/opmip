@@ -4,8 +4,8 @@
 // -----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2011 Universidade de Aveiro
+// Copyrigth (C) 2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -15,25 +15,33 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef OPMIP_APP_DRIVER__HPP_
-#define OPMIP_APP_DRIVER__HPP_
+#ifndef OPMIP_PLUGINS_MAG_DRIVER__HPP_
+#define OPMIP_PLUGINS_MAG_DRIVER__HPP_
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/plugins/mag_driver.hpp>
 #include <boost/shared_ptr.hpp>
+#include <vector>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace app {
+namespace opmip { namespace pmip { class mag;        } }
+namespace boost { namespace asio { class io_service; } }
 
 ////////////////////////////////////////////////////////////////////////////////
-typedef boost::shared_ptr<plugins::mag_driver> driver_ptr;
+namespace opmip { namespace plugins {
 
 ////////////////////////////////////////////////////////////////////////////////
-driver_ptr make_driver(boost::asio::io_service& ios, const std::string& name);
+class mag_driver {
+public:
+	virtual ~mag_driver() { }
+
+	virtual void start(pmip::mag& mag, const std::vector<std::string>& options) = 0;
+	virtual void stop() = 0;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
-} /* namespace app */ } /* namespace opmip */
+} /* namespace plugins */ } /* namespace opmip */
 
 // EOF /////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_APP_DRIVER__HPP_ */
+#endif /* OPMIP_PLUGINS_MAG_DRIVER__HPP__ */
