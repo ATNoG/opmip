@@ -59,7 +59,7 @@ typedef boost::shared_ptr<icmp_rs_receiver> icmp_rs_receiver_ptr;
 template<class Handler>
 struct icmp_rs_receiver::asio_handler {
 	asio_handler(icmp_rs_receiver* rsr, Handler handler)
-		: _rsr(rsr), _handler(handler)
+		: _rsr(rsr->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(boost::system::error_code ec, size_t rbytes)
