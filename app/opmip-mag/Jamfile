@@ -30,6 +30,5 @@ exe opmip-mag
 
 install install
 	: opmip-mag
-	  ../../node.db
 	: <location>../../dist
 	;
