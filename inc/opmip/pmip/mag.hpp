@@ -36,13 +36,41 @@
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
+class error_category : public boost::system::error_category {
+public:
+	error_category()
+	{ }
+
+	const char* name() const;
+	std::string message(int ev) const;
+};
+
+///////////////////////////////////////////////////////////////////////////////
 class mag {
-	typedef boost::asio::io_service::strand strand;
-	typedef boost::function<void(uint)>     completion_functor;
+	typedef boost::asio::io_service::strand                         strand;
+	typedef boost::function<void(const boost::system::error_code&)> completion_functor;
 
 public:
 	typedef ip::address_v6  ip_address;
 	typedef ll::mac_address mac_address;
+
+	class error_category : public boost::system::error_category {
+	public:
+		error_category()
+		{ }
+
+		const char* name() const;
+		std::string message(int ev) const;
+	};
+
+	enum error_code {
+		ec_success,
+		ec_not_authorized,
+		ec_unknown_lma,
+		ec_invalid_state,
+		ec_canceled,
+		ec_timeout,
+	};
 
 	struct attach_info {
 		attach_info(uint poa_dev_id_,
@@ -59,15 +87,6 @@ public:
 //		mobility_options mob_options;
 	};
 
-	enum error_code {
-		ec_success,
-		ec_not_authorized,
-		ec_unknown_lma,
-		ec_invalid_state,
-		ec_canceled,
-		ec_timeout,
-		ec_error
-	};
 
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency);

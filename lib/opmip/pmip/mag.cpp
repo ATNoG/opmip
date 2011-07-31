@@ -30,14 +30,86 @@
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
+static const error_category      k_pba_error_category;
+static const mag::error_category k_mag_error_category;
+
+static const boost::system::error_category& pba_error_category()
+{
+	return k_pba_error_category;
+}
+
+static const boost::system::error_category& mag_error_category()
+{
+	return k_mag_error_category;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 inline void report_completion(boost::asio::io_service::strand& srv,
-                              boost::function<void(uint)>& handler,
-                              mag::error_code ec)
+                              boost::function<void(const boost::system::error_code&)>& handler,
+                              const boost::system::error_code& ec)
 {
 	if (handler) {
 		srv.post(boost::bind(handler, ec));
 		handler.clear();
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+const char* error_category::name() const
+{
+	return "PMIP status codes";
+}
+
+std::string error_category::message(int ev) const
+{
+	switch (ev) {
+	case ip::mproto::pba::status_ok:                                 return "accepted"; break;
+	case ip::mproto::pba::status_ok_needs_prefix:                    return "accepted but prefix discovery necessary"; break;
+	case ip::mproto::pba::status_unspecified:                        return "reason unspecified"; break;
+	case ip::mproto::pba::status_prohibited:                         return "administratively prohibited"; break;
+	case ip::mproto::pba::status_insufficient_resources:             return "insufficient resources"; break;
+	case ip::mproto::pba::status_hr_not_supported:                   return "home registration not supported"; break;
+	case ip::mproto::pba::status_not_home_subnet:                    return "not home subnet"; break;
+	case ip::mproto::pba::status_not_home_agent:                     return "not home agent for this mobile node"; break;
+	case ip::mproto::pba::status_duplicate_address:                  return "duplicate Address Detection failed"; break;
+	case ip::mproto::pba::status_bad_sequence:                       return "sequence number out of window"; break;
+	case ip::mproto::pba::status_expired_home:                       return "expired home nonce index"; break;
+	case ip::mproto::pba::status_expired_care_of:                    return "expired care-of nonce index"; break;
+	case ip::mproto::pba::status_expired:                            return "expired nonces"; break;
+	case ip::mproto::pba::status_invalid_registration:               return "registration type change disallowed"; break;
+	case ip::mproto::pba::status_not_lma_for_this_mn:                return "not local mobility anchor for this mobile node"; break;
+	case ip::mproto::pba::status_not_authorized_for_proxy_reg:       return "the mobile access gateway is not authorized to send proxy binding updates"; break;
+	case ip::mproto::pba::status_not_authorized_for_net_prefix:      return "the mobile node is not authorized for one or more of the requesting home network prefixes"; break;
+	case ip::mproto::pba::status_timestamp_missmatch:                return "invalid timestamp value (the clocks are out of sync)"; break;
+	case ip::mproto::pba::status_timestamp_lower_than_prev_accepted: return "the timestamp value is lower than the previously accepted value"; break;
+	case ip::mproto::pba::status_missing_home_network_prefix:        return "missing home network prefix option"; break;
+	case ip::mproto::pba::status_bce_pbu_prefix_do_not_match:        return "the home network prefixes listed in the BCE do not match the prefixes in the received PBU"; break;
+	case ip::mproto::pba::status_missing_mn_identifier_option:       return "missing mobile node identifier option"; break;
+	case ip::mproto::pba::status_missing_handoff_indicator_option:   return "missing handoff indicator option"; break;
+	case ip::mproto::pba::status_missing_access_type_tech_option:    return "missing access technology type"; break;
+	}
+
+	return std::string();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+const char* mag::error_category::name() const
+{
+	return "opmip::pmip::mag error codes";
+}
+
+std::string mag::error_category::message(int ev) const
+{
+	switch (ev) {
+	case ec_success:        return "success"; break;
+	case ec_not_authorized: return "not authorized"; break;
+	case ec_unknown_lma:    return "unknown lma"; break;
+	case ec_invalid_state:  return "invalid binding state"; break;
+	case ec_canceled:       return "binding canceled"; break;
+	case ec_timeout:        return "timeout"; break;
+	}
+
+	return std::string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,14 +195,14 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 	if (!be) {
 		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 		if (!mn) {
-			report_completion(_service, completion_handler, ec_not_authorized);
+			report_completion(_service, completion_handler, boost::system::error_code(ec_not_authorized, mag_error_category()));
 			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_address, "]");
 			return;
 		}
 
 		const router_node* lma = _node_db.find_router(mn->lma_id());
 		if (!lma) {
-			report_completion(_service, completion_handler, ec_unknown_lma);
+			report_completion(_service, completion_handler, boost::system::error_code(ec_unknown_lma, mag_error_category()));
 			_log(0, "Mobile Node attach error: unknown LMA [id = ", mn->id(), " (", ai.mn_address, "), lma = ", mn->lma_id(), "]");
 			return;
 		}
@@ -147,7 +219,7 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 	}
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
-		report_completion(_service, completion_handler, ec_invalid_state);
+		report_completion(_service, completion_handler, boost::system::error_code(ec_invalid_state, mag_error_category()));
 		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
 		return;
 	}
@@ -170,7 +242,7 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 	be->timer.expires_from_now(boost::posix_time::seconds(1.5)); //FIXME: set a proper timer
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
-	report_completion(_service, be->completion, ec_canceled);
+	report_completion(_service, be->completion, boost::system::error_code(ec_canceled, mag_error_category()));
 	std::swap(be->completion, completion_handler);
 
 	delay.stop();
@@ -185,14 +257,14 @@ void mag::mobile_node_detach_(const attach_info& ai, completion_functor& complet
 
 	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
 	if (!mn) {
-		report_completion(_service, completion_handler, ec_not_authorized);
+		report_completion(_service, completion_handler, boost::system::error_code(ec_not_authorized, mag_error_category()));
 		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_address, "]");
 		return;
 	}
 
 	bulist_entry* be = _bulist.find(mn->id());
 	if (!be || (be->bind_status != bulist_entry::k_bind_requested && be->bind_status != bulist_entry::k_bind_ack)) {
-		report_completion(_service, completion_handler, ec_invalid_state);
+		report_completion(_service, completion_handler, boost::system::error_code(ec_invalid_state, mag_error_category()));
 		_log(0, "Mobile Node detach error: not attached [id = ", mn->id(), " (", ai.mn_address, ")", "]");
 		return;
 	}
@@ -218,7 +290,7 @@ void mag::mobile_node_detach_(const attach_info& ai, completion_functor& complet
 	be->timer.expires_from_now(boost::posix_time::milliseconds(1500));
 	be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_retry, this, _1, pbinfo)));
 
-	report_completion(_service, be->completion, ec_canceled);
+	report_completion(_service, be->completion, boost::system::error_code(ec_canceled, mag_error_category()));
 	std::swap(be->completion, completion_handler);
 
 	delay.stop();
@@ -272,7 +344,8 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 
 	if (pbinfo.lifetime && (be->bind_status == bulist_entry::k_bind_requested
 		                    || be->bind_status == bulist_entry::k_bind_renewing)) {
-		uint ec = ec_success;
+
+		boost::system::error_code ec;
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			be->bind_status = bulist_entry::k_bind_ack;
@@ -280,13 +353,13 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 				add_route_entries(*be);
 
 		} else {
-			ec = pbinfo.status + ec_error;
+			ec = boost::system::error_code(pbinfo.status, pba_error_category());
 		}
 		be->timer.cancel();
 		be->handover_delay.stop();
 
 		if (be->bind_status == bulist_entry::k_bind_requested) {
-			report_completion(_service, be->completion, static_cast<error_code>(ec));
+			report_completion(_service, be->completion, ec);
 			_log(0, "PBA registration [delay = ", be->handover_delay.get(),
 			                        ", id = ", pbinfo.id,
 			                        ", lma = ", pbinfo.address,
@@ -311,12 +384,15 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		_log(0, "PBA register process delay ", delay.get());
 
 	} else 	if (!pbinfo.lifetime && be->bind_status == bulist_entry::k_bind_detach) {
-		uint ec = (pbinfo.status == ip::mproto::pba::status_ok) ? ec_success : pbinfo.status + ec_error;
+		boost::system::error_code ec;
+
+		if (pbinfo.status == ip::mproto::pba::status_ok)
+			ec = boost::system::error_code(pbinfo.status, pba_error_category());
 
 		be->timer.cancel();
 		be->handover_delay.stop();
 
-		report_completion(_service, be->completion, static_cast<error_code>(ec));
+		report_completion(_service, be->completion, ec);
 		_log(0, "PBA de-registration [delay = ", be->handover_delay.get(),
 		                           ", id = ", pbinfo.id,
 		                           ", lma = ", pbinfo.address, "]");
@@ -351,7 +427,7 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding
 	++be->retry_count;
 
 	if (be->bind_status == bulist_entry::k_bind_detach && be->retry_count > 3) {
-		report_completion(_service, be->completion, ec_timeout);
+		report_completion(_service, be->completion, boost::system::error_code(ec_timeout, mag_error_category()));
 		_log(0, "PBU retry error: max retry count [id = ", pbinfo.id, ", lma = ", pbinfo.address, "]");
 		_bulist.remove(be);
 		return;

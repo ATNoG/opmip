@@ -28,12 +28,12 @@ namespace opmip { namespace app {
 static opmip::logger log_("madwifi", std::cout);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void attach_result(const ll::mac_address& mn_address, uint ec)
+static void attach_result(const ll::mac_address& mn_address, const boost::system::error_code& ec)
 {
 	log_(0, "node ", mn_address, " attachment completed with code ", ec);
 }
 
-static void detach_result(const ll::mac_address& mn_address, uint ec)
+static void detach_result(const ll::mac_address& mn_address, const boost::system::error_code& ec)
 {
 	log_(0, "node ", mn_address, " detachment completed with code ", ec);
 }
