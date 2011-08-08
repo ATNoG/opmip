@@ -275,9 +275,9 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		uint ec = ec_success;
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
-			be->bind_status = bulist_entry::k_bind_ack;
 			if (be->bind_status == bulist_entry::k_bind_requested)
 				add_route_entries(*be);
+			be->bind_status = bulist_entry::k_bind_ack;
 
 		} else {
 			ec = pbinfo.status + ec_error;
