@@ -20,7 +20,7 @@ lib opmip
 	  rbtree_hook.cpp
 	  ip/prefix.cpp
 	  linux/nl80211.cpp
-	  ll/mac_address.cpp
+	  net/link/address_mac.cpp
 	  net/link/ethernet.cpp
 	  pmip/node_db.cpp
 	  pmip/bcache.cpp
