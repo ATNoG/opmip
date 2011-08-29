@@ -295,11 +295,10 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			if (be->bind_status == bulist_entry::k_bind_requested)
 				add_route_entries(*be);
-			be->bind_status = bulist_entry::k_bind_ack;
-
 		} else {
 			ec = pbinfo.status + ec_error;
 		}
+
 		be->timer.cancel();
 		be->handover_delay.stop();
 
@@ -315,6 +314,9 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 			                           ", lma = ", pbinfo.address,
 			                           ", status = ", pbinfo.status, "]");
 		}
+
+
+		be->bind_status = bulist_entry::k_bind_ack;
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
 			//Will try to renew 3 seconds before binding expires or 1 second if lifetime <= 6
