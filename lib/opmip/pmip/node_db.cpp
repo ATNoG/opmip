@@ -69,10 +69,14 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 		ip_prefix_list    prefs;
 		link_address_list laddrs;
 		std::string       lma_id;
+		ptree&            pls = i->second.get_child("ip-prefix");
+		ptree&            las = i->second.get_child("link-address");
 
 		id = i->second.get<std::string>("id");
-		prefs.push_back(ip_prefix::from_string(i->second.get<std::string>("ip-prefix")));
-		laddrs.push_back(link_address::from_string(i->second.get<std::string>("link-address")));
+		for (ptree::iterator j = pls.begin(), je = pls.end(); j != je; ++je)
+			prefs.push_back(ip_prefix::from_string(j->second.get_value<std::string>()));
+		for (ptree::iterator j = las.begin(), je = las.end(); j != je; ++je)
+			laddrs.push_back(link_address::from_string(j->second.get_value<std::string>()));
 		lma_id = i->second.get<std::string>("lma-id");
 
 		if (insert_mobile_node(id, prefs, laddrs, lma_id))
