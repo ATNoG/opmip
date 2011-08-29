@@ -1,11 +1,12 @@
 //=============================================================================
 // Brief   : Mobile Access Gateway Service
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2011 Universidade de Aveiro
+// Copyrigth (C) 2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -28,6 +29,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
+
+///////////////////////////////////////////////////////////////////////////////
+bool validate_pba_sequence_number(uint16 last_ack, uint16 last_sent, uint16 current)
+{
+	return last_sent < last_ack ?
+		(current > last_ack) || (current <= last_sent)
+		:
+		(current > last_ack) && (current <= last_sent)
+		;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 inline void report_completion(boost::asio::io_service::strand& srv,
@@ -259,7 +270,7 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		return;
 	}
 
-	if ((pbinfo.sequence <= be->last_ack_sequence) || (pbinfo.sequence > be->sequence_number)) {
+	if (!validate_pba_sequence_number(be->last_ack_sequence, be->sequence_number, pbinfo.sequence)) {
 		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
 		                                          ", lma = ", pbinfo.address,
 		                                          ", sequence = ", be->last_ack_sequence,
