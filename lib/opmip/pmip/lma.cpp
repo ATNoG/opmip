@@ -1,11 +1,12 @@
 //=============================================================================
 // Brief   : Local Mobility Anchor
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2011 Universidade de Aveiro
+// Copyrigth (C) 2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -27,7 +28,11 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 bool validate_sequence_number(uint16 prev, uint16 current)
 {
-	return ((current > prev) && (current < (prev + 32768)));
+	return prev < 32768 ?
+		((current > prev) && (current < ((uint16)(prev + 32768))))
+		:
+		((current > prev) || (current < ((uint16)(prev + 32768))))
+		;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
