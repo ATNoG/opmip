@@ -5,8 +5,8 @@
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2011 Universidade de Aveiro
-// Copyrigth (C) 2011 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -29,10 +29,8 @@ namespace opmip { namespace pmip {
 bool validate_sequence_number(uint16 prev, uint16 current)
 {
 	return prev < 32768 ?
-		((current > prev) && (current < ((uint16)(prev + 32768))))
-		:
-		((current > prev) || (current < ((uint16)(prev + 32768))))
-		;
+		((current > prev) && (current < (prev + 32768))) :
+		((current > prev) || (current < (prev - 32768)));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
