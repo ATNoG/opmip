@@ -185,7 +185,7 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 			                                     ", mag = ", pbinfo.address,
 			                                     ", sequence = ", be.sequence, " <> ", pbinfo.sequence, "]");
 			pbinfo.status = ip::mproto::pba::status_bad_sequence;
-			pbinfo.sequence = be.sequence + 1;
+			pbinfo.sequence = be.sequence;
 			return false;
 		}
 

@@ -253,13 +253,20 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		_log(0, "PBA error: bad sequence number [id = ", pbinfo.id,
 		                                      ", lma = ", pbinfo.address,
 		                                      ", sequence = ", be->sequence_number,
-		                                      ", expected sequence", pbinfo.sequence, "]");
+		                                      ", last accepted sequence = ", pbinfo.sequence, "]");
+
+		be->last_ack_sequence = pbinfo.sequence;
+		be->sequence_number = pbinfo.sequence;
 
 		proxy_binding_info pbinfo;
 
-		be->sequence_number = pbinfo.sequence;
+		pbinfo.id = be->mn_id();
+		pbinfo.address = be->lma_address();
+		pbinfo.handoff = ip::mproto::option::handoff::k_unknown;
+		pbinfo.sequence = ++be->sequence_number;
 		pbinfo.lifetime = (be->bind_status != bulist_entry::k_bind_detach) ? be->lifetime : 0;
 		pbinfo.prefix_list = be->mn_prefix_list();
+
 		pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 
 		pbus->async_send(_mp_sock, boost::bind(&mag::mp_send_handler, this, _1));
