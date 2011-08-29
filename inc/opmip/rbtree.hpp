@@ -21,6 +21,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/rbtree_hook.hpp>
 #include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,14 +37,12 @@ namespace detail {
 ///////////////////////////////////////////////////////////////////////////////
 template<class T, rbtree_hook T::* NodeMember, class Compare>
 class rbtree_iterator : rbtree_hook_iterator {
-	friend class rbtree<T, NodeMember, Compare>;
+public:
+	rbtree_iterator()
+	{ }
 
 	rbtree_iterator(rbtree_hook* next, rbtree_hook* prev)
 		: rbtree_hook_iterator(next, prev)
-	{ }
-
-public:
-	rbtree_iterator()
 	{ }
 
 	T& operator*()
@@ -106,7 +105,8 @@ public:
 	typedef T&       reference;
 	typedef T const& const_reference;
 
-	typedef typename detail::rbtree_iterator<T, NodeMember, Compare> iterator;
+	typedef typename detail::rbtree_iterator<T, NodeMember, Compare>       iterator;
+	typedef typename detail::rbtree_iterator<const T, NodeMember, Compare> const_iterator;
 
 public:
 	rbtree() : _root(nullptr)
@@ -127,6 +127,22 @@ public:
 			return iterator();
 
 		return iterator(nullptr, _root->max());
+	}
+
+	const_iterator begin() const
+	{
+		if (!_root)
+			return iterator();
+
+		return const_iterator(_root->min(), nullptr);
+	}
+
+	const_iterator end() const
+	{
+		if (!_root)
+			return const_iterator();
+
+		return const_iterator(nullptr, _root->max());
 	}
 
 	iterator insert_equal(reference elem)
@@ -188,6 +204,23 @@ public:
 		return end();
 	}
 
+	template<class KeyT, class KeyCompareT>
+	const_iterator find(const KeyT& key, KeyCompareT cmp) const
+	{
+		rbtree_hook* next = const_cast<rbtree_hook*>(_root);
+
+		while (next) {
+			if (cmp(key, *parent_of<T>(next, NodeMember)))
+				next = next->_left;
+			else if (cmp(*parent_of<T>(next, NodeMember), key))
+				next = next->_right;
+			else
+				return const_iterator(next, next->prev());
+		}
+
+		return end();
+	}
+
 	void remove(iterator& i)
 	{
 		member_of<rbtree_hook>(&i, NodeMember)->remove(&_root);
@@ -196,6 +229,24 @@ public:
 	void remove(reference elem)
 	{
 		member_of<rbtree_hook>(&elem, NodeMember)->remove(&_root);
+	}
+
+	template<class Disposer>
+	void clear_and_dispose(Disposer disposer)
+	{
+		if (!_root)
+			return;
+
+		rbtree_hook* next = _root->min();
+		rbtree_hook* prev;
+
+		while (next) {
+			prev = next;
+			next = next->next();
+
+			disposer(parent_of<T>(next, NodeMember));
+		}
+		_root = nullptr;
 	}
 
 	bool empty() const
