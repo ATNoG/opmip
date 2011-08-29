@@ -20,11 +20,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/rbtree.hpp>
 #include <opmip/ip/address.hpp>
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/mac_address.hpp>
-#include <boost/intrusive/rbtree.hpp>
 #include <vector>
+#include <map>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -61,9 +62,6 @@ protected:
 public:
 	const std::string& id() const { return _id; }
 
-private:
-	boost::intrusive::set_member_hook<> _hook;
-
 protected:
 	std::string _id;
 };
@@ -89,9 +87,6 @@ class router_node : public node {
 		}
 	};
 
-private:
-	boost::intrusive::set_member_hook<> _hook;
-
 protected:
 	router_node(const std::string& id, const ip_address& addr, uint device_id)
 		: node(id), _address(addr), _device_id(device_id)
@@ -102,8 +97,10 @@ public:
 	uint              device_id() const { return _device_id; }
 
 protected:
-	ip_address _address;
-	uint       _device_id;
+	rbtree_hook _hook;
+	rbtree_hook _key_hook;
+	ip_address  _address;
+	uint        _device_id;
 
 	//hmac<sha1>::key _key;
 };
@@ -113,89 +110,49 @@ class mobile_node : public node {
 	friend class node_db;
 
 public:
-	typedef ip::prefix_v6          ip_prefix;
-	typedef std::vector<ip_prefix> ip_prefix_list;
-	typedef ll::mac_address        link_address;
-
-private:
-	struct compare {
-		bool operator()(const mobile_node& rhs, const mobile_node& lhs) const
-		{
-			return rhs._link_addr < lhs._link_addr;
-		}
-
-		bool operator()(const mobile_node& rhs, const link_address& key) const
-		{
-			return rhs._link_addr < key;
-		}
-
-		bool operator()(const link_address& key, const mobile_node& lhs) const
-		{
-			return key < lhs._link_addr;
-		}
-	};
+	typedef ip::prefix_v6             ip_prefix;
+	typedef ll::mac_address           link_address;
+	typedef std::vector<ip_prefix>    ip_prefix_list;
+	typedef std::vector<link_address> link_address_list;
 
 public:
-	mobile_node(const std::string& id, const ip_prefix_list& prefs, const link_address& link_addr, const std::string& lma_id)
-		: node(id), _prefixes(prefs), _link_addr(link_addr), _lma_id(lma_id)
+	mobile_node(const std::string& id, const ip_prefix_list& prefs,
+	            const link_address_list& link_addrs, const std::string& lma_id)
+		: node(id), _prefixes(prefs), _link_addrs(link_addrs), _lma_id(lma_id)
 	{ }
 
-	const ip_prefix_list& prefix_list() const { return _prefixes; }
-	const link_address&   mac_address() const { return _link_addr; }
-	const std::string&    lma_id() const      { return _lma_id; }
+	const ip_prefix_list&    prefix_list() const    { return _prefixes; }
+	const link_address_list& link_addresses() const { return _link_addrs; }
+	const std::string&       lma_id() const         { return _lma_id; }
 
 private:
-	boost::intrusive::set_member_hook<> _hook;
-
-private:
-	ip_prefix_list _prefixes;
-	link_address   _link_addr;
-	std::string    _lma_id;
+	rbtree_hook       _hook;
+	ip_prefix_list    _prefixes;
+	link_address_list _link_addrs;
+	std::string       _lma_id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 class node_db {
-	typedef boost::intrusive::compare<node::compare> node_compare_option;
+	typedef rbtree<router_node, &router_node::_hook, node::compare> router_node_tree;
+	typedef rbtree<mobile_node, &mobile_node::_hook, node::compare> mobile_node_tree;
 
-	typedef boost::intrusive::member_hook<node,
-	                                      boost::intrusive::set_member_hook<>,
-	                                      &node::_hook> node_member_hook_option;
+	typedef rbtree<router_node, &router_node::_key_hook, router_node::compare>
+		router_node_key_tree;
 
-	typedef boost::intrusive::rbtree<node,
-	                                 node_member_hook_option,
-	                                 node_compare_option> node_tree;
-
-
-	typedef boost::intrusive::compare<router_node::compare> router_node_compare_option;
-
-	typedef boost::intrusive::member_hook<router_node,
-	                                      boost::intrusive::set_member_hook<>,
-	                                      &router_node::_hook> router_node_member_hook_option;
-
-	typedef boost::intrusive::rbtree<router_node,
-	                                 router_node_member_hook_option,
-	                                 router_node_compare_option> router_node_tree;
-
-
-	typedef boost::intrusive::compare<mobile_node::compare> mobile_node_compare_option;
-
-	typedef boost::intrusive::member_hook<mobile_node,
-	                                      boost::intrusive::set_member_hook<>,
-	                                      &mobile_node::_hook> mobile_node_member_hook_option;
-
-	typedef boost::intrusive::rbtree<mobile_node,
-	                                 mobile_node_member_hook_option,
-	                                 mobile_node_compare_option> mobile_node_tree;
+	typedef std::map<mobile_node::link_address, mobile_node*> mobile_node_key_tree;
 
 public:
-	typedef std::string                 key;
-	typedef router_node::ip_address     router_key;
-	typedef mobile_node::link_address   mn_key;
-	typedef router_node::ip_address     ip_address;
-	typedef mobile_node::ip_prefix      ip_prefix;
-	typedef mobile_node::ip_prefix_list ip_prefix_list;
-	typedef mobile_node::link_address   link_address;
-	typedef mobile_node_tree::iterator  mobile_node_iterator;
+	typedef std::string                    key;
+	typedef router_node::ip_address        router_key;
+	typedef mobile_node::link_address      mn_key;
+	typedef router_node::ip_address        ip_address;
+	typedef mobile_node::ip_prefix         ip_prefix;
+	typedef mobile_node::ip_prefix_list    ip_prefix_list;
+	typedef mobile_node::link_address      link_address;
+	typedef mobile_node::link_address_list link_address_list;
+	typedef router_node_tree::iterator     router_node_iterator;
+	typedef mobile_node_tree::iterator     mobile_node_iterator;
 
 public:
 	node_db();
@@ -209,18 +166,22 @@ public:
 	const router_node* find_router(const router_key& key) const;
 	const mobile_node* find_mobile_node(const mn_key& key) const;
 
-	mobile_node_iterator mobile_node_begin() { return _mobile_nodes_by_key.begin(); }
-	mobile_node_iterator mobile_node_end()   { return _mobile_nodes_by_key.end(); }
+	router_node_iterator router_node_begin() { return _router_nodes_by_id.begin(); }
+	router_node_iterator router_node_end()   { return _router_nodes_by_id.end(); }
+
+	mobile_node_iterator mobile_node_begin() { return _mobile_nodes_by_id.begin(); }
+	mobile_node_iterator mobile_node_end()   { return _mobile_nodes_by_id.end(); }
 
 protected:
 	bool insert_router(const std::string& id, const ip_address& addr, uint device_id);
-	bool insert_mobile_node(const std::string& id, const ip_prefix_list& prefs, const link_address& link_addr, const std::string& lma_id);
+	bool insert_mobile_node(const std::string& id, const ip_prefix_list& prefs,
+	                        const link_address_list& link_addrs, const std::string& lma_id);
 
 private:
-	node_tree        _router_nodes_by_id;
-	node_tree        _mobile_nodes_by_id;
-	router_node_tree _router_nodes_by_key;
-	mobile_node_tree _mobile_nodes_by_key;
+	router_node_tree     _router_nodes_by_id;
+	mobile_node_tree     _mobile_nodes_by_id;
+	router_node_key_tree _router_nodes_by_key;
+	mobile_node_key_tree _mobile_nodes_by_key;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

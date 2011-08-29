@@ -244,7 +244,7 @@ public:
 			prev = next;
 			next = next->next();
 
-			disposer(parent_of<T>(next, NodeMember));
+			disposer(parent_of<T>(prev, NodeMember));
 		}
 		_root = nullptr;
 	}

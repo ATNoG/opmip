@@ -61,7 +61,7 @@ void dummy_driver::start_(uint frequency, pmip::mag& mag)
 	_frequency = frequency;
 
 	for (pmip::node_db::mobile_node_iterator i = db.mobile_node_begin(), e = db.mobile_node_end(); i != e; ++i)
-		_clients.push_back(client_state(i->mac_address(), false));
+		_clients.push_back(client_state(i->link_addresses().front(), false)); //FIXME
 
 	log_(0, "using ", _clients.size(), " mobile node(s), about to generate ", frequency, " message(s) per second");
 
