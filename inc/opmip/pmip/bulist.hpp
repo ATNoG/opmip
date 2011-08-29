@@ -68,9 +68,8 @@ public:
 		  _mn_prefix_list(mn_prefix_list), _lma_addr(lma_address),
 		  _poa_dev_id(poa_dev_id), _poa_addr(poa_address),
 		  lifetime(60), sequence_number(std::time(nullptr)),
-		  last_ack_sequence(sequence_number), timestamp(std::time(nullptr)),
-		  bind_status(k_bind_unknown), retry_count(0), mtu(1460),
-		  timer(ios), ra_sock(ios)
+		  timestamp(std::time(nullptr)), bind_status(k_bind_unknown),
+		  retry_count(0), mtu(1460), timer(ios), ra_sock(ios)
 	{ }
 
 	const std::string&     mn_id() const           { return _mn_id; }
@@ -94,7 +93,6 @@ private:
 public:
 	uint64        lifetime;            ///Initial Lifetime
 	uint16        sequence_number;     ///Last Sequence Number
-	uint16        last_ack_sequence;   ///Last Sequence Number
 	uint64        timestamp;           ///Timestamp to limit the send rate
 	bind_status_t bind_status;
 	uint          retry_count;

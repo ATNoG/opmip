@@ -5,8 +5,8 @@
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2011 Universidade de Aveiro
-// Copyrigth (C) 2011 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -29,16 +29,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
-
-///////////////////////////////////////////////////////////////////////////////
-bool validate_pba_sequence_number(uint16 last_ack, uint16 last_sent, uint16 current)
-{
-	return last_sent < last_ack ?
-		(current > last_ack) || (current <= last_sent)
-		:
-		(current > last_ack) && (current <= last_sent)
-		;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 static const error_category      k_pba_error_category;
@@ -238,7 +228,6 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 	proxy_binding_info pbinfo;
 
 	be->handover_delay.start(); //begin chrono handover delay
-	be->last_ack_sequence = be->sequence_number;
 	pbinfo.id = be->mn_id();
 	pbinfo.address = be->lma_address();
 	pbinfo.sequence = ++be->sequence_number;
@@ -327,7 +316,6 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		                                      ", sequence = ", be->sequence_number,
 		                                      ", last accepted sequence = ", pbinfo.sequence, "]");
 
-		be->last_ack_sequence = pbinfo.sequence;
 		be->sequence_number = pbinfo.sequence;
 
 		proxy_binding_info pbinfo;
@@ -349,16 +337,15 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		return;
 	}
 
-	if (!validate_pba_sequence_number(be->last_ack_sequence, be->sequence_number, pbinfo.sequence)) {
+	uint16 sn = be->sequence_number;
+
+	if (pbinfo.sequence != --sn) {
 		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
 		                                          ", lma = ", pbinfo.address,
-		                                          ", sequence = ", be->last_ack_sequence,
-		                                                    " < ", pbinfo.sequence,
-		                                                   " <= ", be->sequence_number, "]");
+		                                          ", sequence = ", pbinfo.sequence,
+		                                                   " != ", sn, "]");
 		return;
 	}
-
-	be->last_ack_sequence = pbinfo.sequence;
 
 	if (pbinfo.lifetime && (be->bind_status == bulist_entry::k_bind_requested
 		                    || be->bind_status == bulist_entry::k_bind_renewing)) {
@@ -453,8 +440,6 @@ void mag::proxy_binding_retry(const boost::system::error_code& ec, proxy_binding
 		_bulist.remove(be);
 		return;
 	}
-
-	pbinfo.sequence = ++be->sequence_number;
 
 	pbu_sender_ptr pbus(new pbu_sender(pbinfo));
 	double         delay = std::min<double>(32, std::pow(1.5f, be->retry_count)); //FIXME: validate
