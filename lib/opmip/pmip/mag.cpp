@@ -310,7 +310,8 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		}
 
 		if (pbinfo.status == ip::mproto::pba::status_ok) {
-			uint expire = (pbinfo.lifetime < 6) ? pbinfo.lifetime - 3 : 6; //FIXME
+			//Will try to renew 3 seconds before binding expires or 1 second if lifetime <= 6
+			uint expire = (pbinfo.lifetime <= 6) ? pbinfo.lifetime - 1 : pbinfo.lifetime - 3; //FIXME Check used values
 
 			be->timer.expires_from_now(boost::posix_time::seconds(expire));
 			be->timer.async_wait(_service.wrap(boost::bind(&mag::proxy_binding_renew, this, _1, pbinfo.id)));
