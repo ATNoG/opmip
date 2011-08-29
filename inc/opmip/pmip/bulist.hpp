@@ -104,7 +104,7 @@ public:
 	net::link::ethernet::socket   ra_sock;
 	net::link::ethernet::endpoint ra_ep;
 
-	boost::function<void(uint)> completion;
+	boost::function<void(const boost::system::error_code&)> completion;
 	chrono handover_delay;
 };
 
