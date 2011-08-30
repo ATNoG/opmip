@@ -22,9 +22,9 @@
 #include <opmip/base.hpp>
 #include <opmip/net/link/ethernet.hpp>
 #include <opmip/pmip/types.hpp>
+#include <opmip/pmip/icmp_sender.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
 #include <map>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,22 +33,33 @@ namespace opmip { namespace pmip {
 ///////////////////////////////////////////////////////////////////////////////
 class addrconf_server {
 public:
-	typedef ll::mac_address                                link_address;
-	typedef boost::shared_ptr<net::link::ethernet::socket> socket_ptr;
-	typedef boost::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+	typedef ll::address_mac address_mac;
 
-	typedef std::map<link_address, timer_ptr> client_map;
+private:
+	typedef boost::shared_ptr<boost::asio::deadline_timer>  timer_ptr;
+
+	typedef std::map<address_mac, timer_ptr>       client_map;
 
 public:
 	addrconf_server(boost::asio::io_service& ios);
 
+	bool add_dhcp_dev(const ip::address_v6& link_local);
+	void rem_dhcp_dev(const ip::address_v6& link_local);
+
 	void add(uint device_id, const router_advertisement_info& ai);
-	void del(const link_address& addr);
+	void del(const address_mac& addr);
 	void clear();
 
 private:
-	boost::asio::io_service& _io_service;
-	client_map               _clients;
+	void router_advertisement(const boost::system::error_code& ec,
+	                          icmp_ra_sender_ptr& ras,
+	                          net::link::ethernet::endpoint& ep,
+	                          addrconf_server::timer_ptr& timer);
+
+private:
+	boost::asio::io_service&    _io_service;
+	client_map                  _clients;
+	net::link::ethernet::socket _link_sock;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
