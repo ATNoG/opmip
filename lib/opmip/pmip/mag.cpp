@@ -337,13 +337,11 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		return;
 	}
 
-	uint16 sn = be->sequence_number;
-
-	if (pbinfo.sequence != --sn) {
+	if (pbinfo.sequence != be->sequence_number) {
 		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
 		                                          ", lma = ", pbinfo.address,
 		                                          ", sequence = ", pbinfo.sequence,
-		                                                   " != ", sn, "]");
+		                                                   " != ", be->sequence_number, "]");
 		return;
 	}
 
