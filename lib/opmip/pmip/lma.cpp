@@ -245,11 +245,13 @@ void lma::expired_entry(const boost::system::error_code& ec, const std::string& 
 	}
 
 	bcache_entry* be = _bcache.find(mn_id);
-	if (!be || be->bind_status != bcache_entry::k_bind_deregistered) {
+	if (!be || be->bind_status != bcache_entry::k_bind_registered) {
 		_log(0, "Binding cache expired entry error: not found [id = ", mn_id, "]");
 		return;
 	}
 	_log(0, "Binding expired entry [id = ", mn_id, "]");
+
+	be->bind_status = bcache_entry::k_bind_deregistered;
 
 	be->timer.expires_from_now(boost::posix_time::milliseconds(_config.min_delay_before_BCE_delete));
 	be->timer.async_wait(_service.wrap(boost::bind(&lma::remove_entry, this, _1, be->id())));
