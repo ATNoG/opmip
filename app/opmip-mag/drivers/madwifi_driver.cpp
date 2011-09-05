@@ -1,11 +1,12 @@
 //===========================================================================================================
 // Brief   : MadWifi Driver
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -18,6 +19,7 @@
 #include "madwifi_driver.hpp"
 #include <opmip/logger.hpp>
 #include <opmip/sys/error.hpp>
+#include <opmip/pmip/node_db.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -43,8 +45,18 @@ static void link_event(const boost::system::error_code& ec, const madwifi_driver
 	if (ec)
 		return;
 
+	const opmip::pmip::mobile_node* mn = mag.get_node_database().find_mobile_node(ev.mn_address);
+
+	if(!mn) {
+		if (!mn) {
+			log_(0, "node ", ev.mn_address, " not authorized");
+			return;
+		}
+	}
+
 	opmip::pmip::mag::attach_info ai(ev.if_index,
 									 ev.if_address,
+									 mn->id(),
 									 ev.mn_address);
 
 	switch (ev.which) {

@@ -1,6 +1,7 @@
 //===========================================================================================================
 // Brief   : Dummy Driver
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
@@ -92,11 +93,16 @@ void dummy_driver::timer_handler(const boost::system::error_code& ec)
 
 	log_(0, "after ", _chrono.get(), " seconds we rolled the dice and got ", n);
 
+	const opmip::pmip::mobile_node* mn = _mag->get_node_database().find_mobile_node(_clients[n].first);
+
+	if (!mn)
+		return;
+
 	if (!_clients[n].second) {
-		_mag->mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), boost::bind(dummy));
+		_mag->mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = true;
 	} else {
-		_mag->mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), _clients[n].first), boost::bind(dummy));
+		_mag->mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = false;
 	}
 

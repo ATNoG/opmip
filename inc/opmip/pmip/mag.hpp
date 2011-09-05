@@ -75,15 +75,17 @@ public:
 	struct attach_info {
 		attach_info(uint poa_dev_id_,
 		            const ll::mac_address& poa_address_,
+		            const std::string& mn_id_,
 		            const ll::mac_address& mn_address_)
 
 			: poa_dev_id(poa_dev_id_), poa_address(poa_address_),
-			  mn_address(mn_address_)
+			  mn_id(mn_id_), mn_address(mn_address_)
 		{ }
 
-		uint             poa_dev_id;
-		ll::mac_address  poa_address;
-		ll::mac_address  mn_address;
+		uint            poa_dev_id;
+		ll::mac_address poa_address;
+		std::string     mn_id;
+		ll::mac_address mn_address;
 //		mobility_options mob_options;
 	};
 

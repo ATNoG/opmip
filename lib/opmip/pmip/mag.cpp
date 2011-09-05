@@ -192,12 +192,12 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 
 	delay.start();
 
-	bulist_entry* be = _bulist.find(ai.mn_address);
+	bulist_entry* be = _bulist.find(ai.mn_id);
 	if (!be) {
-		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
+		const mobile_node* mn = _node_db.find_mobile_node(ai.mn_id);
 		if (!mn) {
 			report_completion(_service, completion_handler, boost::system::error_code(ec_not_authorized, mag_error_category()));
-			_log(0, "Mobile Node attach error: not authorized [mac = ", ai.mn_address, "]");
+			_log(0, "Mobile Node attach error: not authorized [id = ", ai.mn_id, " (", ai.mn_address, ")]");
 			return;
 		}
 
@@ -221,7 +221,8 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 
 	if (be->bind_status == bulist_entry::k_bind_error) {
 		report_completion(_service, completion_handler, boost::system::error_code(ec_invalid_state, mag_error_category()));
-		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), " (", ai.mn_address, "), lma = ", be->lma_address(), "]");
+		_log(0, "Mobile Node attach error: previous bind failed [id = ", be->mn_id(), "(", ai.mn_address, ")",
+				                                               " (previous = ", be->mn_id(), "), lma = ", be->lma_address(), "]");
 		return;
 	}
 
@@ -255,10 +256,10 @@ void mag::mobile_node_detach_(const attach_info& ai, completion_functor& complet
 
 	delay.start();
 
-	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_address);
+	const mobile_node* mn = _node_db.find_mobile_node(ai.mn_id);
 	if (!mn) {
 		report_completion(_service, completion_handler, boost::system::error_code(ec_not_authorized, mag_error_category()));
-		_log(0, "Mobile Node detach error: not authorized [mac = ", ai.mn_address, "]");
+		_log(0, "Mobile Node detach error: not authorized [id = ", ai.mn_id, "]");
 		return;
 	}
 
@@ -341,7 +342,7 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
 		                                          ", lma = ", pbinfo.address,
 		                                          ", sequence = ", pbinfo.sequence,
-		                                                   " != ", sn, "]");
+		                                                   " != ", be->sequence_number, "]");
 		return;
 	}
 
