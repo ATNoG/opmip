@@ -1,11 +1,12 @@
 //=============================================================================
 // Brief   : Node Database
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -21,6 +22,7 @@
 #include <boost/utility.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,35 +51,31 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 
 	boost::property_tree::read_json(input, pt);
 
-	ptree& routers = pt.get_child("router-nodes");
-	for (ptree::iterator i = routers.begin(), e = routers.end(); i != e; ++i) {
+	BOOST_FOREACH(ptree::value_type &rn, pt.get_child("router-nodes")) {
 		std::string id;
 		ip_address  addr;
 		uint        sid;
 
-		id = i->second.get<std::string>("id");
-		addr = ip_address::from_string(i->second.get<std::string>("ip-address"));
-		sid = i->second.get<uint>("ip-scope-id");
+		id = rn.second.get<std::string>("id");
+		addr = ip_address::from_string(rn.second.get<std::string>("ip-address"));
+		sid = rn.second.get<uint>("ip-scope-id");
 
 		if (insert_router(id, addr, sid))
 			++rcnt;
 	}
 
-	ptree& mns = pt.get_child("mobile-nodes");
-	for (ptree::iterator i = mns.begin(), e = mns.end(); i != e; ++i) {
+	BOOST_FOREACH(ptree::value_type &mn, pt.get_child("mobile-nodes")) {
 		std::string       id;
 		ip_prefix_list    prefs;
 		link_address_list laddrs;
 		std::string       lma_id;
-		ptree&            pls = i->second.get_child("ip-prefix");
-		ptree&            las = i->second.get_child("link-address");
 
-		id = i->second.get<std::string>("id");
-		for (ptree::iterator j = pls.begin(), je = pls.end(); j != je; ++je)
-			prefs.push_back(ip_prefix::from_string(j->second.get_value<std::string>()));
-		for (ptree::iterator j = las.begin(), je = las.end(); j != je; ++je)
-			laddrs.push_back(link_address::from_string(j->second.get_value<std::string>()));
-		lma_id = i->second.get<std::string>("lma-id");
+		id = mn.second.get<std::string>("id");
+		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
+			prefs.push_back(ip_prefix::from_string(v.second.get_value<std::string>()));
+		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("link-address"))
+			laddrs.push_back(link_address::from_string(v.second.get_value<std::string>()));
+		lma_id = mn.second.get<std::string>("lma-id");
 
 		if (insert_mobile_node(id, prefs, laddrs, lma_id))
 			++mcnt;

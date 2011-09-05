@@ -341,7 +341,7 @@ void mag::proxy_binding_ack(const proxy_binding_info& pbinfo, chrono& delay)
 		_log(0, "PBA error: sequence number invalid [id = ", pbinfo.id,
 		                                          ", lma = ", pbinfo.address,
 		                                          ", sequence = ", pbinfo.sequence,
-		                                                   " != ", be->sequence_number, "]");
+		                                                   " != ", sn, "]");
 		return;
 	}
 
