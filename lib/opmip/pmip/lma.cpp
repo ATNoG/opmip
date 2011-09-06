@@ -158,6 +158,11 @@ bool lma::pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo)
 	BOOST_ASSERT((pbinfo.status == ip::mproto::pba::status_ok));
 
 	if (be.care_of_address != pbinfo.address) {
+		if((pbinfo.handoff == ip::mproto::option::handoff::k_not_changed)) {
+			pbinfo.status = ip::mproto::pba::status_not_authorized_for_proxy_reg;
+			return false;
+		}
+
 		const router_node* mag = _node_db.find_router(pbinfo.address);
 		if (!mag) {
 			_log(0, "PBU error: unknown MAG [id = ", pbinfo.id, ", mag = ", pbinfo.address, "]");
