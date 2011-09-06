@@ -1,11 +1,12 @@
 //=============================================================================
 // Brief   : Address Configuration Server
 // Authors : Bruno Santos <bsantos@av.it.pt>
+// Authors : Filipe Manco <filipe.manco@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -60,6 +61,10 @@ addrconf_server::addrconf_server(boost::asio::io_service& ios)
 
 void addrconf_server::add(uint device_id, const router_advertisement_info& ai)
 {
+	client_map::iterator i = _clients.find(ai.dst_link_address);
+	if(i != _clients.end())
+		i->second.get()->cancel();
+
 	socket_ptr sock(boost::make_shared<net::link::ethernet::socket>(boost::ref(_io_service),
 	                                                                net::link::ethernet(net::link::ethernet::ipv6)));
 	timer_ptr timer(boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io_service)));
