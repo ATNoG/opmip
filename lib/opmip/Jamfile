@@ -18,8 +18,8 @@
 lib opmip
 	: debug_linux.cpp
 	  rbtree_hook.cpp
-	  ip/prefix.cpp
 	  linux/nl80211.cpp
+	  net/ip/prefix.cpp
 	  net/ip/dhcp_v6.cpp
 	  net/link/address_mac.cpp
 	  net/link/ethernet.cpp

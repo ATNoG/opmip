@@ -15,11 +15,11 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
+#include <opmip/net/ip/prefix.hpp>
 #include <boost/lexical_cast.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ip {
+namespace opmip { namespace net { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
 prefix_v6 prefix_v6::from_string(const std::string& str)
@@ -72,6 +72,6 @@ std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ip */ } /* namespace opmip */
+} /* namespace net */ } /* namespace ip */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
