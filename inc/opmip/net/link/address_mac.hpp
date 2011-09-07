@@ -48,9 +48,9 @@ public:
 		std::copy(address, address + 6, _address.begin());
 	}
 
-	explicit address_mac(const void* address, size_t len)
+	address_mac(const void* address, size_t len)
 	{
-		const uint8* src = static_cast<const uint8*>(address);
+		const uint8* src = reinterpret_cast<const uint8*>(address);
 
 		std::copy(src, src + std::min<size_t>(len, bytes_type::static_size), _address.begin());
 	}
@@ -58,6 +58,15 @@ public:
 	explicit address_mac(const bytes_type& address)
 	{
 		std::copy(address.begin(), address.end(), _address.begin());
+	}
+
+	bool operator!()
+	{
+		for (bytes_type::iterator i = _address.begin(), e = _address.end(); i != e; ++i) {
+			if (*i)
+				return false;
+		}
+		return true;
 	}
 
 	bool operator<(const address_mac& lhs) const
