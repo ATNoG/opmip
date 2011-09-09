@@ -146,6 +146,7 @@ bool gen_advertise(buffer_type& buff, uint32 tid, const link::address_mac& link_
 bool parse_header(buffer_type& buff, opcode& op, uint& tid);
 bool parse_option(buffer_type& buff, opt_type& opt, buffer_type& option);
 bool parse_option_duid(buffer_type buff, link::address_mac& link_addr);
+bool parse_option_ia(buffer_type& buff, uint32& id, uint32& t1, uint32& t2);
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace dhcp_v6 */ } /* namespace ip */ } /* namespace net */ } /* namespace opmip */

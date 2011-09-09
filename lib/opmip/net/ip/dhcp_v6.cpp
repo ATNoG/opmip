@@ -398,6 +398,11 @@ bool parse_option_duid(buffer_type buff, link::address_mac& link_addr)
 	return buff.first == buff.second;
 }
 
+bool parse_option_ia(buffer_type& buff, uint32& id, uint32& t1, uint32& t2)
+{
+	return get_be_int(buff, id) && get_be_int(buff, t1) && get_be_int(buff, t2);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace dhcp_v6 */ } /* namespace ip */ } /* namespace net */ } /* namespace opmip */
 
