@@ -510,6 +510,7 @@ void mag::add_route_entries(bulist_entry& be)
 
 	router_advertisement_info rainfo;
 
+	rainfo.device_id = be.poa_dev_id();
 	rainfo.link_address = be.poa_address();
 	rainfo.dst_link_address = be.mn_link_address();
 	rainfo.mtu = be.mtu;
@@ -517,7 +518,7 @@ void mag::add_route_entries(bulist_entry& be)
 	rainfo.source = _link_local_ip;
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
-	_addrconf.add(be.poa_dev_id(), rainfo);
+	_addrconf.add(rainfo);
 
 	delay.stop();
 	_log(0, "Add route entries delay ", delay.get());
