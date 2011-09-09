@@ -62,8 +62,8 @@ static const ip::address_v6::bytes_type all_servers = {{
 	0x00, 0x00,
 	0x00, 0x00,
 	0x00, 0x00,
-	0x00, 0x00,
-	0x01, 0x03
+	0x00, 0x01,
+	0x00, 0x03
 }};
 
 static const ip::address_v6::bytes_type all_servers_and_relay_agents = {{
@@ -73,8 +73,8 @@ static const ip::address_v6::bytes_type all_servers_and_relay_agents = {{
 	0x00, 0x00,
 	0x00, 0x00,
 	0x00, 0x00,
-	0x00, 0x00,
-	0x01, 0x02
+	0x00, 0x01,
+	0x00, 0x02
 }};
 
 enum opcode {
@@ -132,12 +132,13 @@ inline size_t buffer_size(const const_buffer_type& buff)
 bool gen_header(buffer_type& buff, opcode op, uint tid);
 bool gen_option_begin(buffer_type& buff, option opt, buffer_type& state);
 bool gen_option_end(buffer_type& buff, buffer_type state);
-bool gen_option_duid_t3(buffer_type& buff, const link::address_mac& link_addr);
+bool gen_option_server_id(buffer_type& buff, const link::address_mac& link_addr);
+bool gen_option_client_id(buffer_type& buff, const buffer_type& cid);
 bool gen_option_ia(buffer_type& buff, uint32 id, uint32 t1, uint32 t2,
                    buffer_type* state = 0);
 bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
                      uint32 val_lifetime, buffer_type state);
-bool gen_option_status(buffer_type& buff, status st);
+bool gen_option_status(buffer_type& buff, status st, const char* msg);
 bool gen_message(buffer_type& buff, opcode op, uint32 tid,
                  const link::address_mac& link_addr,
                  const buffer_type& client_id);

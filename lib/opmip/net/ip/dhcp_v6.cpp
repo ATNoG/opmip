@@ -18,6 +18,7 @@
 #include <opmip/base.hpp>
 #include <opmip/net/ip/dhcp_v6.hpp>
 #include <utility>
+#include <cstring>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace net { namespace ip { namespace dhcp_v6 {
@@ -30,6 +31,7 @@ class uint24 {
 
 public:
 	uint24()
+		: _val(0)
 	{ }
 
 	uint24(uint val)
@@ -71,7 +73,7 @@ struct put_be_int_impl<uint16> {
 			return false;
 
 		*buff.first++ = v >> 8;
-		*buff.first++ = v & 0xf;
+		*buff.first++ = v & 0xff;
 		return true;
 	}
 };
@@ -85,9 +87,9 @@ struct put_be_int_impl<uint24> {
 
 		uint val = v.get();
 
-		*buff.first++ = (val >> 16) & 0xf;
-		*buff.first++ = (val >> 8) & 0xf;
-		*buff.first++ = val & 0xf;
+		*buff.first++ = val >> 16;
+		*buff.first++ = (val >> 8) & 0xff;
+		*buff.first++ = val & 0xff;
 		return true;
 	}
 };
@@ -100,9 +102,9 @@ struct put_be_int_impl<uint32> {
 			return false;
 
 		*buff.first++ = (v >> 24);
-		*buff.first++ = (v >> 16) & 0xf;
-		*buff.first++ = (v >> 8) & 0xf;
-		*buff.first++ = v & 0xf;
+		*buff.first++ = (v >> 16) & 0xff;
+		*buff.first++ = (v >> 8) & 0xff;
+		*buff.first++ = v & 0xff;
 		return true;
 	}
 };
@@ -115,13 +117,13 @@ struct put_be_int_impl<uint64> {
 			return false;
 
 		*buff.first++ = (v >> 56);
-		*buff.first++ = (v >> 48) & 0xf;
-		*buff.first++ = (v >> 40) & 0xf;
-		*buff.first++ = (v >> 32) & 0xf;
-		*buff.first++ = (v >> 24) & 0xf;
-		*buff.first++ = (v >> 16) & 0xf;
-		*buff.first++ = (v >> 8) & 0xf;
-		*buff.first++ = v & 0xf;
+		*buff.first++ = (v >> 48) & 0xff;
+		*buff.first++ = (v >> 40) & 0xff;
+		*buff.first++ = (v >> 32) & 0xff;
+		*buff.first++ = (v >> 24) & 0xff;
+		*buff.first++ = (v >> 16) & 0xff;
+		*buff.first++ = (v >> 8) & 0xff;
+		*buff.first++ = v & 0xff;
 		return true;
 	}
 };
@@ -241,24 +243,40 @@ bool gen_option_begin(buffer_type& buff, option opt, buffer_type& state)
 
 bool gen_option_end(buffer_type& buff, buffer_type state)
 {
-	size_t len = buff.first - (state.first + 2);
+	size_t len = buff.first - state.first;
 
 	BOOST_ASSERT(buff.second == state.second);
-	BOOST_ASSERT(len <= 0xff);
+	BOOST_ASSERT(len <= 0xffff);
 
+	state.first -= 2;
 	return put_be_int(state, uint16(len));
 }
 
-bool gen_option_duid_t3(buffer_type& buff, const link::address_mac& link_addr)
+bool gen_option_server_id(buffer_type& buff, const link::address_mac& link_addr)
 {
-	if (!put_be_int(buff, uint16(3))
+	buffer_type state;
+
+	if (!gen_option_begin(buff, server_id, state)
+		|| !put_be_int(buff, uint16(3))
 		|| !put_be_int(buff, uint16(1))
 		|| buffer_size(buff) < link::address_mac::bytes_type::static_size)
 		return false;
 
 	const link::address_mac::bytes_type& raw = link_addr.to_bytes();
 	buff.first = std::copy(raw.begin(), raw.end(), buff.first);
-	return true;
+	return gen_option_end(buff, state);
+}
+
+bool gen_option_client_id(buffer_type& buff, const buffer_type& cid)
+{
+	buffer_type state;
+
+	if (!gen_option_begin(buff, client_id, state)
+		|| buffer_size(buff) < buffer_size(cid))
+		return false;
+
+	buff.first = std::copy(cid.first, cid.second, buff.first);
+	return gen_option_end(buff, state);
 }
 
 bool gen_option_ia(buffer_type& buff, uint32 id, uint32 t1, uint32 t2, buffer_type* state)
@@ -295,26 +313,29 @@ bool gen_option_addr(buffer_type& buff, const address_v6& addr,
 	return gen_option_end(buff, st) && gen_option_end(buff, state);
 }
 
-bool gen_option_status(buffer_type& buff, status st)
+bool gen_option_status(buffer_type& buff, status st, const char* msg)
 {
 	buffer_type state;
+	size_t len = std::strlen(msg);
 
-	return gen_option_begin(buff, status_code, state)
-		&& put_be_int(buff, uint8(st))
-		&& gen_option_end(buff, state);
+	if (!gen_option_begin(buff, status_code, state)
+		|| !put_be_int(buff, uint16(st))
+		|| buffer_size(buff) < len)
+		return false;
+
+	buff.first = std::copy(reinterpret_cast<const uint8*>(msg),
+	                       reinterpret_cast<const uint8*>(msg) + len,
+	                       buff.first);
+	return gen_option_end(buff, state);
 }
 
 bool gen_message(buffer_type& buff, opcode op, uint32 tid,
                  const link::address_mac& link_addr,
                  const buffer_type& client_id)
 {
-	if (!gen_header(buff, op, tid)
-		|| !gen_option_duid_t3(buff, link_addr)
-		|| buffer_size(buff) < buffer_size(client_id))
-		return false;
-
-	buff.first = std::copy(client_id.first, client_id.second, buff.first);
-	return true;
+	return gen_header(buff, op, tid)
+		&& gen_option_server_id(buff, link_addr)
+		&& gen_option_client_id(buff, client_id);
 }
 
 // Parsers ////////////////////////////////////////////////////////////////////
