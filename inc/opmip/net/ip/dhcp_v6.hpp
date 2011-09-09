@@ -137,8 +137,7 @@ bool gen_option_ia(buffer_type& buff, uint32 id, uint32 t1, uint32 t2,
                    buffer_type* state = 0);
 bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
                      uint32 val_lifetime, buffer_type state);
-bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
-                     uint32 val_lifetime, status st, buffer_type state);
+bool gen_option_status(buffer_type& buff, status st);
 bool gen_message(buffer_type& buff, opcode op, uint32 tid,
                  const link::address_mac& link_addr,
                  const buffer_type& client_id);

@@ -295,23 +295,12 @@ bool gen_option_addr(buffer_type& buff, const address_v6& addr,
 	return gen_option_end(buff, st) && gen_option_end(buff, state);
 }
 
-bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
-                     uint32 val_lifetime, status st, buffer_type state)
+bool gen_option_status(buffer_type& buff, status st)
 {
-	buffer_type st1, st2;
+	buffer_type state;
 
-	if (!gen_option_begin(buff, ia_addr, st1)
-		|| buffer_size(buff) < address_v6::bytes_type::static_size)
-		return false;
-
-	const address_v6::bytes_type& raw = addr.to_bytes();
-	buff.first = std::copy(raw.begin(), raw.end(), buff.first);
-
-	return put_be_int(buff, pref_lifetime) && put_be_int(buff, val_lifetime)
-		&& gen_option_begin(buff, status_code, st2)
+	return gen_option_begin(buff, status_code, state)
 		&& put_be_int(buff, uint8(st))
-		&& gen_option_end(buff, st2)
-		&& gen_option_end(buff, st1)
 		&& gen_option_end(buff, state);
 }
 
