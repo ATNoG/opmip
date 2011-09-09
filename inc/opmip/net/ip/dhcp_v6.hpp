@@ -93,13 +93,13 @@ enum opcode {
 	relay_reply   = 13,
 };
 
-enum opt_type {
+enum option {
 	client_id    = 1, //DUID
 	server_id    = 2, //DUID
 	ia_na        = 3,
 	ia_ta        = 4,
-	iaaddr       = 5,
-	oreqo        = 6,
+	ia_addr      = 5,
+	req_opts     = 6,
 	preference   = 7,
 	elapsed_time = 8,
 	status_code  = 13,
@@ -130,21 +130,22 @@ inline size_t buffer_size(const const_buffer_type& buff)
 
 // Generators /////////////////////////////////////////////////////////////////
 bool gen_header(buffer_type& buff, opcode op, uint tid);
-bool gen_option_begin(buffer_type& buff, opt_type opt, buffer_type& state);
+bool gen_option_begin(buffer_type& buff, option opt, buffer_type& state);
 bool gen_option_end(buffer_type& buff, buffer_type state);
 bool gen_option_duid_t3(buffer_type& buff, const link::address_mac& link_addr);
 bool gen_option_ia(buffer_type& buff, uint32 id, uint32 t1, uint32 t2,
                    buffer_type* state = 0);
-bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
-                        uint32 val_lifetime, buffer_type state);
-bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
-                        uint32 val_lifetime, status st, buffer_type state);
-bool gen_advertise(buffer_type& buff, uint32 tid, const link::address_mac& link_addr,
-                   const buffer_type& client_id);
+bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
+                     uint32 val_lifetime, buffer_type state);
+bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
+                     uint32 val_lifetime, status st, buffer_type state);
+bool gen_message(buffer_type& buff, opcode op, uint32 tid,
+                 const link::address_mac& link_addr,
+                 const buffer_type& client_id);
 
 // Parsers ////////////////////////////////////////////////////////////////////
 bool parse_header(buffer_type& buff, opcode& op, uint& tid);
-bool parse_option(buffer_type& buff, opt_type& opt, buffer_type& option);
+bool parse_option(buffer_type& buff, option& opt, buffer_type& data);
 bool parse_option_duid(buffer_type buff, link::address_mac& link_addr);
 bool parse_option_ia(buffer_type& buff, uint32& id, uint32& t1, uint32& t2);
 

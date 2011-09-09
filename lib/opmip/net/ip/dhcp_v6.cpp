@@ -230,7 +230,7 @@ bool gen_header(buffer_type& buff, opcode op, uint tid)
 		&& put_be_int(buff, uint24(tid));
 }
 
-bool gen_option_begin(buffer_type& buff, opt_type opt, buffer_type& state)
+bool gen_option_begin(buffer_type& buff, option opt, buffer_type& state)
 {
 	if (!put_be_int(buff, uint16(opt)) || !put_be_int(buff, uint16(0)))
 		return false;
@@ -276,13 +276,13 @@ bool gen_option_ia(buffer_type& buff, uint32 id, uint32 t1, uint32 t2, buffer_ty
 	return true;
 }
 
-bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr,
-                        uint32 pref_lifetime, uint32 val_lifetime,
-                        buffer_type state)
+bool gen_option_addr(buffer_type& buff, const address_v6& addr,
+                     uint32 pref_lifetime, uint32 val_lifetime,
+                     buffer_type state)
 {
 	buffer_type st;
 
-	if (!gen_option_begin(buff, iaaddr, st)
+	if (!gen_option_begin(buff, ia_addr, st)
 		|| buffer_size(buff) < address_v6::bytes_type::static_size)
 		return false;
 
@@ -295,12 +295,12 @@ bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr,
 	return gen_option_end(buff, st) && gen_option_end(buff, state);
 }
 
-bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
-                        uint32 val_lifetime, status st, buffer_type state)
+bool gen_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_lifetime,
+                     uint32 val_lifetime, status st, buffer_type state)
 {
 	buffer_type st1, st2;
 
-	if (!gen_option_begin(buff, iaaddr, st1)
+	if (!gen_option_begin(buff, ia_addr, st1)
 		|| buffer_size(buff) < address_v6::bytes_type::static_size)
 		return false;
 
@@ -315,11 +315,11 @@ bool gen_ia_option_addr(buffer_type& buff, const address_v6& addr, uint32 pref_l
 		&& gen_option_end(buff, state);
 }
 
-bool gen_advertise(buffer_type& buff, uint32 tid,
-                                      const link::address_mac& link_addr,
-									  const buffer_type& client_id)
+bool gen_message(buffer_type& buff, opcode op, uint32 tid,
+                 const link::address_mac& link_addr,
+                 const buffer_type& client_id)
 {
-	if (!gen_header(buff, advertise, tid)
+	if (!gen_header(buff, op, tid)
 		|| !gen_option_duid_t3(buff, link_addr)
 		|| buffer_size(buff) < buffer_size(client_id))
 		return false;
@@ -344,20 +344,20 @@ bool parse_header(buffer_type& buff, opcode& op, uint& tid)
 	return true;
 }
 
-bool parse_option(buffer_type& buff, opt_type& opt, buffer_type& option)
+bool parse_option(buffer_type& buff, option& opt, buffer_type& data)
 {
 	uint16 tp;
 	uint16 len;
 
-	if (buffer_size(buff) < 4
-		|| !get_be_int(buff, tp)
+	if (!get_be_int(buff, tp)
 		|| !get_be_int(buff, len)
 		|| buffer_size(buff) < len)
 		return false;
 
-	opt = opt_type(tp);
-	option.first = buff.first - len;
-	option.second = buff.first;
+	opt = option(tp);
+	data.first = buff.first;
+	data.second = buff.first + len;
+	buff.first = data.second;
 
 	return true;
 }
