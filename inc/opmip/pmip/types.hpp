@@ -66,6 +66,7 @@ struct router_advertisement_info {
 	std::vector<ip::prefix_v6> prefix_list;
 	ip::address_v6             source;
 	ip::address_v6             destination;
+	ip::address_v6             home_addr;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

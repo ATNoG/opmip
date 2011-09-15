@@ -22,6 +22,7 @@
 #include <opmip/base.hpp>
 #include <opmip/net/ip/prefix.hpp>
 #include <opmip/net/ip/address.hpp>
+#include <opmip/net/ip/dhcp_v6.hpp>
 #include <opmip/net/link/address_mac.hpp>
 #include <opmip/net/link/ethernet.hpp>
 #include <opmip/pmip/types.hpp>
@@ -40,25 +41,13 @@ namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
 class addrconf_server {
-	typedef boost::shared_ptr<boost::asio::deadline_timer>   timer_ptr;
-	typedef boost::shared_ptr<boost::asio::ip::icmp::socket> icmp_sock_ptr;
-	typedef boost::shared_ptr<boost::asio::ip::udp::socket>  udp_sock_ptr;
-
 public:
 	typedef net::ip::prefix_v6     ip6_prefix;
 	typedef net::ip::address_v6    ip6_address;
 	typedef net::link::address_mac link_address;
 
-	struct device {
-		device(uint idx, const link_address& laddr, const ip6_address& llip)
-			: id(idx), address(laddr), local_ip(llip)
-		{ }
-
-		uint         id;
-		link_address address;
-		ip6_address  local_ip;
-		udp_sock_ptr udp_sock;
-	};
+private:
+	typedef boost::shared_ptr<boost::asio::deadline_timer> timer_ptr;
 
 	struct client {
 		client(const link_address& laddr, const link_address& poa_laddr)
@@ -72,20 +61,6 @@ public:
 		std::vector<ip6_prefix> prefixes;
 	};
 
-private:
-	typedef boost::multi_index_container<
-				device,
-				boost::multi_index::indexed_by<
-					boost::multi_index::ordered_unique<
-						boost::multi_index::member<device, uint, &device::id>
-					>,
-					boost::multi_index::ordered_unique<
-						boost::multi_index::member<device, link_address, &device::address>
-					>
-				>
-			>
-		devices;
-
 	typedef boost::multi_index_container<
 				client,
 				boost::multi_index::indexed_by<
@@ -96,14 +71,16 @@ private:
 			>
 		clients;
 
+	struct dhcp_receive_data;
+
+	typedef boost::shared_ptr<dhcp_receive_data> dhcp_receive_data_ptr;
 
 public:
 	addrconf_server(boost::asio::io_service& ios);
 	~addrconf_server();
 
-	bool dev_add(uint id, const link_address& link_addr, const ip6_address& link_local);
-	bool dev_rem(uint id);
-	void dev_clear();
+	void start();
+	void stop();
 
 	bool add(const router_advertisement_info& ai);
 	bool del(const link_address& addr);
@@ -115,11 +92,27 @@ private:
 	                          net::link::ethernet::endpoint& ep,
 	                          timer_ptr& timer);
 
+	void dhcp6_receive_handler(const boost::system::error_code& ec,
+	                           size_t blen,
+	                           dhcp_receive_data_ptr& rd);
+
+	void dhcp6_handle_message(net::ip::dhcp_v6::buffer_type buff,
+	                          const boost::asio::ip::udp::endpoint& ep);
+
+	void dhcp6_reply_message(const boost::asio::ip::udp::endpoint& ep,
+	                         net::ip::dhcp_v6::opcode op,
+	                         uint tid,
+	                         const link_address& poa_addr,
+	                         net::ip::dhcp_v6::buffer_type& cid,
+	                         uint ia_id,
+	                         const ip6_address& home_addr,
+	                         bool hdonly);
+
 private:
-	boost::asio::io_service&    _io_service;
-	clients                     _clients;
-	net::link::ethernet::socket _link_sock;
-	devices                     _devices;
+	clients                       _clients;
+	net::link::ethernet::socket   _link_sock;
+//	boost::asio::ip::icmp::socket _icmp_sock;
+	boost::asio::ip::udp::socket  _udp_sock;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
