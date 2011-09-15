@@ -25,6 +25,14 @@ xml manual
 
 boostbook manual-html
 	: manual
+	: <xsl:param>boost.image.src="./images/logo.png"
+	  <xsl:param>boost.image.alt="'OPMIP - Open PMIPv6'"
+	  <xsl:param>boost.image.w=100px
+	  <xsl:param>boost.image.h=100px
+
+	  <xsl:param>nav.layout=none
+	  <xsl:param>navig.graphics=1
+	  <xsl:param>generate.manifest=0
 	;
 
 install images
@@ -42,9 +50,9 @@ install css
 	: <location>html
 	;
 
-install pdf
-	: manual-html/<format>pdf
-	: <location>pdf
-	;
+#install pdf
+#	: manual-html/<format>pdf
+#	: <location>pdf
+#	;
 
 alias html : manual-html images callouts css ;
