@@ -117,12 +117,15 @@ public:
 
 public:
 	mobile_node(const std::string& id, const ip_prefix_list& prefs,
-	            const link_address_list& link_addrs, const std::string& lma_id)
-		: node(id), _prefixes(prefs), _link_addrs(link_addrs), _lma_id(lma_id)
+	            const link_address_list& link_addrs, const std::string& lma_id,
+	            const ip_address& home_addr)
+		: node(id), _prefixes(prefs), _link_addrs(link_addrs), _lma_id(lma_id),
+		  _home_addr(home_addr)
 	{ }
 
 	const ip_prefix_list&    prefix_list() const    { return _prefixes; }
 	const link_address_list& link_addresses() const { return _link_addrs; }
+	const ip_address&        home_address() const   { return _home_addr; }
 	const std::string&       lma_id() const         { return _lma_id; }
 
 private:
@@ -130,6 +133,7 @@ private:
 	ip_prefix_list    _prefixes;
 	link_address_list _link_addrs;
 	std::string       _lma_id;
+	ip_address        _home_addr;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -175,7 +179,8 @@ public:
 protected:
 	bool insert_router(const std::string& id, const ip_address& addr, uint device_id);
 	bool insert_mobile_node(const std::string& id, const ip_prefix_list& prefs,
-	                        const link_address_list& link_addrs, const std::string& lma_id);
+	                        const link_address_list& link_addrs, const std::string& lma_id,
+	                        const ip_address& home_addr);
 
 private:
 	router_node_tree     _router_nodes_by_id;

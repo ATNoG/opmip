@@ -69,6 +69,7 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 		ip_prefix_list    prefs;
 		link_address_list laddrs;
 		std::string       lma_id;
+		ip_address        home_addr;
 
 		id = mn.second.get<std::string>("id");
 		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
@@ -76,8 +77,9 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("link-address"))
 			laddrs.push_back(link_address::from_string(v.second.get_value<std::string>()));
 		lma_id = mn.second.get<std::string>("lma-id");
+		home_addr = ip_address::from_string(mn.second.get<std::string>("home-address"));
 
-		if (insert_mobile_node(id, prefs, laddrs, lma_id))
+		if (insert_mobile_node(id, prefs, laddrs, lma_id, home_addr))
 			++mcnt;
 	}
 
@@ -145,9 +147,10 @@ bool node_db::insert_router(const std::string& id, const ip_address& addr, uint 
 }
 
 bool node_db::insert_mobile_node(const std::string& id, const ip_prefix_list& prefs,
-                                 const link_address_list& link_addrs, const std::string& lma_id)
+                                 const link_address_list& link_addrs, const std::string& lma_id,
+                                 const ip_address& home_addr)
 {
-	std::auto_ptr<mobile_node> mn(new mobile_node(id, prefs, link_addrs, lma_id));
+	std::auto_ptr<mobile_node> mn(new mobile_node(id, prefs, link_addrs, lma_id, home_addr));
 	std::pair<mobile_node_tree::iterator, bool> ins = _mobile_nodes_by_id.insert_unique(*mn);
 
 	if (!ins.second) {
