@@ -209,8 +209,8 @@ void mag::mobile_node_attach_(const attach_info& ai, completion_functor& complet
 		}
 
 		be = new bulist_entry(_service.get_io_service(), mn->id(),
-		                      ai.mn_address, mn->prefix_list(), lma->address(),
-		                      ai.poa_dev_id, ai.poa_address);
+		                      ai.mn_address, mn->prefix_list(), mn->home_address(),
+		                      lma->address(), ai.poa_dev_id, ai.poa_address);
 
 		_bulist.insert(be);
 		_log(0, "Mobile Node attach [id = ", mn->id(), " (", ai.mn_address, ")"
@@ -500,16 +500,16 @@ void mag::add_route_entries(bulist_entry& be)
 
 	delay.start();
 
-	const bulist::net_prefix_list& npl = be.mn_prefix_list();
+	const bulist::ip_prefix_list& npl = be.mn_prefix_list();
 	uint adev = be.poa_dev_id();
 	uint tdev = _tunnels.get(be.lma_address());
 
 	_log(0, "Add route entries [id = ", be.mn_id(), ", tunnel = ", tdev, ", LMA = ", be.lma_address(), "]");
 
-	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
+	for (bulist::ip_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_dst(*i, adev);
 
-	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
+	for (bulist::ip_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_src(*i, tdev);
 
 
@@ -535,14 +535,14 @@ void mag::del_route_entries(bulist_entry& be)
 
 	delay.start();
 
-	const bulist::net_prefix_list& npl = be.mn_prefix_list();
+	const bulist::ip_prefix_list& npl = be.mn_prefix_list();
 
 	_log(0, "Remove route entries [id = ", be.mn_id(), ", LMA = ", be.lma_address(), "]");
 
-	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
+	for (bulist::ip_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_dst(*i);
 
-	for (bulist::net_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
+	for (bulist::ip_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.remove_by_src(*i);
 
 	_tunnels.del(be.lma_address());
