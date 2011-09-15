@@ -86,7 +86,6 @@ public:
 		ll::mac_address poa_address;
 		std::string     mn_id;
 		ll::mac_address mn_address;
-//		mobility_options mob_options;
 	};
 
 

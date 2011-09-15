@@ -1,11 +1,11 @@
 //=============================================================================
-// Brief   : Link Layer MAC Address
+// Brief   : IP Address
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -15,21 +15,23 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_LL_MAC_ADDRESS__HPP_
-#define OPMIP_LL_MAC_ADDRESS__HPP_
+#ifndef OPMIP_NET_IP_ADDRESS__HPP_
+#define OPMIP_NET_IP_ADDRESS__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-#include <opmip/net/link/address_mac.hpp>
+#include <opmip/base.hpp>
+#include <boost/asio/ip/address.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ll {
+namespace opmip { namespace net { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
-typedef net::link::address_mac address_mac;
-typedef net::link::address_mac mac_address;
+using boost::asio::ip::address;
+using boost::asio::ip::address_v4;
+using boost::asio::ip::address_v6;
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ll */ } /* namespace opmip */
+} /* namespace ip */ } /* namespace net */ } /* namespace opmip */
 
-///////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_LL_MAC_ADDRESS__HPP_ */
+// EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_NET_IP_ADDRESS__HPP_ */

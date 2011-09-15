@@ -20,7 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/ll/mac_address.hpp>
+#include <opmip/net/link/address_mac.hpp>
 #include <boost/asio/basic_datagram_socket.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ public:
 	public:
 		endpoint();
 		endpoint(uint16 proto, uint ifindex);
-		endpoint(uint16 proto, uint ifindex, pk_type pktp, const ll::mac_address& destination);
+		endpoint(uint16 proto, uint ifindex, pk_type pktp, const address_mac& destination);
 
 		protocol_type     protocol() const       { return protocol_type(_protocol); }
 		::sockaddr*       data()                 { return reinterpret_cast< ::sockaddr*>(this); }
