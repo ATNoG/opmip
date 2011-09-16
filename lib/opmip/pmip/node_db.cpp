@@ -67,17 +67,20 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 	BOOST_FOREACH(ptree::value_type &mn, pt.get_child("mobile-nodes")) {
 		std::string       id;
 		ip_prefix_list    prefs;
+		ip_address        home_addr;
 		link_address_list laddrs;
 		std::string       lma_id;
-		ip_address        home_addr;
 
 		id = mn.second.get<std::string>("id");
-		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
-			prefs.push_back(ip_prefix::from_string(v.second.get_value<std::string>()));
+		if(mn.second.get_child_optional("ip-prefix")) {
+			BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
+				prefs.push_back(ip_prefix::from_string(v.second.get_value<std::string>()));
+		}
+		if(mn.second.get_optional<std::string>("home-address"))
+			home_addr = ip_address::from_string(mn.second.get<std::string>("home-address"));
 		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("link-address"))
 			laddrs.push_back(link_address::from_string(v.second.get_value<std::string>()));
 		lma_id = mn.second.get<std::string>("lma-id");
-		home_addr = ip_address::from_string(mn.second.get<std::string>("home-address"));
 
 		if (insert_mobile_node(id, prefs, laddrs, lma_id, home_addr))
 			++mcnt;
