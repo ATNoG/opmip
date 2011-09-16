@@ -515,7 +515,6 @@ void mag::add_route_entries(bulist_entry& be)
 	for (bulist::ip_prefix_list::const_iterator i = npl.begin(), e = npl.end(); i != e; ++i)
 		_route_table.add_by_src(*i, tdev);
 
-
 	router_advertisement_info rainfo;
 
 	rainfo.device_id = be.poa_dev_id();
@@ -523,6 +522,7 @@ void mag::add_route_entries(bulist_entry& be)
 	rainfo.dst_link_address = be.mn_link_address();
 	rainfo.mtu = be.mtu;
 	rainfo.prefix_list = be.mn_prefix_list();
+	rainfo.home_addr = be.home_address();
 	rainfo.source = _link_local_ip;
 	rainfo.destination = ip::address_v6::from_string("ff02::1");
 
