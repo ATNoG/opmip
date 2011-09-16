@@ -170,6 +170,8 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 
 	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
 
+	_addrconf.start();
+
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pba_receiver_ptr pbar(new pba_receiver);
 
@@ -181,6 +183,7 @@ void mag::stop_()
 {
 	_bulist.clear();
 	_addrconf.clear();
+	_addrconf.stop();
 	_mp_sock.close();
 	_route_table.clear();
 	_tunnels.close();
