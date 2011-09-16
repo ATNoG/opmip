@@ -31,7 +31,6 @@ The implementation of the PMIPv6 is provided by two applications:
 
 [endsect]
 
-
 [section:started Getting Started]
 
 [section:reqs Requirements]
@@ -128,8 +127,9 @@ nodes, and the mobile node database. It uses the __json__ format:
 				"id"           : "mn1",
 				"ip-prefix"    :
 				[
-					"2001:deadb::1/64"
+					"2001:aaaa::/64"
 				],
+				"home-address" : "2001:aaaa::1",
 				"link-address" :
 				[
 					"00:11:22:33:44:55"
@@ -140,8 +140,9 @@ nodes, and the mobile node database. It uses the __json__ format:
 				"id"           : "mn2",
 				"ip-prefix"    :
 				[
-					"2001:deadb::2/64"
+					"2001:bbbb::/64"
 				],
+				"home-address" : "2001:bbbb::1",
 				"link-address" :
 				[
 					"00:12:23:34:45:56"
@@ -168,10 +169,15 @@ In the above example, we have a database with:
 [[Key] [Description]]
 [[id] [Mobile Node identifier. This is used to find the entry in the database,
 it is also used has the PMIPv6 Mobile Node identifier.]]
-[[ip-prefix] [An array of prefixes, to assign to the mobile node.]]
+[[ip-prefix] [An array of prefixes, to assign to the mobile node via
+stateless autoconfiguration.]]
+[[home-address] [An IPv6 address to assign to the mobile node via DHCP.]]
 [[link-address] [An array containing the mobile node interfaces link addresses.]]
 [[lma-id] [The identifier of the LMA router node for this mobile node.]]
 ]
+
+The mobile node can have both [^ip-prefix] and [^home-address] or just one of them.
+If both are present both systems (stateless autoconfiguration and DHCP) will work.
 
 See __usage__ on how to pass the node database to a router node.
 
