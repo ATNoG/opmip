@@ -60,8 +60,7 @@ struct addrconf_server::dhcp_receive_data {
 };
 
 addrconf_server::addrconf_server(boost::asio::io_service& ios)
-	: _link_sock(ios, net::link::ethernet(net::link::ethernet::ipv6)),
-	  _udp_sock(ios, boost::asio::ip::udp::endpoint(ip6_address::any(), dhcp6::server_port))
+	: _link_sock(ios, net::link::ethernet(net::link::ethernet::ipv6))
 {
 }
 
@@ -72,6 +71,7 @@ addrconf_server::~addrconf_server()
 
 void addrconf_server::start()
 {
+/*
 	dhcp_receive_data_ptr rd(boost::make_shared<dhcp_receive_data>());
 	ip6_address ma(dhcp6::all_servers_and_relay_agents);
 
@@ -79,11 +79,14 @@ void addrconf_server::start()
 	_udp_sock.async_receive_from(boost::asio::buffer(rd->buffer), rd->source,
 	                             boost::bind(&addrconf_server::dhcp6_receive_handler,
 	                                         this, _1, _2, rd));
+*/
 }
 
 void addrconf_server::stop()
 {
-	_udp_sock.cancel();
+	for (interface_map::iterator i = _interfaces.begin(), e = _interfaces.end(); i != e; ++i)
+		i->second->cancel();
+	_interfaces.clear();
 }
 
 bool addrconf_server::add(const router_advertisement_info& ai)
@@ -96,6 +99,21 @@ bool addrconf_server::add(const router_advertisement_info& ai)
 
 	if (!_clients.insert(c).second)
 		return false;
+
+	interface_map::iterator inf = _interfaces.find(ai.link_address);
+	if (inf == _interfaces.end()) {
+		boost::asio::ip::udp::endpoint ep(ai.source, dhcp6::server_port);
+		udp_sock_ptr sock(boost::make_shared<boost::asio::ip::udp::socket>(boost::ref(_link_sock.get_io_service()),  ep));
+		dhcp_receive_data_ptr rd(boost::make_shared<dhcp_receive_data>());
+		ip6_address ma(dhcp6::all_servers_and_relay_agents);
+
+		sock->set_option(boost::asio::ip::multicast::join_group(ma));
+		sock->async_receive_from(boost::asio::buffer(rd->buffer), rd->source,
+	                             boost::bind(&addrconf_server::dhcp6_receive_handler,
+	                                         this, _1, _2, rd, sock));
+
+	    _interfaces[ai.link_address] = sock;
+	}
 
 	if (!ai.prefix_list.empty()) {
 		icmp_ra_sender_ptr ras(new icmp_ra_sender(ai));
@@ -148,7 +166,7 @@ void addrconf_server::router_advertisement(const boost::system::error_code& ec,
 
 void addrconf_server::dhcp6_receive_handler(const boost::system::error_code& ec,
                                             size_t blen,
-	                                        dhcp_receive_data_ptr& data)
+	                                        dhcp_receive_data_ptr& data, udp_sock_ptr& sock)
 {
 	if (ec) {
 		BOOST_ASSERT(ec == boost::system::errc::make_error_condition(boost::system::errc::operation_canceled));
@@ -158,9 +176,9 @@ void addrconf_server::dhcp6_receive_handler(const boost::system::error_code& ec,
 
 	dhcp_receive_data_ptr rd(boost::make_shared<dhcp_receive_data>());
 
-	_udp_sock.async_receive_from(boost::asio::buffer(rd->buffer), rd->source,
-	                             boost::bind(&addrconf_server::dhcp6_receive_handler,
-	                                         this, _1, _2, rd));
+	sock->async_receive_from(boost::asio::buffer(rd->buffer), rd->source,
+	                         boost::bind(&addrconf_server::dhcp6_receive_handler,
+	                                     this, _1, _2, rd, sock));
 
 	dhcp6_handle_message(dhcp6::buffer_type(data->buffer, data->buffer + blen), data->source);
 }
@@ -272,8 +290,8 @@ void addrconf_server::dhcp6_reply_message(const boost::asio::ip::udp::endpoint& 
 				return;
 		}
 
-		_udp_sock.async_send_to(boost::asio::buffer(buffer.get(), buff.first - buffer.get()),
-		                        ep, boost::bind(dhcp6_send_handler, _1, buffer));
+		_interfaces[poa_addr]->async_send_to(boost::asio::buffer(buffer.get(), buff.first - buffer.get()),
+		                                     ep, boost::bind(dhcp6_send_handler, _1, buffer));
 	}
 }
 

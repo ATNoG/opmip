@@ -47,7 +47,8 @@ public:
 	typedef net::link::address_mac link_address;
 
 private:
-	typedef boost::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+	typedef boost::shared_ptr<boost::asio::ip::udp::socket> udp_sock_ptr;
+	typedef boost::shared_ptr<boost::asio::deadline_timer>  timer_ptr;
 
 	struct client {
 		client(const link_address& laddr, const link_address& poa_laddr)
@@ -75,6 +76,8 @@ private:
 
 	typedef boost::shared_ptr<dhcp_receive_data> dhcp_receive_data_ptr;
 
+	typedef std::map<link_address, udp_sock_ptr> interface_map;
+
 public:
 	addrconf_server(boost::asio::io_service& ios);
 	~addrconf_server();
@@ -94,7 +97,8 @@ private:
 
 	void dhcp6_receive_handler(const boost::system::error_code& ec,
 	                           size_t blen,
-	                           dhcp_receive_data_ptr& rd);
+	                           dhcp_receive_data_ptr& rd,
+	                           udp_sock_ptr& sock);
 
 	void dhcp6_handle_message(net::ip::dhcp_v6::buffer_type buff,
 	                          const boost::asio::ip::udp::endpoint& ep);
@@ -112,7 +116,7 @@ private:
 	clients                       _clients;
 	net::link::ethernet::socket   _link_sock;
 //	boost::asio::ip::icmp::socket _icmp_sock;
-	boost::asio::ip::udp::socket  _udp_sock;
+	interface_map                 _interfaces;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
