@@ -73,9 +73,7 @@ addrconf_server::~addrconf_server()
 void addrconf_server::start()
 {
 	dhcp_receive_data_ptr rd(boost::make_shared<dhcp_receive_data>());
-	ip6_address ma(dhcp6::all_servers_and_relay_agents);
 
-	_udp_sock.set_option(boost::asio::ip::multicast::join_group(ma));
 	_udp_sock.async_receive_from(boost::asio::buffer(rd->buffer), rd->source,
 	                             boost::bind(&addrconf_server::dhcp6_receive_handler,
 	                                         this, _1, _2, rd));
@@ -83,6 +81,9 @@ void addrconf_server::start()
 
 void addrconf_server::stop()
 {
+	for (std::set<uint>::iterator i = _mcast_interfaces.begin(), e = _mcast_interfaces.end(); i != e; ++i)
+		_udp_sock.set_option(boost::asio::ip::multicast::leave_group(ip6_address(dhcp6::all_servers_and_relay_agents),
+		                                                             *i));
 	_udp_sock.cancel();
 }
 
@@ -96,6 +97,11 @@ bool addrconf_server::add(const router_advertisement_info& ai)
 
 	if (!_clients.insert(c).second)
 		return false;
+
+	//TODO: this should be part of a device list
+	if (_mcast_interfaces.insert(ai.device_id).second)
+		_udp_sock.set_option(boost::asio::ip::multicast::join_group(ip6_address(dhcp6::all_servers_and_relay_agents),
+		                                                            ai.device_id));
 
 	if (!ai.prefix_list.empty()) {
 		icmp_ra_sender_ptr ras(new icmp_ra_sender(ai));

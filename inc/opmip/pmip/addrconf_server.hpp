@@ -34,7 +34,7 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
-#include <map>
+#include <set>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -113,6 +113,7 @@ private:
 	net::link::ethernet::socket   _link_sock;
 //	boost::asio::ip::icmp::socket _icmp_sock;
 	boost::asio::ip::udp::socket  _udp_sock;
+	std::set<uint>                _mcast_interfaces;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
