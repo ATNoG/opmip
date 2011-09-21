@@ -65,6 +65,25 @@ prefix_v6::prefix_v6(const address_v6& addr, uint length)
 	}
 }
 
+bool prefix_v6::match(const address_v6& addr) const
+{
+	address_v6::bytes_type a(addr.to_bytes());
+	uint byte_offset = _length / 8;
+	uint bit_offset = _length % 8;
+
+	if (!std::equal(_prefix.begin(), _prefix.begin() + byte_offset, a.begin()))
+		return false;
+
+	if (bit_offset) {
+		uchar mask = 0xff << (8 - bit_offset);
+
+		if ((_prefix[byte_offset] & mask) != (a[byte_offset] & mask))
+			return false;
+	}
+
+	return true;
+}
+
 std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr)
 {
 	return out << address_v6(lhr._prefix)

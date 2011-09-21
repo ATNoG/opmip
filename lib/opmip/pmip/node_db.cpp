@@ -23,6 +23,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
+#include <algorithm>
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,12 +73,16 @@ std::pair<size_t, size_t> node_db::load(std::istream& input)
 		std::string       lma_id;
 
 		id = mn.second.get<std::string>("id");
-		if(mn.second.get_child_optional("ip-prefix")) {
-			BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
-				prefs.push_back(ip_prefix::from_string(v.second.get_value<std::string>()));
+		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("ip-prefix"))
+			prefs.push_back(ip_prefix::from_string(v.second.get_value<std::string>()));
+		if (mn.second.get_optional<std::string>("home-address")) {
+			ip_address addr = ip_address::from_string(mn.second.get<std::string>("home-address"));
+
+			if (std::find_if(prefs.begin(), prefs.end(), boost::bind(&ip_prefix::match, _1, addr)) != prefs.end())
+				home_addr = addr;
+			else
+				log_(0, "No prefix for this home address [id = ", id, "]");
 		}
-		if(mn.second.get_optional<std::string>("home-address"))
-			home_addr = ip_address::from_string(mn.second.get<std::string>("home-address"));
 		BOOST_FOREACH(ptree::value_type &v, mn.second.get_child("link-address"))
 			laddrs.push_back(link_address::from_string(v.second.get_value<std::string>()));
 		lma_id = mn.second.get<std::string>("lma-id");

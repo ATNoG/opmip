@@ -63,6 +63,8 @@ public:
 	friend bool operator>=(const prefix_v6& rhr, const prefix_v6& lhr);
 	friend std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr);
 
+	bool match(const address_v6& addr) const;
+
 private:
 	uchar      _length;
 	bytes_type _prefix;
