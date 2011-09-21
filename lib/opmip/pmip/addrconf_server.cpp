@@ -239,6 +239,8 @@ void addrconf_server::dhcp6_handle_message(dhcp6::buffer_type buff, const boost:
 	case dhcp6::info_request:
 		hdonly = true;
 	case dhcp6::request:
+	case dhcp6::renew:
+	case dhcp6::confirm:
 		op = dhcp6::reply;
 		break;
 
