@@ -21,8 +21,6 @@ project opmip
 	: requirements
 		<include>inc
 		<link>static
-		<linkflags>-lrt
-		<linkflags>-lpthread
 		<linkflags>-rdynamic
 	: build-dir bin.v2
 	;

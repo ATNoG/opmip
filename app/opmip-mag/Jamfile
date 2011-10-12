@@ -15,6 +15,8 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+lib dl : : <name>dl <link>shared ;
+
 exe opmip-mag
 	: main.cpp
 	  options.cpp
@@ -25,7 +27,7 @@ exe opmip-mag
 	  ../../lib/opmip
 	  /boost//thread
 	  /boost//program_options
-	: <linkflags>-ldl
+	  dl
 	;
 
 install install

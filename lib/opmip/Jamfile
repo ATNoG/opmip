@@ -15,6 +15,9 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+lib pthread : : <name>pthread <link>shared ;
+lib librt : : <name>rt <link>shared ;
+
 lib opmip
 	: debug_linux.cpp
 	  rbtree_hook.cpp
@@ -38,5 +41,6 @@ lib opmip
 	  sys/route_table.cpp
 	  /boost//headers
 	  /boost//system
+	  librt
 	;
 
