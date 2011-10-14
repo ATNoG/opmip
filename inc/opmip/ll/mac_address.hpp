@@ -19,51 +19,14 @@
 #define OPMIP_LL_MAC_ADDRESS__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-#include <opmip/base.hpp>
-#include <boost/array.hpp>
-#include <utility>
-#include <string>
-#include <ostream>
+#include <opmip/net/link/address_mac.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ll {
 
 ///////////////////////////////////////////////////////////////////////////////
-class mac_address {
-public:
-	typedef boost::array<uint8, 6> bytes_type;
-
-public:
-	static mac_address from_string(const char* str);
-	static mac_address from_string(const std::string& str);
-
-public:
-	mac_address()
-	{
-		_address.assign(0);
-	}
-
-	explicit mac_address(const bytes_type& address)
-	{
-		std::copy(address.begin(), address.end(), _address.begin());
-	}
-
-	bool operator<(const mac_address& lhs) const
-	{
-		return _address < lhs._address;
-	}
-
-	std::string to_string() const;
-	bytes_type  to_bytes() const;
-
-	friend std::ostream& operator<<(std::ostream& out, const mac_address& mac)
-	{
-		return out << mac.to_string();
-	}
-
-public:
-	bytes_type _address;
-};
+typedef net::link::address_mac address_mac;
+typedef net::link::address_mac mac_address;
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ll */ } /* namespace opmip */

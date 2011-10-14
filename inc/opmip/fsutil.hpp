@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : Signal Handling
+// Brief   : Filesystem Utilities
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,18 +15,31 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/sys/signals.hpp>
+#ifndef OPMIP_FSUTIL__HPP_
+#define OPMIP_FSUTIL__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-template class boost::signals2::signal<void()>;
+#include <opmip/base.hpp>
+#include <boost/logic/tribool.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys {
+namespace opmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-boost::signals2::signal<void()> interrupt_signal;
+inline boost::tribool fs_read_bool(const boost::filesystem::path& pathname)
+{
+	boost::filesystem::ifstream in(pathname);
+	bool tmp;
+
+	in >> tmp;
+
+	return (!in) ? boost::tribool() : boost::tribool(tmp);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace sys */ } /* namespace opmip */
+} /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_FSUTIL__HPP_ */

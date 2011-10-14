@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : IP Address Prefix
+// Brief   : DHCPv4
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,63 +15,46 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ip/prefix.hpp>
-#include <boost/lexical_cast.hpp>
+#ifndef OPMIP_IP_DHCPV4__HPP_
+#define OPMIP_IP_DHCPV4__HPP_
+
+///////////////////////////////////////////////////////////////////////////////
+#include <opmip/base.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
-prefix_v6 prefix_v6::from_string(const std::string& str)
-{
-	size_t pos = str.rfind('/');
+struct dhcp_v4 {
+	struct header;
+	enum flags;
+};
 
-	if (pos == std::string::npos)
-		return prefix_v6(); //FIXME: throw_exception
+enum dhcp_v4::flags {
+	broadcast = 0x01,
+};
 
-	address_v6 addr = address_v6::from_string(str.substr(0, pos));
-	uint       plen = boost::lexical_cast<uint>(str.substr(pos + 1));
+union dhcp_v4::header {
+	uint8  opcode;
+	uint8  hw_type;
+	uint8  hw_length;
+	uint8  hops;
+	uint32 xid;
+	uint16 elapsed_secs;
+	uint16 flags;
+	uint32 client_addr;
+	uint32 your_addr;
+	uint32 server_addr;
+	uint32 relay_addr;
+	uint8  hw_addr[16];
+	char   server_hostname[64];
+	char   boot_file[128];
+};
 
-	return prefix_v6(addr, plen);
-}
-
-prefix_v6::prefix_v6()
-{
-	_prefix.assign(0);
-	_length = 0;
-}
-
-prefix_v6::prefix_v6(const bytes_type& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		_prefix = addr;
-		_length = static_cast<uchar>(length);
-	}
-}
-
-prefix_v6::prefix_v6(const address_v6& addr, uint length)
-{
-	if (length > 128) {
-		_prefix.assign(0);
-		_length = 0;
-
-	} else {
-		_prefix = addr.to_bytes();
-		_length = static_cast<uchar>(length);
-	}
-}
-
-std::ostream& operator<<(std::ostream& out, const prefix_v6& lhr)
-{
-	return out << address_v6(lhr._prefix)
-	           << '/' << static_cast<uint>(lhr._length);
-}
+OPMIP_STATIC_ASSERT(sizeof(dhcp_v4::header) == 236);
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace ip */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_IP_DHCPV4__HPP_ */

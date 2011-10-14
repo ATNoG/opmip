@@ -15,9 +15,16 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
+lib pthread : : <name>pthread <link>shared ;
+lib librt : : <name>rt <link>shared ;
+
 lib opmip
-	: ip/prefix.cpp
-	  ll/mac_address.cpp
+	: debug_linux.cpp
+	  rbtree_hook.cpp
+	  linux/nl80211.cpp
+	  net/ip/prefix.cpp
+	  net/ip/dhcp_v6.cpp
+	  net/link/address_mac.cpp
 	  net/link/ethernet.cpp
 	  pmip/node_db.cpp
 	  pmip/bcache.cpp
@@ -29,11 +36,11 @@ lib opmip
 	  pmip/tunnels.cpp
 	  pmip/lma.cpp
 	  pmip/mag.cpp
+	  pmip/addrconf_server.cpp
 	  sys/ip6_tunnel_service.cpp
 	  sys/route_table.cpp
-	  sys/signals.cpp
-	  sys/signals_unix.cpp
 	  /boost//headers
 	  /boost//system
+	  librt
 	;
 

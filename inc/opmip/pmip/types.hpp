@@ -53,17 +53,20 @@ struct proxy_binding_info {
 
 struct router_advertisement_info {
 	router_advertisement_info()
-		: hop_limit(64), lifetime(~0), mtu(1500)
+		: hop_limit(64), lifetime(~0), device_id(~0), mtu(1500)
 	{ }
 
 
 	uint8                      hop_limit;
 	uint16                     lifetime;
+	uint                       device_id;
 	ll::mac_address            link_address;
+	ll::mac_address            dst_link_address;
 	uint32                     mtu;
 	std::vector<ip::prefix_v6> prefix_list;
 	ip::address_v6             source;
 	ip::address_v6             destination;
+	ip::address_v6             home_addr;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

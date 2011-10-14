@@ -1,5 +1,5 @@
 //=============================================================================
-// Brief   : Signal Handling - Unix Implementation
+// Brief   : Generic Netlink
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
@@ -15,32 +15,23 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/sys/signals.hpp>
-#include <signal.h>
+#ifndef OPMIP_LINUX_GENETLINK__HPP_
+#define OPMIP_LINUX_GENETLINK__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys {
+#include <opmip/linux/netlink.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-static void interrupt_handler(int)
-{
-	interrupt_signal();
-}
+namespace opmip { namespace linux_ {
 
 ///////////////////////////////////////////////////////////////////////////////
-void init_signals(uint mk)
-{
-	struct ::sigaction sa;
-
-	std::memset(&sa, 0, sizeof(sa));
-
-	if (mk & signal_mask::interrupt) {
-		sa.sa_handler = interrupt_handler;
-		::sigaction(SIGINT, &sa, 0);
-	}
-}
+class genetlink : public netlink_<16> {
+public:
+	class message;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace sys */ } /* namespace opmip */
+} /* namespace linux */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
+#endif /* OPMIP_LINUX_GENETLINK__HPP_ */

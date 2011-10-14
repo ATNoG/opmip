@@ -16,6 +16,7 @@
 //=============================================================================
 
 #include <opmip/pmip/tunnels.hpp>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
@@ -32,27 +33,32 @@ ip6_tunnels::~ip6_tunnels()
 
 void ip6_tunnels::open(const ip::address_v6& address)
 {
-	if (!_tunnels.empty())
+	if (!_tunnels.empty()) {
+		_gc.clear();
 		_tunnels.clear();
+	}
 	_local = address;
 }
 
 void ip6_tunnels::close()
 {
 	_local = ip::address_v6();
+	_gc.clear();
 	_tunnels.clear();
 }
 
 uint ip6_tunnels::get(const ip::address_v6& remote)
 {
-	auto i = _tunnels.find(remote);
+	map::iterator i = _tunnels.find(remote);
 	if (i != _tunnels.end()) {
-		++i->second->refcount;
+		if (++i->second->refcount == 1)
+			_gc.erase(remote);
+
 		return i->second->tunnel.get_device_id();
 	}
 
 	std::auto_ptr<entry> tun(new entry(_io_service));
-	auto res = _tunnels.insert(remote, tun);
+	std::pair<map::iterator, bool> res = _tunnels.insert(remote, tun);
 
 	try {
 		res.first->second->tunnel.open("", _local.scope_id(), _local, remote);
@@ -68,10 +74,19 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 
 void ip6_tunnels::del(const ip::address_v6& remote)
 {
-	auto i = _tunnels.find(remote);
-	if (i != _tunnels.end()) {
-		if (!(--i->second->refcount))
-			_tunnels.erase(i);
+	map::iterator i = _tunnels.find(remote);
+	if (i != _tunnels.end() && i->second->refcount) {
+		if (!--i->second->refcount)
+			_gc.insert(i->first);
+	}
+
+	if (_gc.size() >= k_gc_threshold) {
+		for (map_gc::iterator i = _gc.begin(), e = _gc.end(); i!= e; ++i) {
+			map::iterator j = _tunnels.find(*i);
+			if (j != _tunnels.end() && !j->second->refcount)
+				_tunnels.erase(*i);
+		}
+		_gc.clear();
 	}
 }
 

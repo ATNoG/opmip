@@ -20,6 +20,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/logger.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/bcache.hpp>
@@ -53,23 +54,24 @@ public:
 public:
 	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const char* id);
+	void start(const std::string& id);
 	void stop();
 
 private:
 	void mp_send_handler(const boost::system::error_code& ec);
-	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur);
+	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur, chrono& delay);
 
 private:
-	void istart(const char* id);
-	void istop();
+	void start_(const std::string& id);
+	void stop_();
 
-	void          proxy_binding_update(proxy_binding_info& pbinfo);
+	void          proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay);
 	bcache_entry* pbu_get_be(proxy_binding_info& pbinfo);
 	bool          pbu_mag_checkin(bcache_entry& be, proxy_binding_info& pbinfo);
 	void          pbu_process(proxy_binding_info& pbinfo);
 
-	void bcache_remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
+	void expired_entry(const boost::system::error_code& ec, const std::string& mn_id);
+	void remove_entry(const boost::system::error_code& ec, const std::string& mn_id);
 
 	void add_route_entries(bcache_entry* be);
 	void del_route_entries(bcache_entry* be);

@@ -1,10 +1,11 @@
 #==============================================================================
 # Authors : Bruno Santos <bsantos@av.it.pt>
+# Authors : Filipe Manco <filipe.manco@av.it.pt>
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
 #
-# Copyright (C) 2010 Universidade de Aveiro
-# Copyright (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+# Copyright (C) 2010-2011 Universidade de Aveiro
+# Copyright (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 #
 # This software is distributed under a license. The full license
 # agreement can be found in the file LICENSE in this distribution.
@@ -15,6 +16,24 @@
 #==============================================================================
 
 project opmip/doc ;
+
+import quickbook ;
+
+xml manual
+	: src/opmip-manual.qbk
+	;
+
+boostbook manual-html
+	: manual
+	: <xsl:param>boost.image.src="./images/logo.png"
+	  <xsl:param>boost.image.alt="'OPMIP - Open PMIPv6'"
+	  <xsl:param>boost.image.w=100px
+	  <xsl:param>boost.image.h=100px
+
+	  <xsl:param>nav.layout=none
+	  <xsl:param>navig.graphics=1
+	  <xsl:param>generate.manifest=0
+	;
 
 install images
 	: [ glob src/images/*.png ]
@@ -31,9 +50,9 @@ install css
 	: <location>html
 	;
 
-install pdf
-	: ../app//manual-doc/<format>pdf
-	: <location>pdf
-	;
+#install pdf
+#	: manual-html/<format>pdf
+#	: <location>pdf
+#	;
 
-alias html : ../app//manual-doc images callouts css ;
+alias html : manual-html images callouts css ;

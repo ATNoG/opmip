@@ -89,7 +89,7 @@ bool pbu_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 
 	pbinfo.address  = _endpoint.address();
 	pbinfo.sequence = pbu->sequence();
-	pbinfo.lifetime = 4000 * pbu->lifetime();
+	pbinfo.lifetime = 4 * pbu->lifetime();
 
 	return parse_options(_buffer + pos, rbytes - pos, pbinfo);
 }
@@ -110,7 +110,7 @@ bool pba_receiver::parse(size_t rbytes, proxy_binding_info& pbinfo)
 
 	pbinfo.address  = _endpoint.address();
 	pbinfo.sequence = pba->sequence();
-	pbinfo.lifetime = 4000 * pba->lifetime();
+	pbinfo.lifetime = 4 * pba->lifetime();
 	pbinfo.status   = pba->status();
 
 	return parse_options(_buffer + pos, rbytes - pos, pbinfo);

@@ -4,8 +4,8 @@
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -15,10 +15,10 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#include <opmip/ll/mac_address.hpp>
+#include <opmip/net/link/address_mac.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace ll {
+namespace opmip { namespace net { namespace link {
 
 ///////////////////////////////////////////////////////////////////////////////
 //FIXME: move this somewhere else
@@ -34,9 +34,9 @@ static uchar hex_to_int(uchar c)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-mac_address mac_address::from_string(const char* str)
+address_mac address_mac::from_string(const char* str)
 {
-	mac_address mac;
+	address_mac mac;
 	uint i;
 
 	for (i = 0; i < bytes_type::static_size; ++i) {
@@ -58,22 +58,17 @@ mac_address mac_address::from_string(const char* str)
 	}
 
 	if (((i + 1) != bytes_type::static_size) || *str != '\0')
-		return mac_address();
+		return address_mac();
 
 	return mac;
 }
 
-mac_address mac_address::from_string(const std::string& str)
+address_mac address_mac::from_string(const std::string& str)
 {
 	return from_string(str.c_str());
 }
 
-mac_address::bytes_type mac_address::to_bytes() const
-{
-	return _address;
-}
-
-std::string mac_address::to_string() const
+std::string address_mac::to_string() const
 {
 	std::string str;
 
@@ -105,6 +100,6 @@ std::string mac_address::to_string() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-} /* namespace ll */ } /* namespace opmip */
+} /* namespace link */ } /* namespace net */ } /* namespace opmip */
 
 ///////////////////////////////////////////////////////////////////////////////

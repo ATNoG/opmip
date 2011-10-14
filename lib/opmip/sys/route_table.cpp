@@ -62,7 +62,7 @@ std::pair<route_table::const_iterator, bool> route_table::find_by_src(const ip::
 {
 	std::pair<const_iterator, bool> res(_map_by_src.find(prefix), true);
 
-	if (res.first == _map_by_src.cend())
+	if (res.first == _map_by_src.end())
 		res.second = false;
 
 	return res;
@@ -110,7 +110,7 @@ std::pair<route_table::const_iterator, bool> route_table::find_by_dst(const ip::
 {
 	std::pair<const_iterator, bool> res(_map_by_dst.find(prefix), true);
 
-	if (res.first == _map_by_dst.cend())
+	if (res.first == _map_by_dst.end())
 		res.second = false;
 
 	return res;

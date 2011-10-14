@@ -20,15 +20,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/refcount.hpp>
+#include <opmip/chrono.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/types.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class pbu_receiver : public refcount_base {
+class pbu_receiver : public boost::enable_shared_from_this<pbu_receiver> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -52,24 +54,26 @@ private:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pbu_receiver> pbu_receiver_ptr;
+typedef boost::shared_ptr<pbu_receiver> pbu_receiver_ptr;
 
 template<class Handler>
 struct pbu_receiver::asio_handler {
 	asio_handler(pbu_receiver* pbur, Handler handler)
-		: _pbur(pbur), _handler(handler)
+		: _pbur(pbur->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(boost::system::error_code ec, size_t rbytes)
 	{
 		proxy_binding_info pbinfo;
+		chrono delay;
 
+		delay.start();
 		if (!ec) {
 			if (!_pbur->parse(rbytes, pbinfo))
 				ec = boost::system::errc::make_error_code(boost::system::errc::bad_message);
 		}
 
-		_handler(ec, pbinfo, _pbur);
+		_handler(ec, pbinfo, _pbur, delay);
 	}
 
 	pbu_receiver_ptr _pbur;
@@ -77,7 +81,7 @@ struct pbu_receiver::asio_handler {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class pba_receiver : public refcount_base {
+class pba_receiver : public  boost::enable_shared_from_this<pba_receiver> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -101,24 +105,26 @@ private:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pba_receiver> pba_receiver_ptr;
+typedef boost::shared_ptr<pba_receiver> pba_receiver_ptr;
 
 template<class Handler>
 struct pba_receiver::asio_handler {
 	asio_handler(pba_receiver* pbar, Handler handler)
-		: _pbar(pbar), _handler(handler)
+		: _pbar(pbar->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(boost::system::error_code ec, size_t rbytes)
 	{
 		proxy_binding_info pbinfo;
+		chrono delay;
 
+		delay.start();
 		if (!ec) {
 			if (!_pbar->parse(rbytes, pbinfo))
 				ec = boost::system::errc::make_error_code(boost::system::errc::bad_message);
 		}
 
-		_handler(ec, pbinfo, _pbar);
+		_handler(ec, pbinfo, _pbar, delay);
 	}
 
 	pba_receiver_ptr _pbar;

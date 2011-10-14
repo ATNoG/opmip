@@ -15,16 +15,23 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-import boost ;
+import os ;
 
 project opmip
 	: requirements
 		<include>inc
 		<link>static
+		<linkflags>-rdynamic
 	: build-dir bin.v2
 	;
 
-boost.use-project 1.42 ;
+local boost_root = [ os.environ BOOST_ROOT ] ;
+
+if $(boost_root) {
+	use-project boost : $(boost_root) ;
+} else {
+	use-project boost : ../boost_1_47_0 ;
+}
 
 build-project app/opmip-mag ;
 build-project app/opmip-lma ;

@@ -20,14 +20,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/sys/error.hpp>
+#include <opmip/pmip/mag.hpp>
 #include "madwifi_driver_impl.hpp"
+#include "../driver.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
 
 ////////////////////////////////////////////////////////////////////////////////
-class madwifi_driver : boost::noncopyable {
+class madwifi_driver : public plugins::mag_driver {
 public:
 	typedef madwifi_driver_impl::address_mac   address_mac;
 	typedef madwifi_driver_impl::event_type    event_type;
@@ -36,30 +37,14 @@ public:
 	typedef madwifi_driver_impl::if_list       if_list;
 
 public:
-	madwifi_driver(boost::asio::io_service& ios)
-		: implementation(ios)
-	{ }
+	madwifi_driver(boost::asio::io_service& ios);
+	~madwifi_driver();
 
-	template<class EventHandler>
-	void start(const if_list& ifs, EventHandler handler)
-	{
-		boost::system::error_code ec;
-
-		implementation.set_event_handler(handler);
-		implementation.start(ifs, ec);
-		sys::throw_on_error(ec);
-	}
-
-	void stop()
-	{
-		boost::system::error_code ec;
-
-		implementation.stop(ec);
-		sys::throw_on_error(ec);
-	}
+	virtual void start(pmip::mag& mag, const std::vector<std::string>& options);
+	virtual void stop();
 
 private:
-	madwifi_driver_impl implementation;
+	opmip::app::madwifi_driver_impl _impl;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

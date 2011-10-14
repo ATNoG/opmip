@@ -28,10 +28,18 @@
 #define OPMIP_SCOPED(def)     switch(def) case 0: default:
 #define OPMIP_COUNT_OF(array) (sizeof(array) / sizeof(array[0]))
 
+#define OPMIP_NOT_USED(x) (void)x;
+
 #ifdef BOOST_HAS_STATIC_ASSERT
 #	define OPMIP_STATIC_ASSERT(exp, reason) static_assert(exp, reason)
 #else
 #	define OPMIP_STATIC_ASSERT(exp, reason) BOOST_STATIC_ASSERT(exp)
+#endif
+
+#ifdef __GNUC__
+#	define OPMIP_ATTR_NO_RETURN __attribute__((noreturn))
+#else
+#	define OPMIP_ATTR_NO_RETURN
 #endif
 
 #define OPMIP_UNDEFINED_BOOL                           \
@@ -72,8 +80,8 @@ typedef boost::int64_t     sint64;
 typedef boost::intmax_t    sintmax;
 typedef boost::uintmax_t   uintmax;
 
-typedef std::size_t        size_t;
-typedef std::ptrdiff_t     ptrdiff_t;
+typedef std::size_t        ptrsint;
+typedef std::ptrdiff_t     ptruint;
 
 ///////////////////////////////////////////////////////////////////////////////
 struct nullptr_t { template<class T> operator T*() const { return 0; } };
@@ -96,6 +104,28 @@ inline ParentT* parent_of(MemberT* member, MemberT ParentT::* Member)
 		return nullptr;
 
 	return reinterpret_cast<ParentT*>(reinterpret_cast<char*>(member) - reinterpret_cast<const char*>(&(parent->*Member)));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+template<class T, class U>
+inline T offset_cast(U* from, size_t offset)
+{
+	//TODO: add support for references
+	//      make sure this only works with pointers and references
+
+	uchar* p = reinterpret_cast<uchar*>(from);
+
+	return reinterpret_cast<T>(p + offset);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+template<class T>
+inline T remaining_length(T length, T position)
+{
+	if (position > length)
+		return 0;
+
+	return length - position;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

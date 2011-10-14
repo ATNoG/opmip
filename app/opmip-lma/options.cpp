@@ -36,10 +36,12 @@ bool cmdline_options::parse(int argc, char** argv)
 		("help,h",        "display command line options");
 
 	config.add_options()
-		("node-db",       po::value<std::string>()->default_value("node.db"),
-		                  "node database")
-		("id",            po::value<std::string>()->default_value(boost::asio::ip::host_name()),
-		                  "MAG identifier on the node database");
+		("id,i",           po::value<std::string>()->default_value(boost::asio::ip::host_name()),
+		                   "router identifier on the node database")
+		("database,d",     po::value<std::string>()->default_value("node.db"),
+		                   "node database")
+		("log,l",          "optional log file, defaults to the standard output");
+
 	options.add(config);
 
 	po::store(po::parse_command_line(argc, argv, options), vm);
@@ -51,7 +53,7 @@ bool cmdline_options::parse(int argc, char** argv)
 	}
 
 	identifier = vm["id"].as<std::string>();
-	node_db = vm["node-db"].as<std::string>();
+	node_db = vm["database"].as<std::string>();
 
 	return true;
 }

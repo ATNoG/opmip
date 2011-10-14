@@ -1,11 +1,11 @@
 //=============================================================================
-// Brief   : Signal Handling
+// Brief   : IP Address
 // Authors : Bruno Santos <bsantos@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2011 Universidade de Aveiro
+// Copyrigth (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -15,33 +15,23 @@
 // This software is distributed without any warranty.
 //=============================================================================
 
-#ifndef OPMIP_SYS_SIGNALS__HPP_
-#define OPMIP_SYS_SIGNALS__HPP_
+#ifndef OPMIP_NET_IP_ADDRESS__HPP_
+#define OPMIP_NET_IP_ADDRESS__HPP_
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <boost/signals2/signal.hpp>
+#include <boost/asio/ip/address.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-extern template class boost::signals2::signal<void()>;
+namespace opmip { namespace net { namespace ip {
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace opmip { namespace sys {
+using boost::asio::ip::address;
+using boost::asio::ip::address_v4;
+using boost::asio::ip::address_v6;
 
 ///////////////////////////////////////////////////////////////////////////////
-extern boost::signals2::signal<void()> interrupt_signal;
-
-///////////////////////////////////////////////////////////////////////////////
-struct signal_mask {
-	enum {
-		interrupt = 0x1,
-	};
-};
-
-void init_signals(uint mk);
-
-///////////////////////////////////////////////////////////////////////////////
-} /* namespace sys */ } /* namespace opmip */
+} /* namespace ip */ } /* namespace net */ } /* namespace opmip */
 
 // EOF ////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_SYS_SIGNALS__HPP_ */
+#endif /* OPMIP_NET_IP_ADDRESS__HPP_ */

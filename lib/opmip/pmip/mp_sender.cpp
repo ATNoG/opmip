@@ -47,7 +47,7 @@ static size_t append_options(uchar* buffer, size_t len, const proxy_binding_info
 		len += ip::mproto::option::size(opt);
 
 	} else {
-		for (auto i = pbinfo.prefix_list.begin(), e = pbinfo.prefix_list.end(); i != e; ++i) {
+		for (std::vector<ip::prefix_v6>::const_iterator i = pbinfo.prefix_list.begin(), e = pbinfo.prefix_list.end(); i != e; ++i) {
 			opt = new(buffer + len) ip::mproto::option(ip::mproto::option::netprefix());
 			npf = opt->get<ip::mproto::option::netprefix>();
 			npf->length = i->length();
@@ -91,7 +91,7 @@ pbu_sender::pbu_sender(const proxy_binding_info& pbinfo)
 	pbu->sequence(pbinfo.sequence);
 	pbu->ack(true);
 	pbu->proxy_reg(true);
-	pbu->lifetime(pbinfo.lifetime / 4000);
+	pbu->lifetime(pbinfo.lifetime / 4);
 
 	_length = append_options(_buffer, len, pbinfo);
 	pbu->init(ip::mproto::pbu::mh_type, _length);
@@ -109,7 +109,7 @@ pba_sender::pba_sender(const proxy_binding_info& pbinfo)
 	pba->status(pbinfo.status);
 	pba->proxy_reg(true);
 	pba->sequence(pbinfo.sequence);
-	pba->lifetime(pbinfo.lifetime / 4000);
+	pba->lifetime(pbinfo.lifetime / 4);
 
 	_length = append_options(_buffer, len, pbinfo);
 	pba->init(ip::mproto::pba::mh_type, _length);

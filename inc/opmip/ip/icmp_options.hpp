@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/ip/options.hpp>
+#include <opmip/ip/address.hpp>
 #include <opmip/ip/prefix.hpp>
 #include <opmip/ll/mac_address.hpp>
 #include <boost/array.hpp>
@@ -143,6 +144,30 @@ public:
 public:
 	uint16 _reserved;
 	uint32 _mtu;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class opt_rdns : public option { //RFC 5006 (experimental)
+public:
+	typedef address_v6::bytes_type bytes_type;
+
+	static const uint8  type_value  = 25;
+	static const size_t static_size = 8 + bytes_type::static_size;
+
+public:
+	opt_rdns(uint address_count = 1)
+		: option(type_value, static_size + bytes_type::static_size * address_count),
+		  reserved(0), lifetime(0)
+	{
+		BOOST_ASSERT(address_count != 0);
+	}
+
+	uint address_count() const { return (option::size(this) - static_size) / bytes_type::static_size; }
+
+public:
+	uint16     reserved;
+	uint32     lifetime;
+	bytes_type addresses[1];
 };
 
 ///////////////////////////////////////////////////////////////////////////////

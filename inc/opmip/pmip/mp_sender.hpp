@@ -20,15 +20,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
-#include <opmip/refcount.hpp>
 #include <opmip/ip/mproto.hpp>
 #include <opmip/pmip/types.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace pmip {
 
 ///////////////////////////////////////////////////////////////////////////////
-class pbu_sender : public refcount_base {
+class pbu_sender : public boost::enable_shared_from_this<pbu_sender> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -49,12 +50,12 @@ public:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pbu_sender> pbu_sender_ptr;
+typedef boost::shared_ptr<pbu_sender> pbu_sender_ptr;
 
 template<class Handler>
 struct pbu_sender::asio_handler {
 	asio_handler(pbu_sender* pbus, Handler handler)
-		: _pbus(pbus), _handler(handler)
+		: _pbus(pbus->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(const boost::system::error_code& ec, size_t wbytes)
@@ -68,7 +69,7 @@ struct pbu_sender::asio_handler {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class pba_sender : public refcount_base {
+class pba_sender : public boost::enable_shared_from_this<pba_sender> {
 	template<class Handler>
 	struct asio_handler;
 
@@ -89,12 +90,12 @@ private:
 	uchar                _buffer[1460];
 };
 
-typedef refcount_ptr<pba_sender> pba_sender_ptr;
+typedef boost::shared_ptr<pba_sender> pba_sender_ptr;
 
 template<class Handler>
 struct pba_sender::asio_handler {
 	asio_handler(pba_sender* pbas, Handler handler)
-		: _pbas(pbas), _handler(handler)
+		: _pbas(pbas->shared_from_this()), _handler(handler)
 	{ }
 
 	void operator()(const boost::system::error_code& ec, size_t wbytes)
