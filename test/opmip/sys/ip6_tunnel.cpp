@@ -29,16 +29,16 @@ int main()
 
 	tn0.open("pmip0",
 	         2,
-	         sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"),
+	         sys::ip::address_v6::from_string("2001:690:2380:7770:226:22ff:fef0:6b94"),
 	         sys::ip::address_v6::any(), ec);
 	if (ec)
 		std::cerr << "failed to create tunnel: " << ec.message() << std::endl;
 
 	tn0.delete_on_close(false);
 
-	tn0.set_address(sys::ip::address_v6::from_string("2001:c188:5d6e:7:218:f3ff:fe90:6d6f"), 64, ec);
+	tn0.add_address(sys::ip::address_v6::from_string("2001:690:2380:7770:226:cafe:dead:beef"), 64, ec);
 	if (ec)
-		std::cerr << "failed to set tunnel address: " << ec.message() << std::endl;
+		std::cerr << "failed to add tunnel address: " << ec.message() << std::endl;
 
 	tn0.set_enable(true, ec);
 	if (ec)

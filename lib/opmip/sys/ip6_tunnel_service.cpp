@@ -124,16 +124,10 @@ void ip6_tunnel_service::close(implementation_type& impl, boost::system::error_c
 	}
 }
 
-void ip6_tunnel_service::set_address(implementation_type& impl, const ip::address_v6& address,
+void ip6_tunnel_service::add_address(implementation_type& impl, const ip::address_v6& address,
                                                                 uint prefix_length,
                                                                 boost::system::error_code& ec)
 {
-	if (!is_open(impl)) {
-		ec = boost::system::error_code(boost::system::errc::bad_file_descriptor,
-		                               boost::system::get_generic_category());
-		return;
-	}
-
 	if (prefix_length > 128) {
 		ec = boost::system::error_code(boost::system::errc::invalid_argument,
 		                               boost::system::get_generic_category());
@@ -163,9 +157,10 @@ void ip6_tunnel_service::set_address(implementation_type& impl, const ip::addres
 
 	uchar  resp[512];
 	size_t rlen;
+	uint   seq;
 	{
 		boost::mutex::scoped_lock lc(_rtnl_mutex);
-		msg.sequence(++_rtnl_seq);
+		msg.sequence(seq = ++_rtnl_seq);
 
 		_rtnl.send(msg.cbuffer(), 0, ec);
 		if (ec)
@@ -179,12 +174,13 @@ void ip6_tunnel_service::set_address(implementation_type& impl, const ip::addres
 
 	nl::message_iterator mit(resp, rlen);
 	nl::message_iterator end;
-	int                  errc = 0;
+	int                  errc = EIO;
 
 	for (; mit != end; ++mit) {
 		if (mit->type == nl::header::m_error) { //TODO: check the sequence
 			nl::message<nl::error> err(mit);
 
+			assert(mit->sequence == seq);
 			errc = -err->error;
 			break;
 		}

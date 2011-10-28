@@ -69,7 +69,7 @@ public:
 	bool is_open(const implementation_type& impl) const;
 	void close(implementation_type& impl, boost::system::error_code& ec);
 
-	void set_address(implementation_type& impl, const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
+	void add_address(implementation_type& impl, const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
 
 	void get_index(implementation_type& impl, uint& index, boost::system::error_code& ec);
 

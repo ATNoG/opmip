@@ -48,8 +48,8 @@ public:
 	void close();
 	void close(boost::system::error_code& ec);
 
-	void set_address(const ip::address_v6& address, uint prefix_length);
-	void set_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
+	void add_address(const ip::address_v6& address, uint prefix_length);
+	void add_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec);
 
 	bool get_enable();
 	bool get_enable(boost::system::error_code& ec);
@@ -111,16 +111,16 @@ inline void ip6_tunnel::close(boost::system::error_code& ec)
 	service.close(implementation, ec);
 }
 
-inline void ip6_tunnel::set_address(const ip::address_v6& address, uint prefix_length)
+inline void ip6_tunnel::add_address(const ip::address_v6& address, uint prefix_length)
 {
 	boost::system::error_code ec;
-	service.set_address(implementation, address, prefix_length, ec);
+	service.add_address(implementation, address, prefix_length, ec);
 	throw_on_error(ec, "opmip::ip6_tunnel::set_address");
 }
 
-inline void ip6_tunnel::set_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec)
+inline void ip6_tunnel::add_address(const ip::address_v6& address, uint prefix_length, boost::system::error_code& ec)
 {
-	service.set_address(implementation, address, prefix_length, ec);
+	service.add_address(implementation, address, prefix_length, ec);
 }
 
 inline bool ip6_tunnel::get_enable()
