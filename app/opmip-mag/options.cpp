@@ -40,6 +40,8 @@ bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 		("database,d",     po::value<std::string>()->default_value("node.db"),
 		                   "node database")
 		("log,l",          "optional log file, defaults to the standard output")
+		("tga,t",          po::value<bool>()->default_value(false),
+                                   "set tunnel global address")
 		("driver,e",       po::value<std::string>()->default_value("madwifi"),
 		                   "event driver to be used, available: madwifi, 802.11, dummy")
 		("link-local-ip",  po::value<std::string>()->default_value("fe80::1"),
@@ -59,6 +61,7 @@ bool cmdline_options::parse(int argc, char** argv, std::ostream& out)
 	identifier = vm["id"].as<std::string>();
 	database = vm["database"].as<std::string>();
 	driver = vm["driver"].as<std::string>();
+	tunnel_global_address = vm["tga"].as<bool>();
 
 	if (vm.count("driver-options"))
 		driver_options = vm["driver-options"].as<std::vector<std::string> >();

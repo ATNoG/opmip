@@ -35,6 +35,7 @@ struct cmdline_options {
 	std::string              database;
 	std::string              driver;
 	std::vector<std::string> driver_options;
+	bool                     tunnel_global_address;
 	ip::address_v6           link_local_ip; //TODO: deprecate
 
 
