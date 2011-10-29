@@ -54,7 +54,7 @@ public:
 public:
 	lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency);
 
-	void start(const std::string& id);
+	void start(const std::string& id, bool tunnel_global_address);
 	void stop();
 
 private:
@@ -62,7 +62,7 @@ private:
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pbu_receiver_ptr& pbur, chrono& delay);
 
 private:
-	void start_(const std::string& id);
+	void start_(const std::string& id, bool tunnel_global_address);
 	void stop_();
 
 	void          proxy_binding_update(proxy_binding_info& pbinfo, chrono& delay);

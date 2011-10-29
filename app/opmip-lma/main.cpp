@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
 		load_node_database(opts.node_db, ndb);
 
-		lma.start(opts.identifier.c_str());
+		lma.start(opts.identifier.c_str(), opts.tunnel_global_address);
 
 		sigs.async_wait(boost::bind(signal_handler, _1, boost::ref(lma)));
 

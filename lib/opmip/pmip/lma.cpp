@@ -40,9 +40,9 @@ lma::lma(boost::asio::io_service& ios, node_db& ndb, size_t concurrency)
 {
 }
 
-void lma::start(const std::string& id)
+void lma::start(const std::string& id, bool tunnel_global_address)
 {
-	_service.dispatch(boost::bind(&lma::start_, this, id));
+	_service.dispatch(boost::bind(&lma::start_, this, id, tunnel_global_address));
 }
 
 void lma::stop()
@@ -68,7 +68,7 @@ void lma::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	pbur->async_receive(_mp_sock, boost::bind(&lma::mp_receive_handler, this, _1, _2, _3, _4));
 }
 
-void lma::start_(const std::string& id)
+void lma::start_(const std::string& id, bool tunnel_global_address)
 {
 	const router_node* node = _node_db.find_router(id);
 	if (!node) {
@@ -83,7 +83,7 @@ void lma::start_(const std::string& id)
 
 	_identifier = id;
 
-	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()), tunnel_global_address);
 
 	for (size_t i = 0; i < _concurrency; ++i) {
 		pbu_receiver_ptr pbur(new pbu_receiver());
