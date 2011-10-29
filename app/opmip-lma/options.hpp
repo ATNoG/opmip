@@ -31,7 +31,7 @@ namespace opmip { namespace app {
 struct cmdline_options {
 	std::string identifier;
 	std::string node_db;
-
+	bool tunnel_global_address;
 	bool parse(int argc, char** argv);
 };
 

@@ -40,7 +40,10 @@ bool cmdline_options::parse(int argc, char** argv)
 		                   "router identifier on the node database")
 		("database,d",     po::value<std::string>()->default_value("node.db"),
 		                   "node database")
-		("log,l",          "optional log file, defaults to the standard output");
+		("log,l",          "optional log file, defaults to the standard output")
+		("tga,d",     	   po::value<bool>()->default_value("false"),
+		                   "set tunnel global address (LMAA)");
+
 
 	options.add(config);
 
@@ -54,6 +57,7 @@ bool cmdline_options::parse(int argc, char** argv)
 
 	identifier = vm["id"].as<std::string>();
 	node_db = vm["database"].as<std::string>();
+	tunnel_global_address = vm["tga"].as<bool>();
 
 	return true;
 }
