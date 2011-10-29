@@ -28,7 +28,7 @@ int main()
 	sys::ip6_tunnel tn0(ios);
 
 	tn0.open("pmip0",
-	         2,
+	         3,
 	         sys::ip::address_v6::from_string("2001:690:2380:7770:226:22ff:fef0:6b94"),
 	         sys::ip::address_v6::any(), ec);
 	if (ec)

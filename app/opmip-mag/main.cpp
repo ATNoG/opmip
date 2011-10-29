@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 
 		log_(0, "chrono resolution ", opmip::chrono::get_resolution());
 
-		mag.start(opts.identifier.c_str(), opts.link_local_ip);
+		mag.start(opts.identifier.c_str(), opts.link_local_ip, opts.tunnel_global_address);
 
 		drv = opmip::app::make_driver(ios, opts.driver);
 		if (!drv) {

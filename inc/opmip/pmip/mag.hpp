@@ -92,7 +92,7 @@ public:
 public:
 	mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size_t concurrency);
 
-	void start(const std::string& id, const ip_address& link_local_ip);
+	void start(const std::string& id, const ip_address& link_local_ip, bool tunnel_global_address);
 	void stop();
 
 	template<class CompletionHandler>
@@ -108,7 +108,7 @@ private:
 	void mp_receive_handler(const boost::system::error_code& ec, const proxy_binding_info& pbinfo, pba_receiver_ptr& pbar, chrono& delay);
 
 private:
-	void start_(const std::string& id, const ip_address& mn_access_link);
+	void start_(const std::string& id, const ip_address& mn_access_link, bool tunnel_global_address);
 	void stop_();
 
 	void mobile_node_attach_(const attach_info& ai, completion_functor& completion_handler);

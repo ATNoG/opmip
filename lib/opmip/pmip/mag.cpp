@@ -121,9 +121,9 @@ mag::mag(boost::asio::io_service& ios, node_db& ndb, addrconf_server& asrv, size
 {
 }
 
-void mag::start(const std::string& id, const ip_address& mn_access_link)
+void mag::start(const std::string& id, const ip_address& mn_access_link, bool tunnel_global_address)
 {
-	_service.dispatch(boost::bind(&mag::start_, this, id, mn_access_link));
+	_service.dispatch(boost::bind(&mag::start_, this, id, mn_access_link, tunnel_global_address));
 }
 
 void mag::stop()
@@ -149,7 +149,7 @@ void mag::mp_receive_handler(const boost::system::error_code& ec, const proxy_bi
 	}
 }
 
-void mag::start_(const std::string& id, const ip_address& link_local_ip)
+void mag::start_(const std::string& id, const ip_address& link_local_ip, bool tunnel_global_address)
 {
 	const router_node* node = _node_db.find_router(id);
 	if (!node)
@@ -168,7 +168,7 @@ void mag::start_(const std::string& id, const ip_address& link_local_ip)
 	_identifier = id;
 	_link_local_ip = link_local_ip;
 
-	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()));
+	_tunnels.open(ip::address_v6(node->address().to_bytes(), node->device_id()), tunnel_global_address);
 
 	_addrconf.start();
 

@@ -48,7 +48,7 @@ public:
 	ip6_tunnels(boost::asio::io_service& ios);
 	~ip6_tunnels();
 
-	void open(const ip::address_v6& address);
+	void open(const ip::address_v6& address, bool global_address = false);
 	void close();
 
 	uint get(const ip::address_v6& remote);
@@ -61,6 +61,7 @@ private:
 	ip::address_v6           _local;
 	map                      _tunnels;
 	map_gc                   _gc;
+	bool                     _global_address;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
