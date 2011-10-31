@@ -41,7 +41,7 @@ bool cmdline_options::parse(int argc, char** argv)
 		("database,d",     po::value<std::string>()->default_value("node.db"),
 		                   "node database")
 		("log,l",          "optional log file, defaults to the standard output")
-		("tga,d",     	   po::value<bool>()->default_value("false"),
+		("tga,t",     	   po::value<bool>()->default_value("false"),
 		                   "set tunnel global address (LMAA)");
 
 
