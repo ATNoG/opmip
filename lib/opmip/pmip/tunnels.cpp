@@ -38,6 +38,7 @@ void ip6_tunnels::open(const ip::address_v6& address, bool global_address)
 		_tunnels.clear();
 	}
 	_local = address;
+	_global_address = global_address;
 }
 
 void ip6_tunnels::close()
@@ -64,7 +65,7 @@ uint ip6_tunnels::get(const ip::address_v6& remote)
 		res.first->second->tunnel.open("", _local.scope_id(), _local, remote);
 		res.first->second->tunnel.set_enable(true);
 		if (_global_address == true)	
-			res.first->second->tunnel.add_address(_local, 64); // make this prefix configurable
+			res.first->second->tunnel.add_address(_local, 64); // TODO make this prefix configurable
 		else {}
 	} catch (...) {
 		_tunnels.erase(res.first);
