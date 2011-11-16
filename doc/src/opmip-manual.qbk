@@ -232,9 +232,9 @@ The following working directory is recommended:
  |
  +-- projects/
  |    |
- |    `-- boost_1_47_0/
- |
- +-- opmip/
+ |    +-- boost_1_47_0/
+ |    |
+ |    `-- opmip/
  |
  `-- user-config.jam
 ``
@@ -248,12 +248,13 @@ To properly setup __boost__ on your computer follow the next setps:
 # Get __boost__ libraries
  # Download __boost__ libraries from
   * [@http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download]
- # Unpack to [^~/projects/boost_1_47_0]
-  * [^cd ~/projects]
+ # Unpack to [^~\/projects/boost_1_47_0]
+  * [^cd ~\/projects]
   * [^tar --bzip2 -xf <path-to-downloaded-file>/boost_1_47_0.tar.bz2]
 # Set Environment variables
  # Set [^BOOST_ROOT] environment variable
-  * [^export BOOST_ROOT=~/projetcs/boost_1_47_0/]
+  * [^export BOOST_ROOT=~\/projects/boost_1_47_0/]
+ # Maybe you want to put this in your [^.bashrc] file
 # Build and install Boost.Build
  # First of all *DO NOT* build boost libraries (you don't need it)
  # Build Boost.Build
@@ -261,7 +262,8 @@ To properly setup __boost__ on your computer follow the next setps:
   * [^./bootstrap.sh]
  # Install
   * [^cp b2 /usr/bin]
-  * [^cp -r tools/build/v2 /usr/share/boost-build/]
+  * [^mkdir /usr/share/boost-build]
+  * [^cp -r tools/build/v2 \/usr/share/boost-build]
 # Setup __boost__
  # Create [^user-config.jam] under your home directory with the following contents
 
@@ -277,7 +279,7 @@ To properly setup __boost__ on your computer follow the next setps:
 
 	using boost
 		: 1.47
-		: <root>/home/[username]/projetcs/boost_1_47_0/
+		: <root>/home/[username]/projects/boost_1_47_0/
 		;
 
 	using gcc ;
@@ -309,11 +311,11 @@ even if you choose to use the debianized sources.]
  * [^cd ~/projects]
  * [^tar -xf <path-to-opmip.tar.gz>]
 # Build debian package
- * [^cd opmip/opmip-0.1]
+ * [^cd opmip/opmip-0.2]
  * [^dpkg-buildpackage]
 # Install the debian
  * [^cd ..]
- * [^dpkg -i opmip_0.1-1_<arch>.deb]
+ * [^dpkg -i opmip_0.2-1_<arch>.deb]
 
 [endsect]
 
@@ -323,10 +325,10 @@ even if you choose to use the debianized sources.]
  * [^cd ~/projects]
  * [^git clone https://helios.av.it.pt/git/opmip]
 # Build OPMIP
- * [^cd ~/projetcs/opmip]
+ * [^cd opmip]
  * [^b2]
 
-The generated binaries are now under [^~/projects/opmip/dist/].
+The generated binaries are now under [^~\/projects/opmip/dist/].
 
 [endsect]
 
