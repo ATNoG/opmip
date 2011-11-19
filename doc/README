@@ -1,0 +1,104 @@
+========================================
+  How to Build OPMIP Documentation
+========================================
+
+==============================
+  Install Boost
+==============================
+
+Recomended working directory
+
+ ~/
+ |
+ +-- projects/
+ |    |
+ |    +-- boost_1_47_0/
+ |    |
+ |    `-- opmip/
+ |
+ `-- user-config.jam
+
+
+1. Download Boost libraries from
+     http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download
+
+2. Unpack to ~/projects/boost_1_47_0
+     $ cd ~/projects
+     $ tar --bzip2 -xf <path-to-downloaded-file>/boost_1_47_0.tar.bz2
+
+3. Set Environment variables
+     Set BOOST_ROOT environment variable
+       $ export BOOST_ROOT=~/projects/boost_1_47_0/
+     Maybe you want to put this in your .bashrc file
+
+4. Build and install Boost.Build
+     First of all DO NOT build boost libraries (you don't need it)
+     Build Boost.Build
+       $ cd $BOOST_ROOT
+       $ ./bootstrap.sh
+     Install
+       $ cp b2 /usr/local/bin
+       $ mkdir /usr/share/boost-build
+       $ cp -r tools/build/v2 /usr/share/boost-build
+
+5. Setup Boost
+     Create user-config.jam under your home directory with the following contents
+
+	#==================== user-config.jam ====================
+	# Replace [username] with the proper username.
+	#
+	# See the Boost.Build documentation for more details!
+	#=========================================================
+
+	using boost
+		: 1.47
+		: <root>/home/[username]/projects/boost_1_47_0/
+		;
+
+	using gcc ;
+
+	#========================== EOF ==========================
+
+
+==============================
+  Install Quickbook
+==============================
+
+1 .Build Quickbook
+     $ cd $BOOST_ROOT/tools/quickbook
+     $ b2
+
+2. Install
+     $ cp ../../dist/bin/quickbook /usr/local/bin
+
+3. Install dependecies (xsltproc docbook-xsl and docbook-xml)
+     $ apt-get install xsltproc docbook-xsl docbook-xml
+
+4. Add the following lines to your user-config.jam file
+
+	#==================== user-config.jam ====================
+
+	using quickbook
+		: /usr/local/bin/quickbook
+		;
+
+	using xsltproc ;
+
+	using boostbook
+		: /usr/share/xml/docbook/stylesheet/nwalsh
+		: /usr/share/xml/docbook/schema/dtd/4.2
+		;
+
+	#========================== EOF ==========================
+
+
+==============================
+  Build OPMIP Documentation
+==============================
+
+1. Build Documentation
+     $ cd ~/projects/opmip/doc
+     $ b2
+
+Documentation is now under html directory
+
