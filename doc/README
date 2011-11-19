@@ -39,7 +39,7 @@ Recomended working directory
      Install
        $ cp b2 /usr/local/bin
        $ mkdir /usr/share/boost-build
-       $ cp -r tools/build/v2 /usr/share/boost-build
+       $ cp -r tools/build/v2/* /usr/share/boost-build/
 
 5. Setup Boost
      Create user-config.jam under your home directory with the following contents

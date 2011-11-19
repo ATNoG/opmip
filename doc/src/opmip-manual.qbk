@@ -261,9 +261,9 @@ To properly setup __boost__ on your computer follow the next setps:
   * [^cd $BOOST_ROOT]
   * [^./bootstrap.sh]
  # Install
-  * [^cp b2 /usr/bin]
+  * [^cp b2 /usr/local/bin]
   * [^mkdir /usr/share/boost-build]
-  * [^cp -r tools/build/v2 \/usr/share/boost-build]
+  * [^cp -r tools/build/v2/* \/usr/share/boost-build/]
 # Setup __boost__
  # Create [^user-config.jam] under your home directory with the following contents
 
