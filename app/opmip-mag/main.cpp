@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 
 		mag.start(opts.identifier.c_str(), opts.link_local_ip, opts.tunnel_global_address);
 
-		drv = opmip::app::make_driver(ios, opts.driver);
+		drv = opmip::app::make_driver(ios, mag, opts.driver);
 		if (!drv) {
 			log_(0, "driver not found: ", opts.driver);
 			return 1;
