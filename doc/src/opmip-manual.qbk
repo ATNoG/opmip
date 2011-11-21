@@ -104,7 +104,7 @@ binaries are standalone, they can be put anywhere.
 Either way you will have to manually configure the startup of the OPMIP as a
 service if you wish.
 
-[important The binaries require an additional file, the [link manual.started.nodedb node database].] 
+[important The binaries require an additional file, the [link manual.started.nodedb node database].]
 
 [endsect]
 
@@ -264,33 +264,12 @@ To properly setup __boost__ on your computer follow the next setps:
   * [^cp b2 /usr/local/bin]
   * [^mkdir /usr/share/boost-build]
   * [^cp -r tools/build/v2/* \/usr/share/boost-build/]
-# Setup __boost__
- # Create [^user-config.jam] under your home directory with the following contents
 
-[table Setup user-config.jam
-[
- [user-config.jam]
- [[teletype]``
-	#==================== user-config.jam ====================
-	# Replace [username] with the proper username.
-	#
-	# See the Boost.Build documentation for more details!
-	#=========================================================
-
-	using boost
-		: 1.47
-		: <root>/home/[username]/projects/boost_1_47_0/
-		;
-
-	using gcc ;
-
-	#========================== EOF ==========================
- ``]
-]
-]
 
 [important Make sure BOOST_ROOT is defined. If BOOST_ROOT isn't defined
-__boost__ libraries must be in opmip sources parent directory.]
+__boost__ libraries must be in opmip sources parent directory. You can also
+pass the location in command line with the option --boost-root=/path/to/boost instead of
+setting the BOOST_ROOT environment variable.]
 
 [endsect]
 
@@ -366,9 +345,14 @@ example:
 ``opmip-mag -e madwifi ath0``
 
 The built-in dummy driver must receive the number of events to generate per
-second. For example, to generate 1 event/second:
+second. The frequency must be in the range [0.0001, 1000]. For example, to
+generate 1 event/second:
 
 ``opmip-mag -e dummy 1``
+
+You can also tell the dummy driver, after the frequency option, the mobile node
+IDs from the database to impersonate. If you do not set this, the dummy driver will
+impersonate all of them.
 
 To use your own driver (see [link manual.driver Write an opmip-mag event driver])
 the argument must be the [^.so] filename or the path to the file. For example:
@@ -513,7 +497,7 @@ First steps:
 
 # Build OPMIP
 # Install OPMIP, if you're using debian package, or copy the binaries (__opmip_lma__ and
- __opmip_mag__) to somewhere in your [^PATH] otherwise 
+ __opmip_mag__) to somewhere in your [^PATH] otherwise
 # Copy [^node.db] file to the routers (LMA, MAG1 and MAG2)
 # Install __iperf__ software on mobile node and LMA
 # Configure the routers according to the [link manual.started Getting Started] section

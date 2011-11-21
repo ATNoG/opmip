@@ -16,22 +16,43 @@
 #==============================================================================
 
 import os ;
+import option ;
+import path ;
 
 project opmip
 	: requirements
 		<include>inc
 		<link>static
 		<linkflags>-rdynamic
+	: usage-requirements
+		<include>inc
 	: build-dir bin.v2
 	;
 
-local boost_root = [ os.environ BOOST_ROOT ] ;
+path-constant pwd : . ;
 
-if $(boost_root) {
-	use-project boost : $(boost_root) ;
+#
+# Import the boost project
+#
+# TODO: check boost library version for minimum requirements
+#
+local boost_root_default = [ path.join $(pwd) ../boost_1_47_0 ] ;
+local boost_root ;
+
+boost_root ?= [ option.get boost-root ] ;
+boost_root ?= [ os.environ BOOST_ROOT ] ;
+
+if ! $(boost_root) {
+	ECHO "Warning: Assuming that boost is located at" $(boost_root_default) ;
+	ECHO "Warning: You can set the location of the boost libraries in the command line"
+	     "(--boost-root=path/to/boost) or in the environment variable BOOST_ROOT" ;
+
+	use-project boost : $(boost_root_default) ;
 } else {
-	use-project boost : ../boost_1_47_0 ;
+	use-project boost : $(boost_root) ;
 }
+
+
 
 build-project app/opmip-mag ;
 build-project app/opmip-lma ;

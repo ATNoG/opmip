@@ -45,14 +45,15 @@ dummy_driver::~dummy_driver()
 
 void dummy_driver::start(pmip::mag& mag, const std::vector<std::string>& options)
 {
-	uint frequency = boost::lexical_cast<uint>(options.at(0));
+	float frequency = boost::lexical_cast<float>(options.at(0));
+	std::vector<std::string> clients(options.begin() + 1, options.end());
 
-	BOOST_ASSERT(0 < frequency || frequency <= 1000);
+	BOOST_ASSERT(!(frequency < 0.0001 || frequency > 1000));
 
-	_strand.dispatch(boost::bind(&dummy_driver::start_, this, frequency, boost::ref(mag)));
+	_strand.dispatch(boost::bind(&dummy_driver::start_, this, frequency, clients, boost::ref(mag)));
 }
 
-void dummy_driver::start_(uint frequency, pmip::mag& mag)
+void dummy_driver::start_(float frequency, const std::vector<std::string>& clients, pmip::mag& mag)
 {
 	pmip::node_db& db = mag.get_node_database();
 
@@ -61,8 +62,17 @@ void dummy_driver::start_(uint frequency, pmip::mag& mag)
 	_mag = boost::addressof(mag);
 	_frequency = frequency;
 
-	for (pmip::node_db::mobile_node_iterator i = db.mobile_node_begin(), e = db.mobile_node_end(); i != e; ++i)
-		_clients.push_back(client_state(i->link_addresses().front(), false)); //FIXME
+	if (clients.empty())
+		for (pmip::node_db::mobile_node_iterator i = db.mobile_node_begin(), e = db.mobile_node_end(); i != e; ++i)
+			_clients.push_back(client_state(i->link_addresses().front(), false));
+	else
+		for (std::vector<std::string>::const_iterator i = clients.begin(), e = clients.end(); i != e; ++i) {
+			const pmip::mobile_node* mn = db.find_mobile_node(*i);
+			if (mn)
+				_clients.push_back(client_state(mn->link_addresses().front(), false));
+			else
+				log_(0, "mobile node ", *i, " not found in database");
+		}
 
 	log_(0, "using ", _clients.size(), " mobile node(s), about to generate ", frequency, " message(s) per second");
 
@@ -111,8 +121,11 @@ void dummy_driver::timer_handler(const boost::system::error_code& ec)
 
 void dummy_driver::schedule()
 {
+	ulong sec  = 1 / _frequency;
+	ulong msec = (1 / _frequency - sec) * 1000;
+
 	_chrono.start();
-	_timer.expires_from_now(boost::posix_time::milliseconds(1000 / _frequency));
+	_timer.expires_from_now(boost::posix_time::seconds(sec) + boost::posix_time::milliseconds(msec));
 	_timer.async_wait(_strand.wrap(boost::bind(&dummy_driver::timer_handler, this, _1)));
 }
 
