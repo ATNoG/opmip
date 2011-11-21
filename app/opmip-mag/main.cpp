@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 			log_(0, "driver not found: ", opts.driver);
 			return 1;
 		}
-		drv->start(mag, opts.driver_options);
+		drv->start(opts.driver_options);
 
 		sigs.async_wait(boost::bind(signal_handler, _1, drv, boost::ref(mag)));
 

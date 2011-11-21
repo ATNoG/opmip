@@ -37,14 +37,15 @@ public:
 	typedef madwifi_driver_impl::if_list       if_list;
 
 public:
-	madwifi_driver(boost::asio::io_service& ios);
+	madwifi_driver(boost::asio::io_service& ios, pmip::mag& mag);
 	~madwifi_driver();
 
-	virtual void start(pmip::mag& mag, const std::vector<std::string>& options);
+	virtual void start(const std::vector<std::string>& options);
 	virtual void stop();
 
 private:
 	opmip::app::madwifi_driver_impl _impl;
+	pmip::mag&                      _mag;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -69,9 +69,10 @@ private:
 driver_ptr make_driver(boost::asio::io_service& ios, pmip::mag& mag, const std::string& name)
 {
 	if (name == "madwifi")
-		return boost::make_shared<madwifi_driver>(boost::ref(ios));
+		return boost::make_shared<madwifi_driver>(boost::ref(ios), boost::ref(mag));
 	else if (name == "dummy")
-		return boost::make_shared<dummy_driver>(boost::ref(ios));
+		return boost::make_shared<dummy_driver>(boost::ref(ios), boost::ref(mag));
+
 
 	void* dl = ::dlopen(name.c_str(), RTLD_NOW);
 	if (!dl) {

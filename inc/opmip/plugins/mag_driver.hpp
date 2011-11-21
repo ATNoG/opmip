@@ -31,7 +31,7 @@ class mag_driver {
 public:
 	virtual ~mag_driver() { }
 
-	virtual void start(pmip::mag& mag, const std::vector<std::string>& options) = 0;
+	virtual void start(const std::vector<std::string>& options) = 0;
 	virtual void stop() = 0;
 };
 

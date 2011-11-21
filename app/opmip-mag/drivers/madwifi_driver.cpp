@@ -73,8 +73,8 @@ static void link_event(const boost::system::error_code& ec, const madwifi_driver
 	}
 }
 
-madwifi_driver::madwifi_driver(boost::asio::io_service& ios)
-	: _impl(ios)
+madwifi_driver::madwifi_driver(boost::asio::io_service& ios, pmip::mag& mag)
+	: _impl(ios), _mag(mag)
 {
 }
 
@@ -82,11 +82,11 @@ madwifi_driver::~madwifi_driver()
 {
 }
 
-void madwifi_driver::start(pmip::mag& mag, const std::vector<std::string>& options)
+void madwifi_driver::start(const std::vector<std::string>& options)
 {
 	boost::system::error_code ec;
 
-	_impl.set_event_handler(boost::bind(link_event, _1, _2, boost::ref(mag)));
+	_impl.set_event_handler(boost::bind(link_event, _1, _2, boost::ref(_mag)));
 	_impl.start(options, ec);
 	sys::throw_on_error(ec);
 }

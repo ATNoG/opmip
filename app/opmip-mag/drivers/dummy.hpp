@@ -37,24 +37,24 @@ class dummy_driver : public plugins::mag_driver {
 	typedef std::pair<ll::mac_address, bool> client_state;
 
 public:
-	dummy_driver(boost::asio::io_service& ios);
+	dummy_driver(boost::asio::io_service& ios, pmip::mag& mag);
 	~dummy_driver();
 
-	virtual void start(pmip::mag& mag, const std::vector<std::string>& options);
+	virtual void start(const std::vector<std::string>& options);
 	virtual void stop();
 
 private:
-	void start_(float frequency, const std::vector<std::string>& clients, pmip::mag& mag);
+	void start_(float frequency, const std::vector<std::string>& clients);
 	void stop_();
 	void timer_handler(const boost::system::error_code& ec);
 	void schedule();
 
 private:
 	boost::asio::strand         _strand;
+	pmip::mag&                  _mag;
 	boost::asio::deadline_timer _timer;
 	rand_engine                 _rand;
 	std::vector<client_state>   _clients;
-	pmip::mag*                  _mag;
 	float                       _frequency;
 	chrono                      _chrono;
 };

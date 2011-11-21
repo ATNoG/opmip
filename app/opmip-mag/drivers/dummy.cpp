@@ -34,8 +34,8 @@ static void dummy()
 {
 }
 
-dummy_driver::dummy_driver(boost::asio::io_service& ios)
-	: _strand(ios), _timer(ios), _rand(std::time(0))
+dummy_driver::dummy_driver(boost::asio::io_service& ios, pmip::mag& mag)
+	: _strand(ios), _mag(mag), _timer(ios), _rand(std::time(0))
 {
 }
 
@@ -43,23 +43,22 @@ dummy_driver::~dummy_driver()
 {
 }
 
-void dummy_driver::start(pmip::mag& mag, const std::vector<std::string>& options)
+void dummy_driver::start(const std::vector<std::string>& options)
 {
 	float frequency = boost::lexical_cast<float>(options.at(0));
-	std::vector<std::string> clients(options.begin() + 1, options.end());
 
 	BOOST_ASSERT(!(frequency < 0.0001 || frequency > 1000));
 
-	_strand.dispatch(boost::bind(&dummy_driver::start_, this, frequency, clients, boost::ref(mag)));
+	_strand.dispatch(boost::bind(&dummy_driver::start_, this, frequency,
+	                             std::vector<std::string>(options.begin() + 1, options.end())));
 }
 
-void dummy_driver::start_(float frequency, const std::vector<std::string>& clients, pmip::mag& mag)
+void dummy_driver::start_(float frequency, const std::vector<std::string>& clients)
 {
-	pmip::node_db& db = mag.get_node_database();
+	pmip::node_db& db = _mag.get_node_database();
 
 	_timer.cancel();
 	_clients.clear();
-	_mag = boost::addressof(mag);
 	_frequency = frequency;
 
 	if (clients.empty())
@@ -103,16 +102,16 @@ void dummy_driver::timer_handler(const boost::system::error_code& ec)
 
 	log_(0, "after ", _chrono.get(), " seconds we rolled the dice and got ", n);
 
-	const opmip::pmip::mobile_node* mn = _mag->get_node_database().find_mobile_node(_clients[n].first);
+	const opmip::pmip::mobile_node* mn = _mag.get_node_database().find_mobile_node(_clients[n].first);
 
 	if (!mn)
 		return;
 
 	if (!_clients[n].second) {
-		_mag->mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
+		_mag.mobile_node_attach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = true;
 	} else {
-		_mag->mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
+		_mag.mobile_node_detach(pmip::mag::attach_info(1, ll::mac_address(), mn->id(), _clients[n].first), boost::bind(dummy));
 		_clients[n].second = false;
 	}
 
