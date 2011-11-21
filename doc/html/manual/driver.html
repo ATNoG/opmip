@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<title>Write an opmip-mag event driver</title>
+<link rel="stylesheet" href="../boostbook.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="prev" href="usage.html" title="Usage">
+<link rel="next" href="experiments.html" title="Experiments">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table cellpadding="2" width="100%"><tr><td valign="top"><img alt="'OPMIP - Open PMIPv6'" width="100px" height="100px" src=".././images/logo.png"></td></tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="usage.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="experiments.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="manual.driver"></a><a class="link" href="driver.html" title="Write an opmip-mag event driver">Write an opmip-mag event driver</a>
+</h2></div></div></div>
+<p>
+      <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> driver is the responsible
+      for detect attach/dettach events and pass the correspondent mobile node id
+      to the <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> application.
+    </p>
+<p>
+      OPMIP has built-in support for wireless cards with <a href="http://madwifi-project.org/" target="_top">MadWifi</a>
+      drivers, and also an implementation of a dummy driver that generate random
+      events, useful for experiments. But you can also write your own drivers to
+      detect events, for instance, from 802.1x, or any other technology.
+    </p>
+<p>
+      To build your own driver you must write a C++ class that extends <code class="computeroutput">opmip::plugins::driver</code>
+      and implement <code class="computeroutput">start</code> and <code class="computeroutput">stop</code> functions.
+    </p>
+<p>
+      The code must be compiled as a shared library. The generated <code class="literal">.so</code>
+      is then used by the <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> application
+      (see <a class="link" href="usage.html" title="Usage">Usage</a>).
+    </p>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+<p>
+        Check <code class="computeroutput">opmip/plugins/test/</code> for an example of how to implement
+        a plugin.
+      </p>
+<p>
+        You can also check <code class="computeroutput">opmip/app/opmip-mag/drivers/</code> for the implementation
+        of the <a href="http://madwifi-project.org/" target="_top">MadWifi</a> driver.
+      </p>
+</td></tr>
+</table></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+        <code class="computeroutput">madwifi</code> and <code class="computeroutput">dummy</code> cannot be used to name custom
+        drivers has the names are used by OPMIP to identify the built-in drivers.
+      </p></td></tr>
+</table></div>
+</div>
+<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
+<td align="left"></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010, 2011 Universidade Aveiro<br>Copyright &#169; 2010, 2011 Instituto de Telecomunica&#231;&#245;es
+      - P&#243;lo Aveiro</div></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="usage.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="experiments.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+</body>
+</html>

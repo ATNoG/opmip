@@ -1,0 +1,418 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<title>Experiments</title>
+<link rel="stylesheet" href="../boostbook.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="prev" href="driver.html" title="Write an opmip-mag event driver">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table cellpadding="2" width="100%"><tr><td valign="top"><img alt="'OPMIP - Open PMIPv6'" width="100px" height="100px" src=".././images/logo.png"></td></tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="driver.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="manual.experiments"></a><a class="link" href="experiments.html" title="Experiments">Experiments</a>
+</h2></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="experiments.html#manual.experiments.basics">Basics</a></span></dt>
+<dt><span class="section"><a href="experiments.html#manual.experiments.exp1">Experiment 1</a></span></dt>
+<dt><span class="section"><a href="experiments.html#manual.experiments.exp2">Experiment 2</a></span></dt>
+</dl></div>
+<p>
+      This section shows how to setup two experiments that allow you to test OPMIP
+      in two diferent scenarios.
+    </p>
+<p>
+      <span class="bold"><strong>This are only examples and obviously other experiments
+      are possible.</strong></span>
+    </p>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.experiments.basics"></a><a class="link" href="experiments.html#manual.experiments.basics" title="Basics">Basics</a>
+</h3></div></div></div>
+<p>
+        The following experiments test handover between two APs using a single homed
+        and a multi homed mobile node.
+      </p>
+<p>
+        To run the experiments you will need:
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            Three computers configured to run OPMIP applications (router nodes)
+            <div class="itemizedlist"><ul class="itemizedlist" type="circle">
+<li class="listitem">
+                  Two of the computers will run <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a>
+                  application, so they need a wireless interface
+                </li>
+<li class="listitem">
+                  Both MAG computers need to be connected to LMA, but don't need
+                  to be connected to each other
+                </li>
+</ul></div>
+          </li>
+<li class="listitem">
+            A computer to simulate the mobile node
+            <div class="itemizedlist"><ul class="itemizedlist" type="circle">
+<li class="listitem">
+                  The mobile node needs one wireless interface for the first experiment
+                  and two wireless interfaces for the second experiment
+                </li>
+<li class="listitem">
+                  It also needs a DHCP client that supports IPv6
+                </li>
+</ul></div>
+          </li>
+<li class="listitem">
+            <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a> software
+          </li>
+</ul></div>
+<p>
+        In this experiments:
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            We're working with root access on the machines
+          </li>
+<li class="listitem">
+            OPMIP applications are somewhere in <code class="literal">PATH</code> and node
+            database (named <code class="literal">node.db</code>) are in the home directory
+            that is the current working directory
+          </li>
+<li class="listitem">
+            We use the following node database: 
+<pre class="programlisting">{
+	"router-nodes" :
+	[
+		{
+			"id"          : "lma1",
+			"ip-address"  : "2001::1:1",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "mag1",
+			"ip-address"  : "2001::2:1",
+			"ip-scope-id" : "4"
+		},
+		{
+			"id"          : "mag2",
+			"ip-address"  : "2001::2:2",
+			"ip-scope-id" : "4"
+		},
+	],
+
+	"mobile-nodes" :
+	[
+		{
+			"id"           : "mn1",
+			"ip-prefix"    :
+			[
+				"3001:aaaa:bbbb:cccc::/64",
+			],
+			"link-address" :
+			[
+				"00:00:00:00:00:00",
+				"00:00:00:00:00:00"
+			],
+			"lma-id"       : "lma1"
+		}
+	]
+}
+</pre>
+            <div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem">
+                  Don't forget to change the mobile nodes' link addresses according
+                  to your system
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            We're using the built-in <a href="http://madwifi-project.org/" target="_top">MadWifi</a>
+            driver
+          </li>
+<li class="listitem">
+            We follow the next conventions:
+            <div class="itemizedlist"><ul class="itemizedlist" type="circle">
+<li class="listitem">
+                  LMA identify the computer running <a class="link" href="usage.html#manual.usage.lma" title="opmip-lma">opmip-lma</a>
+                  application
+                </li>
+<li class="listitem">
+                  MAG<em class="replaceable"><code>x</code></em> where <em class="replaceable"><code>x</code></em>
+                  is a number identify a computer running <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a>
+                  application
+                </li>
+<li class="listitem">
+                  MAG<em class="replaceable"><code>x</code></em> access point SSID is OPMIP_MAGx
+                </li>
+<li class="listitem">
+                  Computers running OPMIP applications are routers
+                </li>
+<li class="listitem">
+                  MAG wireless cards are named <code class="literal">ath0</code>
+                </li>
+<li class="listitem">
+                  Mobile node wireless cards are named <code class="literal">ath0</code> and
+                  <code class="literal">ath1</code>
+                </li>
+</ul></div>
+          </li>
+</ul></div>
+<p>
+        First steps:
+      </p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+            Build OPMIP
+          </li>
+<li class="listitem">
+            Install OPMIP, if you're using debian package, or copy the binaries (<a class="link" href="usage.html#manual.usage.lma" title="opmip-lma">opmip-lma</a> and <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a>)
+            to somewhere in your <code class="literal">PATH</code> otherwise
+          </li>
+<li class="listitem">
+            Copy <code class="literal">node.db</code> file to the routers (LMA, MAG1 and MAG2)
+          </li>
+<li class="listitem">
+            Install <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+            software on mobile node and LMA
+          </li>
+<li class="listitem">
+            Configure the routers according to the <a class="link" href="started.html" title="Getting Started">Getting
+            Started</a> section
+          </li>
+</ol></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+          Make sure the node database is consistent in all router nodes, and the
+          nodes are configured accordingly to the database.
+        </p></td></tr>
+</table></div>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.experiments.exp1"></a><a class="link" href="experiments.html#manual.experiments.exp1" title="Experiment 1">Experiment 1</a>
+</h3></div></div></div>
+<p>
+        This experiments test an handover between two APs using a single homed mobile
+        node.
+      </p>
+<p>
+        To run this experiment follow the next steps (first check <a class="link" href="experiments.html#manual.experiments.basics" title="Basics">Basic
+        setup</a> above)
+      </p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+            Start <a class="link" href="usage.html#manual.usage.lma" title="opmip-lma">opmip-lma</a> application in
+            LMA
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">opmip-lma -d node.db</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> application in
+            both MAGs
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">opmip-mag -e madwifi ath0 </code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+            server in LMA
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iperf -V -s</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Attach the mobile node to the MAG1 Access Point
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iwconfig ath0 essid OPMIP_MAG1</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+            client
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                  run it for some time so you can run the all experiment, we'll use
+                  10000 seconds
+                </li>
+<li class="listitem">
+                  <code class="literal">iperf -V -c 2001::1:1 -t 10000</code>
+                </li>
+</ul></div>
+          </li>
+<li class="listitem">
+            You can check that packets are flowing with a packet capture tool like
+            <a href="http://www.tcpdump.org/" target="_top">tcpdump</a>
+          </li>
+<li class="listitem">
+            Attach the mobile node to the MAG2 Access Point
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iwconfig ath0 essid OPMIP_MAG2</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            You can check that after a short delay packets are again flowing between
+            server and client
+          </li>
+</ol></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+          Make sure that <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+          client binds to the ip address autoconfigured by the mobile node. If you
+          need use <code class="literal">-B</code> modifier to force the bind.
+        </p></td></tr>
+</table></div>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.experiments.exp2"></a><a class="link" href="experiments.html#manual.experiments.exp2" title="Experiment 2">Experiment 2</a>
+</h3></div></div></div>
+<p>
+        This experiments test an handover between two APs using a multi homed mobile
+        node. In order to allow this experiment we'll need to use DHCP.
+      </p>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top">
+<p>
+          Multihoming support is a research area on which we are currently working.
+          This experiment's only purpose is to demonstrate OPMIP's current capabilities
+          of supporting multihoming. Expect some improvements in a near future.
+        </p>
+<p>
+          For example, there are no easy way to make a client remove a previous lease
+          from DHCP. We are currently researching on how to make the client drop
+          the lease instead of make the user remove it himself/herself.
+        </p>
+</td></tr>
+</table></div>
+<p>
+        To run this experiment follow the next steps (first check <a class="link" href="experiments.html#manual.experiments.basics" title="Basics">Basic
+        setup</a> above)
+      </p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+            Start <a class="link" href="usage.html#manual.usage.lma" title="opmip-lma">opmip-lma</a> application in
+            LMA
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">opmip-lma -d node.db</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> application in
+            both MAGs
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">opmip-mag -e madwifi ath0 </code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+            server in LMA
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iperf -V -s</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Attach the mobile node's <code class="literal">ath0</code> interface to the MAG1
+            Access Point
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iwconfig ath0 essid OPMIP_MAG1</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Get an ip addres through DHCPv6
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">dhclient -6 ath0</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Start <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+            client
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                  run it for some time so you can run the all experiment, we'll use
+                  10000 seconds
+                </li>
+<li class="listitem">
+                  <code class="literal">iperf -V -c 2001::1:1 -t 10000</code>
+                </li>
+</ul></div>
+          </li>
+<li class="listitem">
+            You can check that packets are flowing with a packet capture tool like
+            <a href="http://www.tcpdump.org/" target="_top">tcpdump</a>
+          </li>
+<li class="listitem">
+            Attach the mobile node's <code class="literal">ath1</code> interface to the MAG2
+            Access Point
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">iwconfig ath1 essid OPMIP_MAG2</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Release the previous lease manualy
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">rm /var/lib/dhcp/dhclient6.leases</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Get ip address for <code class="literal">ath1</code>
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                  <code class="literal">dhclient -6 ath1</code>
+                </li></ul></div>
+          </li>
+<li class="listitem">
+            Dettach and turn down mobile node's <code class="literal">ath0</code> interface
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                  <code class="literal">iwconfig ath0 essid _</code>
+                </li>
+<li class="listitem">
+                  <code class="literal">ifconfig ath0 down</code>
+                </li>
+</ul></div>
+          </li>
+<li class="listitem">
+            You can check that packets are now flowing through <code class="literal">ath1</code>
+            interface
+          </li>
+</ol></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+          Make sure that <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a>
+          client binds to the ip address autoconfigured by the mobile node. If you
+          need use <code class="literal">-B</code> modifier to force the bind.
+        </p></td></tr>
+</table></div>
+</div>
+</div>
+<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
+<td align="left"></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010, 2011 Universidade Aveiro<br>Copyright &#169; 2010, 2011 Instituto de Telecomunica&#231;&#245;es
+      - P&#243;lo Aveiro</div></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="driver.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a>
+</div>
+</body>
+</html>
