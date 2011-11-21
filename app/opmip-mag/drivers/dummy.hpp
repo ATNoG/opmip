@@ -44,7 +44,7 @@ public:
 	virtual void stop();
 
 private:
-	void start_(float frequency, pmip::mag& mag);
+	void start_(float frequency, const std::vector<std::string>& clients, pmip::mag& mag);
 	void stop_();
 	void timer_handler(const boost::system::error_code& ec);
 	void schedule();
