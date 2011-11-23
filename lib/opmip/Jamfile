@@ -4,8 +4,8 @@
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
 #
-# Copyright (C) 2010 Universidade de Aveiro
-# Copyright (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+# Copyright (C) 2010-2011 Universidade de Aveiro
+# Copyright (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 #
 # This software is distributed under a license. The full license
 # agreement can be found in the file LICENSE in this distribution.
@@ -15,8 +15,20 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-lib pthread : : <name>pthread <link>shared ;
-lib librt : : <name>rt <link>shared ;
+local rule runtime-lib ( name : libname ? )
+{
+	libname ?= $(name) ;
+
+	lib $(name)
+		:
+		: <name>$(libname)
+		  <runtime-link>shared:<link>shared
+		  <runtime-link>static:<link>static
+		;
+}
+
+runtime-lib pthread ;
+runtime-lib librt : rt ;
 
 lib opmip
 	: debug_linux.cpp
@@ -43,4 +55,3 @@ lib opmip
 	  /boost//system
 	  librt
 	;
-
