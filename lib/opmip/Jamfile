@@ -36,13 +36,13 @@ lib opmip
 	  linux/nl80211.cpp
 	  net/ip/prefix.cpp
 	  net/ip/dhcp_v6.cpp
+	  net/ip/icmp_parser.cpp
 	  net/link/address_mac.cpp
 	  net/link/ethernet.cpp
 	  pmip/node_db.cpp
 	  pmip/bcache.cpp
 	  pmip/bulist.cpp
 	  pmip/icmp_sender.cpp
-	  pmip/icmp_receiver.cpp
 	  pmip/mp_sender.cpp
 	  pmip/mp_receiver.cpp
 	  pmip/tunnels.cpp
