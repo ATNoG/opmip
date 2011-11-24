@@ -4,8 +4,8 @@
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
 #
-# Copyright (C) 2010 Universidade de Aveiro
-# Copyright (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+# Copyright (C) 2010-2011 Universidade de Aveiro
+# Copyright (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
 #
 # This software is distributed under a license. The full license
 # agreement can be found in the file LICENSE in this distribution.
@@ -29,35 +29,71 @@ project opmip
 	: build-dir bin.v2
 	;
 
-path-constant pwd : . ;
-
 #
 # Import the boost project
 #
-# TODO: check boost library version for minimum requirements
-#
-local boost_root_default = [ path.join $(pwd) ../boost_1_47_0 ] ;
-local boost_root ;
+local boost-major = 1 ;
+local boost-minor = 47 ;
+local boost-patch = 0 ;
+local boost-root ;
 
-boost_root ?= [ option.get boost-root ] ;
-boost_root ?= [ os.environ BOOST_ROOT ] ;
+boost-root ?= [ option.get boost-root ] ;
+boost-root ?= [ os.environ BOOST_ROOT ] ;
 
-if ! $(boost_root) {
-	ECHO "Warning: Assuming that boost is located at" $(boost_root_default) ;
-	ECHO "Warning: You can set the location of the boost libraries in the command line"
-	     "(--boost-root=path/to/boost) or in the environment variable BOOST_ROOT" ;
+if ! $(boost-root) {
+	boost-root = [ path.join [ path.pwd ] ../boost_$(boost-major)_$(boost-minor)_$(boost-patch) ] ;
 
-	use-project boost : $(boost_root_default) ;
-} else {
-	use-project boost : $(boost_root) ;
+	local version = $(boost-major).$(boost-minor).$(boost-patch) ;
+
+	ECHO "Warning: Assuming that Boost $(version) root is located at $(boost-root)" ;
+	ECHO "Warning: You can set the location of the Boost $(version) libraries root in the command line"
+	     "(--boost-root=/path/to/boost) or in the environment variable BOOST_ROOT" ;
 }
+use-project boost : $(boost-root) ;
 
+#
+# General utilities
+#
+rule explicit-alias ( main-target-name :
+                      sources + :
+                      requirements * :
+                      default-build * :
+                      usage-requirements * )
+{
+    alias $(main-target-name)
+		: $(sources)
+		: $(requirements)
+		: $(default-build)
+		: $(usage-requirements)
+		;
 
+    explicit $(main-target-name) ;
+}
+IMPORT $(__name__) : explicit-alias : : opmip.explicit-alias ;
 
-build-project app/opmip-mag ;
-build-project app/opmip-lma ;
+rule runtime-lib ( name : basename ? )
+{
+	basename ?= $(name) ;
 
-alias install
-	: app/opmip-lma//install
-	  app/opmip-mag//install
+	lib $(name)
+		:
+		: <name>$(basename)
+		  <runtime-link>shared:<link>shared
+		  <runtime-link>static:<link>static
+		;
+}
+IMPORT $(__name__) : runtime-lib : : opmip.runtime-lib ;
+
+#
+# Add alias for external usage
+#
+explicit-alias base : lib/opmip//opmip ;
+
+#
+# Build
+#
+install opmip-dist
+	: app/opmip-lma//opmip-lma
+	  app/opmip-mag//opmip-mag
+	: <location>dist
 	;

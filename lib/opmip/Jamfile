@@ -15,20 +15,8 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-local rule runtime-lib ( name : libname ? )
-{
-	libname ?= $(name) ;
-
-	lib $(name)
-		:
-		: <name>$(libname)
-		  <runtime-link>shared:<link>shared
-		  <runtime-link>static:<link>static
-		;
-}
-
-runtime-lib pthread ;
-runtime-lib librt : rt ;
+opmip.runtime-lib pthread ;
+opmip.runtime-lib librt : rt ;
 
 lib opmip
 	: debug_linux.cpp
