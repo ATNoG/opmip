@@ -21,6 +21,7 @@
 #include <opmip/sys/netlink/message.hpp>
 #include <opmip/sys/rtnetlink/address.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/array.hpp>
 #include <algorithm>
 #include <cstdlib>
 
@@ -151,8 +152,8 @@ void ip6_tunnel_service::add_address(implementation_type& impl, const ip::addres
 	msg->index = idx;
 
 	ip::address_v6::bytes_type tmp = address.to_bytes();
-	msg.push_attribute(rtnl::address::attr_local, tmp.elems, tmp.size());
-	msg.push_attribute(rtnl::address::attr_address, tmp.elems, tmp.size());
+	msg.push_attribute(rtnl::address::attr_local, tmp.begin(), tmp.size());
+	msg.push_attribute(rtnl::address::attr_address, tmp.begin(), tmp.size());
 
 
 	uchar  resp[512];
@@ -409,15 +410,14 @@ std::ostream& operator<<(std::ostream& os, const ip6_tunnel_service::parameters&
 		static const char flag1_str[] = "use_original_traffic_class | ";
 		static const char flag2_str[] = "use_original_flowlabel | ";
 		static const char flag3_str[] = "use_original_dscp";
-		static const std::size_t slen = sizeof(scope_str)
-		                                + sizeof(flag0_str)
-		                                + sizeof(flag1_str)
-		                                + sizeof(flag2_str)
-		                                + sizeof(flag3_str)
-		                                - 4;
+		static const size_t slen = sizeof(scope_str)
+		                           + sizeof(flag0_str)
+		                           + sizeof(flag1_str)
+		                           + sizeof(flag2_str)
+		                           + sizeof(flag3_str)
+		                           - 4;
 		boost::array<char, slen>::iterator pos;
 		boost::array<char, slen> tmp;
-
 
 		pos = std::copy(scope_str, scope_str + 2, tmp.begin());
 

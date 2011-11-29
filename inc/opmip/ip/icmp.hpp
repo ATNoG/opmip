@@ -143,7 +143,7 @@ public:
 	neighbor_solicitation()
 		: header(type_value, code_value), _reserved(0)
 	{
-		_target_addr.assign(0);
+		_target_addr.fill(0);
 	}
 
 	void target(const address_v6::bytes_type& addr) { _target_addr = addr; }
@@ -166,7 +166,7 @@ public:
 		: header(type_value, code_value), _flags(0), _reserved1(0),
 		_reserved2(0)
 	{
-		_target_addr.assign(0);
+		_target_addr.fill(0);
 	}
 
 	void target(const address_v6::bytes_type& addr) { _target_addr = addr; }

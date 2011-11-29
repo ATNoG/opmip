@@ -259,7 +259,7 @@ bool gen_option_server_id(buffer_type& buff, const link::address_mac& link_addr)
 	if (!gen_option_begin(buff, server_id, state)
 		|| !put_be_int(buff, uint16(3))
 		|| !put_be_int(buff, uint16(1))
-		|| buffer_size(buff) < link::address_mac::bytes_type::static_size)
+		|| buffer_size(buff) < link::address_mac::bytes_type::size())
 		return false;
 
 	const link::address_mac::bytes_type& raw = link_addr.to_bytes();
@@ -301,7 +301,7 @@ bool gen_option_addr(buffer_type& buff, const address_v6& addr,
 	buffer_type st;
 
 	if (!gen_option_begin(buff, ia_addr, st)
-		|| buffer_size(buff) < address_v6::bytes_type::static_size)
+		|| buffer_size(buff) < 16)
 		return false;
 
 	const address_v6::bytes_type& raw = addr.to_bytes();

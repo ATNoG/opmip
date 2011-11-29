@@ -161,11 +161,11 @@ void route_table::add_by_src(iterator& entry, boost::system::error_code& ec)
 
 	if (!entry->second.gateway.is_unspecified()) {
 		ip::prefix_v6::bytes_type gw = entry->second.gateway.to_bytes();
-		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.elems, gw.size());
+		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.begin(), gw.size());
 	}
 
 	ip::prefix_v6::bytes_type src = entry->first.bytes();
-	rtmsg.push_attribute(rtnl::route::attr_source, src.elems, src.size());
+	rtmsg.push_attribute(rtnl::route::attr_source, src.begin(), src.size());
 
 	uint32 dev = entry->second.device;
 	rtmsg.push_attribute(rtnl::route::attr_output_device, &dev, sizeof(dev));
@@ -190,11 +190,11 @@ void route_table::remove_by_src(iterator& entry, boost::system::error_code& ec)
 
 	if (!entry->second.gateway.is_unspecified()) {
 		ip::prefix_v6::bytes_type gw = entry->second.gateway.to_bytes();
-		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.elems, gw.size());
+		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.begin(), gw.size());
 	}
 
 	ip::prefix_v6::bytes_type src = entry->first.bytes();
-	rtmsg.push_attribute(rtnl::route::attr_source, src.elems, src.size());
+	rtmsg.push_attribute(rtnl::route::attr_source, src.begin(), src.size());
 
 	uint32 dev = entry->second.device;
 	rtmsg.push_attribute(rtnl::route::attr_output_device, &dev, sizeof(dev));
@@ -219,11 +219,11 @@ void route_table::add_by_dst(iterator& entry, boost::system::error_code& ec)
 
 	if (!entry->second.gateway.is_unspecified()) {
 		ip::prefix_v6::bytes_type gw = entry->second.gateway.to_bytes();
-		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.elems, gw.size());
+		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.begin(), gw.size());
 	}
 
 	ip::prefix_v6::bytes_type dst = entry->first.bytes();
-	rtmsg.push_attribute(rtnl::route::attr_destination, dst.elems, dst.size());
+	rtmsg.push_attribute(rtnl::route::attr_destination, dst.begin(), dst.size());
 
 	uint32 dev = entry->second.device;
 	rtmsg.push_attribute(rtnl::route::attr_output_device, &dev, sizeof(dev));
@@ -248,11 +248,11 @@ void route_table::remove_by_dst(iterator& entry, boost::system::error_code& ec)
 
 	if (!entry->second.gateway.is_unspecified()) {
 		ip::prefix_v6::bytes_type gw = entry->second.gateway.to_bytes();
-		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.elems, gw.size());
+		rtmsg.push_attribute(rtnl::route::attr_gateway, gw.begin(), gw.size());
 	}
 
 	ip::prefix_v6::bytes_type dst = entry->first.bytes();
-	rtmsg.push_attribute(rtnl::route::attr_destination, dst.elems, dst.size());
+	rtmsg.push_attribute(rtnl::route::attr_destination, dst.begin(), dst.size());
 
 	uint32 dev = entry->second.device;
 	rtmsg.push_attribute(rtnl::route::attr_output_device, &dev, sizeof(dev));

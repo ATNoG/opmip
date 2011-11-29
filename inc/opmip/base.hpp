@@ -84,9 +84,13 @@ typedef std::size_t        ptrsint;
 typedef std::ptrdiff_t     ptruint;
 
 ///////////////////////////////////////////////////////////////////////////////
-struct nullptr_t { template<class T> operator T*() const { return 0; } };
+#ifdef BOOST_NO_NULLPTR
+	struct nullptr_t { template<class T> operator T*() const { return 0; } };
 
-static const nullptr_t nullptr = nullptr_t();
+	static const nullptr_t nullptr = nullptr_t();
+#else
+	typedef decltype(nullptr) nullptr_t;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MemberT, class ParentT>

@@ -49,7 +49,7 @@ public:
 	opt_link_layer()
 		: option(type_value, static_size)
 	{
-		_mac.assign(0);
+		_mac.fill(0);
 	}
 
 	opt_link_layer& operator=(const ll::mac_address& mac)
@@ -77,7 +77,7 @@ public:
 	typedef prefix_v6::bytes_type bytes_type;
 
 	static const uint8  type_value  = 3;
-	static const size_t static_size = 16 + bytes_type::static_size;
+	static const size_t static_size = 16 + 16;
 
 public:
 	opt_prefix_info()
@@ -85,7 +85,7 @@ public:
 		_plength(0),_flags(0), _valid_lifetime(0),
 		_prefered_lifetime(0), _reserved(0)
 	{
-		_prefix.assign(0);
+		_prefix.fill(0);
 	}
 
 	prefix_v6 prefix() const  { return prefix_v6(_prefix, _plength); }
@@ -152,17 +152,17 @@ public:
 	typedef address_v6::bytes_type bytes_type;
 
 	static const uint8  type_value  = 25;
-	static const size_t static_size = 8 + bytes_type::static_size;
+	static const size_t static_size = 8 + 16;
 
 public:
 	opt_rdns(uint address_count = 1)
-		: option(type_value, static_size + bytes_type::static_size * address_count),
+		: option(type_value, static_size + 16 * address_count),
 		  reserved(0), lifetime(0)
 	{
 		BOOST_ASSERT(address_count != 0);
 	}
 
-	uint address_count() const { return (option::size(this) - static_size) / bytes_type::static_size; }
+	uint address_count() const { return (option::size(this) - static_size) / 16; }
 
 public:
 	uint16     reserved;

@@ -37,14 +37,14 @@ prefix_v6 prefix_v6::from_string(const std::string& str)
 
 prefix_v6::prefix_v6()
 {
-	_prefix.assign(0);
+	_prefix.fill(0);
 	_length = 0;
 }
 
 prefix_v6::prefix_v6(const bytes_type& addr, uint length)
 {
 	if (length > 128) {
-		_prefix.assign(0);
+		_prefix.fill(0);
 		_length = 0;
 
 	} else {
@@ -56,7 +56,7 @@ prefix_v6::prefix_v6(const bytes_type& addr, uint length)
 prefix_v6::prefix_v6(const address_v6& addr, uint length)
 {
 	if (length > 128) {
-		_prefix.assign(0);
+		_prefix.fill(0);
 		_length = 0;
 
 	} else {
