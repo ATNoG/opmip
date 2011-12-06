@@ -21,6 +21,7 @@ exe opmip-mag
 	: main.cpp
 	  options.cpp
 	  driver.cpp
+	  drivers/icmp.cpp
 	  drivers/madwifi_driver.cpp
 	  drivers/madwifi_driver_impl.cpp
 	  drivers/dummy.cpp
