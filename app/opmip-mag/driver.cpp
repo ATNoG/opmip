@@ -16,6 +16,7 @@
 //===========================================================================================================
 
 #include "driver.hpp"
+#include "drivers/icmp.hpp"
 #include "drivers/madwifi_driver.hpp"
 #include "drivers/dummy.hpp"
 #include <opmip/plugins/mag.hpp>
@@ -68,6 +69,8 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 driver_ptr make_driver(boost::asio::io_service& ios, pmip::mag& mag, const std::string& name)
 {
+	if (name == "icmp")
+		return boost::make_shared<icmp_drv>(boost::ref(ios), boost::ref(mag));
 	if (name == "madwifi")
 		return boost::make_shared<madwifi_driver>(boost::ref(ios), boost::ref(mag));
 	else if (name == "dummy")
