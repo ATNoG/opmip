@@ -17,6 +17,20 @@
 
 lib dl : : <name>dl <link>shared ;
 
+if [ opmip.has-odtone ] {
+	opmip.explicit-alias ieee802_11
+		: drivers/ieee802_21_driver.cpp
+		  /odtone//base
+		  /odtone//mih
+		  /odtone//sap
+		:
+		:
+		: <define>OPMIP_CFG_ODTONE
+		;
+} else {
+	opmip.explicit-alias ieee802_11 ;
+}
+
 exe opmip-mag
 	: main.cpp
 	  options.cpp
@@ -29,6 +43,7 @@ exe opmip-mag
 	  /boost//thread
 	  /boost//program_options
 	  dl
+	  ieee802_11
 	;
 
 install install

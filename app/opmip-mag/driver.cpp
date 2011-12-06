@@ -18,6 +18,9 @@
 #include "driver.hpp"
 #include "drivers/icmp.hpp"
 #include "drivers/madwifi_driver.hpp"
+#ifdef OPMIP_CFG_ODTONE
+	#include "drivers/ieee802_21_driver.hpp"
+#endif /* #ifdef OPMIP_CFG_ODTONE */
 #include "drivers/dummy.hpp"
 #include <opmip/plugins/mag.hpp>
 #include <boost/make_shared.hpp>
@@ -73,6 +76,10 @@ driver_ptr make_driver(boost::asio::io_service& ios, pmip::mag& mag, const std::
 		return boost::make_shared<icmp_drv>(boost::ref(ios), boost::ref(mag));
 	if (name == "madwifi")
 		return boost::make_shared<madwifi_driver>(boost::ref(ios), boost::ref(mag));
+#ifdef OPMIP_CFG_ODTONE
+	else if (name == "ieee802.21")
+		return boost::make_shared<ieee802_21_driver>(boost::ref(ios), boost::ref(mag));
+#endif /* #ifdef OPMIP_CFG_ODTONE */
 	else if (name == "dummy")
 		return boost::make_shared<dummy_driver>(boost::ref(ios), boost::ref(mag));
 

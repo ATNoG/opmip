@@ -52,10 +52,20 @@ if ! $(boost-root) {
 use-project boost : $(boost-root) ;
 
 #
+# Import the ODTONE Project
+#
+odtone-root ?= [ option.get odtone-root ] ;
+odtone-root ?= [ os.environ ODTONE_ROOT ] ;
+
+if $(odtone-root) {
+	use-project odtone : $(odtone-root) ;
+}
+
+#
 # General utilities
 #
 rule explicit-alias ( main-target-name :
-                      sources + :
+                      sources * :
                       requirements * :
                       default-build * :
                       usage-requirements * )
@@ -83,6 +93,15 @@ rule runtime-lib ( name : basename ? )
 		;
 }
 IMPORT $(__name__) : runtime-lib : : opmip.runtime-lib ;
+
+#
+# Check if the ODTONE project has been included
+#
+rule has-odtone ( )
+{
+	return $(odtone-root) ;
+}
+IMPORT $(__name__) : has-odtone : : opmip.has-odtone ;
 
 #
 # Add alias for external usage
