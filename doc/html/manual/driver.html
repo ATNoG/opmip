@@ -73,6 +73,13 @@
 <div class="titlepage"><div><div><h3 class="title">
 <a name="manual.driver.icmp"></a><a class="link" href="driver.html#manual.driver.icmp" title="ICMP driver">ICMP driver</a>
 </h3></div></div></div>
+<p>
+        OPMIP-MAG ICMP driver options usage:
+</p>
+<pre class="programlisting">&lt;local interface 1&gt; &lt;local interface N&gt;
+</pre>
+<p>
+      </p>
 <h4>
 <a name="manual.driver.icmp.h0"></a>
         <span><a name="manual.driver.icmp.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.icmp.testbed_configuration">Testbed
@@ -213,6 +220,13 @@
 <dt><span class="section"><a href="driver.html#manual.driver.80221.80221MAGPoA">MAG and PoA in different
         entities</a></span></dt>
 </dl></div>
+<p>
+        OPMIP-MAG IEEE 802.21 driver options usage:
+</p>
+<pre class="programlisting">"&lt;local MIHF&gt;" "&lt;local interface 1&gt; &lt;local interface N&gt;" ["&lt;remote MIHF 1&gt; &lt;interface&gt;, &lt;remote MIHF N&gt; &lt;interface&gt;"]
+</pre>
+<p>
+      </p>
 <div class="section">
 <div class="titlepage"><div><div><h4 class="title">
 <a name="manual.driver.80221.80221MAG"></a><a class="link" href="driver.html#manual.driver.80221.80221MAG" title="MAG co-located with PoA">MAG co-located with PoA</a>
@@ -358,7 +372,7 @@ transport = udp
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp --conf.file=./link_sap_icmp.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0"
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0"
 </pre>
 <p>
         </p>
@@ -367,7 +381,7 @@ transport = udp
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp &#8211;conf.file=./link_sap_icmp.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0"
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0"
 </pre>
 <p>
         </p>
@@ -555,7 +569,7 @@ transport = udp
           <span class="bold"><strong>MAG 1:</strong></span>
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0" &#8220;poa1_mihf control&#8221;
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" &#8220;poa1_mihf control&#8221;
 </pre>
 <p>
         </p>
@@ -563,7 +577,7 @@ transport = udp
           <span class="bold"><strong>MAG 2:</strong></span>
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0" &#8220;poa2_mihf control&#8221;
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" &#8220;poa2_mihf control&#8221;
 </pre>
 <p>
         </p>

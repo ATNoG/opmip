@@ -414,6 +414,10 @@ the __mad_wifi__ driver.
 names are used by OPMIP to identify the built-in drivers.]
 
 [section:icmp ICMP driver]
+OPMIP-MAG ICMP driver options usage:
+``
+<local interface 1> <local interface N>
+``
 
 [h3 Testbed configuration]
 
@@ -508,6 +512,10 @@ Then, just connect the MN to one of the MAGs network.
 [endsect]
 
 [section:80221 IEEE 802.21 driver]
+OPMIP-MAG IEEE 802.21 driver options usage:
+``
+"<local MIHF>" "<local interface 1> <local interface N>" ["<remote MIHF 1> <interface>, <remote MIHF N> <interface>"]
+``
 
 [section:80221MAG MAG co-located with PoA]
 
@@ -603,6 +611,7 @@ transport = udp
 ``
 
 [h3 Execution commands]
+
 [*LMA:]
 ``
 ./opmip-lma -d node.db
@@ -612,14 +621,14 @@ transport = udp
 ``
 ./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp --conf.file=./link_sap_icmp.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0"
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0"
 ``
 
 [*MAG 2:]
 ``
 ./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp –conf.file=./link_sap_icmp.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0"
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0"
 ``
 
 [*MN:]
@@ -756,13 +765,13 @@ transport = udp
 [*MAG 1:]
 ``
 ./odtone-mihf --conf.file=./odtone.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0" “poa1_mihf control”
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" “poa1_mihf control”
 ``
 
 [*MAG 2:]
 ``
 ./odtone-mihf --conf.file=./odtone.conf
-./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0" “poa2_mihf control”
+./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" “poa2_mihf control”
 ``
 
 [*MN:]
