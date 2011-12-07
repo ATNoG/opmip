@@ -7,6 +7,7 @@
 	[purpose How to use the OPMIP MAG and LMA applications]
 	[authors [Santos, Bruno]]
 	[authors [Manco, Filipe]]
+	[authors [Guimarães, Carlos]]
 ]
 
 [def __usage__     [link manual.usage usage]]
@@ -156,6 +157,7 @@ nodes, and the mobile nodes database. It uses the __json__ format:
 				],
 				"lma-id"       : "node1"
 			}
+		]
 	}
 ``
 
