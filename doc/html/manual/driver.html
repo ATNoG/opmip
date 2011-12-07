@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <title>Write an opmip-mag event driver</title>
 <link rel="stylesheet" href="../boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
 <link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="prev" href="usage.html" title="Usage">
@@ -19,6 +19,10 @@
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
 <a name="manual.driver"></a><a class="link" href="driver.html" title="Write an opmip-mag event driver">Write an opmip-mag event driver</a>
 </h2></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="driver.html#manual.driver.icmp">ICMP driver</a></span></dt>
+<dt><span class="section"><a href="driver.html#manual.driver.80221">IEEE 802.21 driver</a></span></dt>
+</dl></div>
 <p>
       <a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a> driver is the responsible
       for detect attach/dettach events and pass the correspondent mobile node id
@@ -65,6 +69,513 @@
         drivers has the names are used by OPMIP to identify the built-in drivers.
       </p></td></tr>
 </table></div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.driver.icmp"></a><a class="link" href="driver.html#manual.driver.icmp" title="ICMP driver">ICMP driver</a>
+</h3></div></div></div>
+<h4>
+<a name="manual.driver.icmp.h0"></a>
+        <span><a name="manual.driver.icmp.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.icmp.testbed_configuration">Testbed
+        configuration</a>
+      </h4>
+<p>
+        <span class="inlinemediaobject"><img src=".././images/ICMP.png" alt="ICMP"></span>
+      </p>
+<p>
+        <span class="bold"><strong>MAG 1</strong></span>
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:bd
+          </li>
+<li class="listitem">
+            <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:7f ;
+            inet6 addr: 2001:aaaa:bbbb:cccc::4/64 Scope:Global
+          </li>
+</ul></div>
+<p>
+        <span class="bold"><strong>MAG 2</strong></span>
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:e8
+          </li>
+<li class="listitem">
+            <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:8e ;
+            inet6 addr: 2001:aaaa:bbbb:cccc::1/64 Scope:Global
+          </li>
+</ul></div>
+<p>
+        <span class="bold"><strong>LMA</strong></span>
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:73 ;
+            inet6 addr: 2001:aaaa:bbbb:cccc::5/64 Scope:Global
+          </li></ul></div>
+<p>
+        <span class="bold"><strong>MN</strong></span>
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
+          </li></ul></div>
+<h4>
+<a name="manual.driver.icmp.h1"></a>
+        <span><a name="manual.driver.icmp.node_database_configuration"></a></span><a class="link" href="driver.html#manual.driver.icmp.node_database_configuration">Node
+        database configuration</a>
+      </h4>
+<p>
+        <span class="bold"><strong>node.db file</strong></span>
+      </p>
+<p>
+        The node database contains the database of LMA/MAG nodes, also known as router
+        nodes, and the mobile nodes database. It will be used by the MAGs and the
+        LMA nodes. It uses the JSON format:
+</p>
+<pre class="programlisting">{
+        "router-nodes" :
+        [
+                {
+                        "id"          : "node5",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::5",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node4",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::4",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node1",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::1",
+                        "ip-scope-id" : "4"
+                }
+        ],
+
+        "mobile-nodes" :
+        [
+                {
+                        "id"           : "mn1",
+                        "ip-prefix"    :
+                        [
+                                "3001:aaaa:bbbb:cccc::/64"
+                        ],
+                        "link-address" :
+                        [
+                                "00:80:48:5f:a2:8b"
+                        ],
+                        "lma-id"       : "node5"
+                }
+        ]
+}
+</pre>
+<p>
+      </p>
+<h4>
+<a name="manual.driver.icmp.h2"></a>
+        <span><a name="manual.driver.icmp.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.icmp.execution_commands">Execution
+        commands</a>
+      </h4>
+<p>
+        <span class="bold"><strong>LMA:</strong></span>
+</p>
+<pre class="programlisting">./opmip-lma -d node.db
+</pre>
+<p>
+      </p>
+<p>
+        <span class="bold"><strong>MAG1:</strong></span>
+</p>
+<pre class="programlisting">./opmip-mag -d node.db -e icmp ath0
+</pre>
+<p>
+      </p>
+<p>
+        <span class="bold"><strong>MAG2:</strong></span>
+</p>
+<pre class="programlisting">./opmip-mag -d node.db -e icmp ath0
+</pre>
+<p>
+      </p>
+<p>
+        <span class="bold"><strong>MN:</strong></span>
+      </p>
+<p>
+        In order to enable the MN to send router solicitation messages, &#8220;/proc/sys/net/ipv6/conf/all/forwarding&#8221;
+        must be set to 0 (zero). Then, just connect the MN to one of the MAGs network.
+      </p>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.driver.80221"></a><a class="link" href="driver.html#manual.driver.80221" title="IEEE 802.21 driver">IEEE 802.21 driver</a>
+</h3></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="driver.html#manual.driver.80221.80221MAG">MAG co-located with PoA</a></span></dt>
+<dt><span class="section"><a href="driver.html#manual.driver.80221.80221MAGPoA">MAG and PoA in different
+        entities</a></span></dt>
+</dl></div>
+<div class="section">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="manual.driver.80221.80221MAG"></a><a class="link" href="driver.html#manual.driver.80221.80221MAG" title="MAG co-located with PoA">MAG co-located with PoA</a>
+</h4></div></div></div>
+<h4>
+<a name="manual.driver.80221.80221MAG.h0"></a>
+          <span><a name="manual.driver.80221.80221MAG.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.testbed_configuration">Testbed configuration</a>
+        </h4>
+<p>
+          <span class="inlinemediaobject"><img src=".././images/80221MAG.png" alt="80221MAG"></span>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+              <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:bd
+            </li>
+<li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:7f
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::4/64 Scope:Global
+            </li>
+</ul></div>
+<p>
+          <span class="bold"><strong>MAG 2</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+              <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:e8
+            </li>
+<li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:8e
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::1/64 Scope:Global
+            </li>
+</ul></div>
+<p>
+          <span class="bold"><strong>LMA</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:73
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::5/64 Scope:Global
+            </li></ul></div>
+<p>
+          <span class="bold"><strong>MN</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+              <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
+            </li></ul></div>
+<h4>
+<a name="manual.driver.80221.80221MAG.h1"></a>
+          <span><a name="manual.driver.80221.80221MAG.configuration_files"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.configuration_files">Configuration
+          files</a>
+        </h4>
+<p>
+          <span class="bold"><strong>node.db file</strong></span>
+        </p>
+<p>
+          The node database contains the database of LMA/MAG nodes, also known as
+          router nodes, and the mobile nodes database. It will be used by the MAGs
+          and the LMA nodes. It uses the JSON format:
+</p>
+<pre class="programlisting">{
+        "router-nodes" :
+        [
+                {
+                        "id"          : "node5",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::5",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node4",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::4",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node1",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::1",
+                        "ip-scope-id" : "4"
+                }
+        ],
+
+        "mobile-nodes" :
+        [
+                {
+                        "id"           : "mn1",
+                        "ip-prefix"    :
+                        [
+                                "3001:aaaa:bbbb:cccc::/64"
+                        ],
+                        "link-address" :
+                        [
+                                "00:80:48:5f:a2:8b"
+                        ],
+                        "lma-id"       : "node5"
+                }
+        ]
+}
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>Link SAP configuration file</strong></span>
+</p>
+<pre class="programlisting">[link]
+id=link1
+port = 1235
+ tec = 802_11
+link_addr_list = ath0 00:80:48:62:e7:bd
+event_list = link_detected, link_up, link_down, link_parameters_report, link_going_down, link_handover_imminent, link_handover_complete
+
+[mihf]
+ip=127.0.0.1
+local_port=1025
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1 MIHF configuration file</strong></span> (for the
+          MAG 2 MIHF the configuration file is identical)
+</p>
+<pre class="programlisting">[mihf]
+id = mihf1
+local_port = 1025
+remote_port = 4551
+transport = udp
+</pre>
+<p>
+        </p>
+<h4>
+<a name="manual.driver.80221.80221MAG.h2"></a>
+          <span><a name="manual.driver.80221.80221MAG.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.execution_commands">Execution
+          commands</a>
+        </h4>
+<p>
+          <span class="bold"><strong>LMA:</strong></span>
+</p>
+<pre class="programlisting">./opmip-lma -d node.db
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./link_sap_icmp --conf.file=./link_sap_icmp.conf
+./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0"
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 2:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./link_sap_icmp &#8211;conf.file=./link_sap_icmp.conf
+./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0"
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MN:</strong></span>
+        </p>
+<p>
+          In order to enable the MN to send router solicitation messages, &#8220;/proc/sys/net/ipv6/conf/all/forwarding&#8221;
+          must be set to 0 (zero). Then, just connect the MN to one of the MAGs network.
+        </p>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="manual.driver.80221.80221MAGPoA"></a><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA" title="MAG and PoA in different entities">MAG and PoA in different
+        entities</a>
+</h4></div></div></div>
+<h4>
+<a name="manual.driver.80221.80221MAGPoA.h0"></a>
+          <span><a name="manual.driver.80221.80221MAGPoA.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.testbed_configuration">Testbed
+          configuration</a>
+        </h4>
+<p>
+          <span class="inlinemediaobject"><img src=".././images/80221_MAG-POA.png" alt="80221_MAG-POA"></span>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+              <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:bd
+            </li>
+<li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:7f
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::4/64 Scope:Global
+            </li>
+</ul></div>
+<p>
+          <span class="bold"><strong>MAG 2</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+              <span class="bold"><strong>ath0:</strong></span> HWaddr: 00:80:48:62:e7:e8
+            </li>
+<li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:8e
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::1/64 Scope:Global
+            </li>
+</ul></div>
+<p>
+          <span class="bold"><strong>LMA</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+              <span class="bold"><strong>control:</strong></span> HWaddr: 00:03:1d:07:15:73
+              ; inet6 addr: 2001:aaaa:bbbb:cccc::5/64 Scope:Global
+            </li></ul></div>
+<p>
+          <span class="bold"><strong>MN</strong></span>
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+              <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
+            </li></ul></div>
+<h4>
+<a name="manual.driver.80221.80221MAGPoA.h1"></a>
+          <span><a name="manual.driver.80221.80221MAGPoA.configuration_files"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.configuration_files">Configuration
+          files</a>
+        </h4>
+<p>
+          <span class="bold"><strong>node.db file</strong></span>
+        </p>
+<p>
+          The node database contains the database of LMA/MAG nodes, also known as
+          router nodes, and the mobile nodes database. It will be used by the MAGs
+          and the LMA nodes. It uses the JSON format:
+</p>
+<pre class="programlisting">{
+        "router-nodes" :
+        [
+                {
+                        "id"          : "node5",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::5",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node4",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::4",
+                        "ip-scope-id" : "4"
+                },
+                {
+                        "id"          : "node1",
+                        "ip-address"  : "2001:aaaa:bbbb:cccc::1",
+                        "ip-scope-id" : "4"
+                }
+        ],
+
+        "mobile-nodes" :
+        [
+                {
+                        "id"           : "mn1",
+                        "ip-prefix"    :
+                        [
+                                "3001:aaaa:bbbb:cccc::/64"
+                        ],
+                        "link-address" :
+                        [
+                                "00:80:48:5f:a2:8b"
+                        ],
+                        "lma-id"       : "node5"
+                }
+        ]
+}
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>Link SAP configuration file</strong></span>
+</p>
+<pre class="programlisting">[link]
+id=link1
+port = 1235
+ tec = 802_11
+link_addr_list = ath0 00:80:48:62:e7:bd
+event_list = link_detected, link_up, link_down, link_parameters_report, link_going_down, link_handover_imminent, link_handover_complete
+
+[mihf]
+ip=127.0.0.1
+local_port=1025
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1 MIHF configuration file</strong></span> (for the
+          MAG 2 MIHF the configuration file is identical)
+</p>
+<pre class="programlisting">[mihf]
+id = mihf1
+local_port = 1025
+remote_port = 4551
+peers = poa1_mihf 10.110.1.2 4551 udp
+transport = udp
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>PoA 1 MIHF configuration file</strong></span> (for the
+          MAG 2 MIHF the configuration file is identical)
+</p>
+<pre class="programlisting">[mihf]
+id = poa1_mihf
+local_port = 1025
+remote_port = 4551
+peers = mihf1 10.110.1.4 4551 udp
+transport = udp
+</pre>
+<p>
+        </p>
+<h4>
+<a name="manual.driver.80221.80221MAGPoA.h2"></a>
+          <span><a name="manual.driver.80221.80221MAGPoA.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.execution_commands">Execution
+          commands</a>
+        </h4>
+<p>
+          <span class="bold"><strong>LMA:</strong></span>
+</p>
+<pre class="programlisting">./opmip-lma -d node.db
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>PoA 1:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./link_sap_icmp --conf.file=./link_sap_icmp.conf
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>PoA 2:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./link_sap_icmp --conf.file=./link_sap_icmp.conf
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 1:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:7f control, 00:80:48:62:e7:bd ath0" &#8220;poa1_mihf control&#8221;
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MAG 2:</strong></span>
+</p>
+<pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
+./opmip-mag -d node.db -e ieee802.21 mihf1 "00:03:1d:07:15:8e control, 00:80:48:62:e7:e8 ath0" &#8220;poa2_mihf control&#8221;
+</pre>
+<p>
+        </p>
+<p>
+          <span class="bold"><strong>MN:</strong></span>
+        </p>
+<p>
+          In order to enable the MN to send router solicitation messages, &#8220;/proc/sys/net/ipv6/conf/all/forwarding&#8221;
+          must be set to 0 (zero). Then, just connect the MN to one of the MAGs network.
+        </p>
+</div>
+</div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>
