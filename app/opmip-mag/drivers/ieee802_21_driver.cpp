@@ -139,7 +139,7 @@ void ieee802_21_driver::decode_options(const std::vector<std::string>& options)
 {
 	if(options.size() < 2 || options.size() > 3) {
 		log_(0, "IEEE 802.21 Usage: \"<local_mihf_id>\" \"<local_interface_mapping>\" \"<remote_mihf_mapping>\"");
-		exit(-1);
+		throw("Invalid options");
 	}
 
 	// Decode local MIHF
@@ -173,7 +173,7 @@ void ieee802_21_driver::decode_options(const std::vector<std::string>& options)
 
 			if(words.size() != 2) {
 				log_(0, "Remote MIHF Mapping Usage: <MIHF 1> <interface 1>, <MIHF N> <interface N>");
-				exit(-1);
+				throw("Invalid options");
 			}
 
 			std::string mihf = words[0];
