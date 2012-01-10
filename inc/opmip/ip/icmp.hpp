@@ -1,11 +1,12 @@
 //=============================================================================
 // Brief   : IPv6 ICMP Data Structures
 // Authors : Bruno Santos <bsantos@av.it.pt>
+//           Sérgio Figueiredo <sfigueiredo@av.it.pt>
 // ----------------------------------------------------------------------------
 // OPMIP - Open Proxy Mobile IP
 //
-// Copyright (C) 2010 Universidade de Aveiro
-// Copyrigth (C) 2010 Instituto de Telecomunicações - Pólo de Aveiro
+// Copyright (C) 2010-2012 Universidade de Aveiro
+// Copyrigth (C) 2010-2012 Instituto de Telecomunicações - Pólo de Aveiro
 //
 // This software is distributed under a license. The full license
 // agreement can be found in the file LICENSE in this distribution.
@@ -35,6 +36,8 @@ struct icmp {
 	class router_advertisement;
 	class neighbor_solicitation;
 	class neighbor_advertisement;
+	struct mld_report;
+	struct mld_query;
 	class filter;
 };
 
@@ -206,6 +209,79 @@ private:
 	uint16                 _reserved2;
 	address_v6::bytes_type _target_addr;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+struct icmp::mld_report : icmp::header {
+	static const uint8 type_value = 143;
+
+	struct mcast_address {
+		mcast_address* next()
+		{
+			size_t offset = align_to<4>(sizeof(*this) + aux_data_len + sizeof(address_v6::bytes_type) * source_count);
+
+			return offset_cast<mcast_address*>(this, offset);
+		}
+
+		uint8                  type;
+		uint8                  aux_data_len;
+		uint16                 source_count;
+		address_v6::bytes_type group;
+		address_v6::bytes_type sources[];
+	};
+
+	uint16        reserved;
+	uint16        count;
+	mcast_address mcast_addresses[];
+};
+
+///////////////////////////////////////////////////////////////////////////////
+struct icmp::mld_query : icmp::header {
+	static const uint8 type_value = 130;
+	static const uint8 code_value = 0;
+
+	mld_query()
+		: header(type_value, code_value)
+	{ }
+
+	uint16 max_response_code()
+	{
+		uint mat = max_resp_code & 0xfff;
+		uint exp = (max_resp_code >> 12) & 0x7;
+		return max_resp_code < 0x8000 ? max_resp_code : (mat | 0x1000) >> (exp + 3);
+	}
+
+	void S(bool val) // Suppress Routing-side processing
+	{
+		if (val)
+			flags |= 1 << 3;
+		else
+			flags &= ~(1 << 3);
+	}
+
+	void qrv(uint8 val)
+	{
+		if (val < 0x7)
+			flags |= 0x7;
+		else
+			flags &= ~(0x7);
+	}
+
+	uint8 qqi()
+	{
+		uint mat = qqic & 0xf;
+		uint exp = (qqic >> 4) & 0x7;
+		return qqic < 0x80 ? qqic : (mat | 0x10) >> (exp + 3);
+	}
+
+
+	uint16					max_resp_code;
+	uint16					reserved;
+	address_v6::bytes_type 	group;
+	uint8					flags;
+	uint8					qqic;
+	uint16            		source_count;
+	address_v6::bytes_type 	sources[];
+} __attribute__((packed));
 
 ///////////////////////////////////////////////////////////////////////////////
 class icmp::filter {
