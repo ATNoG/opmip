@@ -23,3 +23,7 @@ exe mldv2
 	: mldv2.cpp
 	  ../../../../lib/opmip//opmip
 	;
+exe pim
+	: pim.cpp
+	  ../../../../lib/opmip//opmip
+	;
