@@ -19,3 +19,7 @@ exe dhcp_v6
 	: dhcp_v6.cpp
 	  ../../../../lib/opmip//opmip
 	;
+exe mldv2
+	: mldv2.cpp
+	  ../../../../lib/opmip//opmip
+	;
