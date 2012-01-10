@@ -25,6 +25,8 @@ lib opmip
 	  net/ip/prefix.cpp
 	  net/ip/dhcp_v6.cpp
 	  net/ip/icmp_parser.cpp
+	  net/ip/icmp_generator.cpp
+	  net/ip/pim_gen_parser.cpp
 	  net/link/address_mac.cpp
 	  net/link/ethernet.cpp
 	  pmip/node_db.cpp
