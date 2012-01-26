@@ -32,6 +32,8 @@ project opmip
 #
 # Import the boost project
 #
+path-constant TOP : . ;
+
 local boost-major = 1 ;
 local boost-minor = 47 ;
 local boost-patch = 0 ;
@@ -41,7 +43,7 @@ boost-root ?= [ option.get boost-root ] ;
 boost-root ?= [ os.environ BOOST_ROOT ] ;
 
 if ! $(boost-root) {
-	boost-root = [ path.join [ path.pwd ] ../boost_$(boost-major)_$(boost-minor)_$(boost-patch) ] ;
+	boost-root = [ path.join $(TOP) ../boost_$(boost-major)_$(boost-minor)_$(boost-patch) ] ;
 
 	local version = $(boost-major).$(boost-minor).$(boost-patch) ;
 
