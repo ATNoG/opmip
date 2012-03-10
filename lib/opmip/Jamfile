@@ -43,5 +43,6 @@ lib opmip
 	  sys/route_table.cpp
 	  /boost//headers
 	  /boost//system
+	  pthread
 	  librt
 	;
