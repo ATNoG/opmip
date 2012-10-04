@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <opmip/base.hpp>
 #include <opmip/exception.hpp>
+#include <boost/system/error_code.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace ip {
@@ -36,7 +37,7 @@ public:
 	{
 		if (len % 2)
 			OPMIP_THROW_EXCEPTION(exception(boost::system::errc::invalid_argument,
-			                                boost::system::get_generic_category(),
+			                                boost::system::generic_category(),
 			                                __func__));
 
 		update(reinterpret_cast<const uint16*>(data), len / 2);
