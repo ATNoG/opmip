@@ -110,4 +110,6 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+#include <boost/asio/impl/src.hpp>
+
 // EOF ////////////////////////////////////////////////////////////////////////

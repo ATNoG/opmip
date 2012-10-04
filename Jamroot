@@ -24,6 +24,7 @@ project opmip
 		<include>inc
 		<link>static
 		<linkflags>-rdynamic
+		<define>BOOST_ASIO_SEPARATE_COMPILATION
 	: usage-requirements
 		<include>inc
 	: build-dir bin.v2

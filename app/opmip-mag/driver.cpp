@@ -24,6 +24,7 @@
 #include "drivers/dummy.hpp"
 #include <opmip/plugins/mag.hpp>
 #include <boost/make_shared.hpp>
+#include <iostream>
 #include <dlfcn.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

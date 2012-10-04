@@ -18,12 +18,12 @@
 #include "icmp.hpp"
 #include <opmip/ip/icmp.hpp>
 #include <opmip/net/ip/icmp_parser.hpp>
-
 #include <boost/make_shared.hpp>
 #include <boost/asio/ip/multicast.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/bind.hpp>
+#include <iostream>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace opmip { namespace app {
