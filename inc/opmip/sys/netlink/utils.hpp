@@ -56,7 +56,7 @@ void checked_send(Socket& sock, const ConstBufferSequence& msg, boost::system::e
 
 				errc = -err->error;
 				if (errc)
-					ec = boost::system::error_code(errc, boost::system::get_system_category());
+					ec = boost::system::error_code(errc, boost::system::system_category());
 				return;
 			}
 		}

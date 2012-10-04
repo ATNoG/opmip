@@ -100,7 +100,7 @@ void madwifi_driver_impl::add_interface_h(boost::system::error_code& ec, size_t 
 
 			errc = -err->error;
 			if (errc) {
-				ec = boost::system::error_code(errc, boost::system::get_system_category());
+				ec = boost::system::error_code(errc, boost::system::system_category());
 			}
 			return;
 
@@ -141,7 +141,7 @@ void madwifi_driver_impl::receive_handler(boost::system::error_code ec, size_t r
 
 //			errc = -err->error;
 //			if (errc) {
-//				ec = boost::system::error_code(errc, boost::system::get_system_category());
+//				ec = boost::system::error_code(errc, boost::system::system_category());
 //				_event_handler(ec, event());
 //			}
 

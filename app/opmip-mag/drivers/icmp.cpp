@@ -52,7 +52,7 @@ struct setup_poa_dev_map : boost::noncopyable {
 		: _fd(::socket(AF_INET6, SOCK_DGRAM, 0)), _map(m)
 	{
 		if (_fd < 0) {
-			boost::system::system_error se(errno, boost::system::get_system_category(),
+			boost::system::system_error se(errno, boost::system::system_category(),
 			                               "setup_poa_dev_map_ -> ::socket");
 			boost::throw_exception(se);
 		}
@@ -77,14 +77,14 @@ struct setup_poa_dev_map : boost::noncopyable {
 		std::copy(boost::begin(name), boost::end(name), ioc.name);
 
 		if (::ioctl(_fd, ioctl_get_index, &ioc) != 0) {
-			log_(0, "\'", name, "\' ", boost::system::get_system_category().message(errno));
+			log_(0, "\'", name, "\' ", boost::system::system_category().message(errno));
 			return;
 		}
 
 		idx = ioc.index;
 
 		if (::ioctl(_fd, ioctl_get_haddr, &ioc) != 0) {
-			log_(0, "\'", name, "\' ", boost::system::get_system_category().message(errno));
+			log_(0, "\'", name, "\' ", boost::system::system_category().message(errno));
 			return;
 		}
 

@@ -40,7 +40,7 @@ ip6_tunnel_service::ip6_tunnel_service(boost::asio::io_service& ios)
 	if (_fd < 0) {
 		boost::throw_exception(
 			boost::system::system_error(errno,
-			                            boost::system::get_system_category(),
+			                            boost::system::system_category(),
 			                            "::socket"));
 	}
 	_tunnels.init();
@@ -188,7 +188,7 @@ void ip6_tunnel_service::add_address(implementation_type& impl, const ip::addres
 	}
 
 	if (errc)
-		ec = boost::system::error_code(errc, boost::system::get_system_category());
+		ec = boost::system::error_code(errc, boost::system::system_category());
 	else
 		ec = boost::system::error_code();
 }
@@ -255,7 +255,7 @@ void ip6_tunnel_service::set_enable(implementation_type& impl, bool value,
 
 	std::strncpy(req.name, impl.data.name(), sizeof(req.name));
 	io_control(ioctl_get_flags, &req, ec);
-	if (ec) 
+	if (ec)
 		return;
 
 	if (value)
@@ -317,7 +317,7 @@ void ip6_tunnel_service::add(parameters& op, boost::system::error_code& ec)
 	io_control("ip6tnl0", ioctl_add, op.data(), ec);
 //	if (!ec && (op != tmp))
 //		ec = boost::system::error_code(boost::system::errc::invalid_argument,
-//		                               boost::system::get_system_category());
+//		                               boost::system::system_category());
 }
 
 void ip6_tunnel_service::remove(parameters& op, boost::system::error_code& ec)
@@ -349,7 +349,7 @@ void ip6_tunnel_service::io_control(int opcode, void* data, boost::system::error
 	res = ::ioctl(_fd, opcode, data);
 	if (res < 0)
 		ec = boost::system::error_code(errno,
-		                               boost::system::get_system_category());
+		                               boost::system::system_category());
 	else
 		ec = boost::system::error_code();
 }

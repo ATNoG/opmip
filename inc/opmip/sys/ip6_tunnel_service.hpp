@@ -25,6 +25,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address_v6.hpp>
+#include <boost/system/error_code.hpp>
 #include <cstring>
 #include <ostream>
 

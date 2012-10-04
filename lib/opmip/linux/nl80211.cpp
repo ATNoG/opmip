@@ -135,7 +135,7 @@ void nl80211::setup_family(boost::system::error_code& ec)
 	size_t rbytes = _gnl.receive(boost::asio::buffer(_buffer));
 	for (netlink::message_iterator mit(_buffer, rbytes); mit; ++mit) {
 		if (mit.type() == netlink::message::error) {
-			ec = boost::system::error_code(mit.error(), boost::system::get_system_category());
+			ec = boost::system::error_code(mit.error(), boost::system::system_category());
 			return;
 		}
 
@@ -210,7 +210,7 @@ void nl80211::setup_family(boost::system::error_code& ec)
 	size_t rbytes = _gnl.receive(boost::asio::buffer(_buffer));
 	for (netlink::message_iterator mit(_buffer, rbytes); mit; ++mit) {
 		if (mit.type() == netlink::message::error) {
-			ec = boost::system::error_code(mit.error(), boost::system::get_system_category());
+			ec = boost::system::error_code(mit.error(), boost::system::system_category());
 			return;
 		}
 
@@ -230,7 +230,7 @@ void nl80211::receive_handler(const boost::system::error_code& ec, size_t rbytes
 		if (mit.type() == netlink::message::error) {
 			int error = mit.error();
 			if (error) {
-				boost::system::error_code err(error, boost::system::get_system_category());
+				boost::system::error_code err(error, boost::system::system_category());
 				_event_handler(err, event());
 			}
 
