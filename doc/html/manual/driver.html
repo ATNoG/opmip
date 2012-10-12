@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <title>Write an opmip-mag event driver</title>
 <link rel="stylesheet" href="../boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
 <link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="prev" href="usage.html" title="Usage">
@@ -74,16 +74,15 @@
 <a name="manual.driver.icmp"></a><a class="link" href="driver.html#manual.driver.icmp" title="ICMP driver">ICMP driver</a>
 </h3></div></div></div>
 <p>
-        OPMIP-MAG ICMP driver options usage:
+        OPMIP-MAG ICMP driver options usage: 
 </p>
 <pre class="programlisting">&lt;local interface 1&gt; &lt;local interface N&gt;
 </pre>
 <p>
       </p>
-<h4>
-<a name="manual.driver.icmp.h0"></a>
-        <span><a name="manual.driver.icmp.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.icmp.testbed_configuration">Testbed
-        configuration</a>
+<a name="manual.driver.icmp.testbed_configuration"></a><h4>
+<a name="manual.driver.icmp.testbed_configuration-heading"></a>
+        <a class="link" href="driver.html#manual.driver.icmp.testbed_configuration">Testbed configuration</a>
       </h4>
 <p>
         <span class="inlinemediaobject"><img src=".././images/ICMP.png" alt="ICMP"></span>
@@ -125,10 +124,10 @@
 <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
             <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
           </li></ul></div>
-<h4>
-<a name="manual.driver.icmp.h1"></a>
-        <span><a name="manual.driver.icmp.node_database_configuration"></a></span><a class="link" href="driver.html#manual.driver.icmp.node_database_configuration">Node
-        database configuration</a>
+<a name="manual.driver.icmp.node_database_configuration"></a><h4>
+<a name="manual.driver.icmp.node_database_configuration-heading"></a>
+        <a class="link" href="driver.html#manual.driver.icmp.node_database_configuration">Node database
+        configuration</a>
       </h4>
 <p>
         <span class="bold"><strong>node.db file</strong></span>
@@ -136,7 +135,7 @@
 <p>
         The node database contains the database of LMA/MAG nodes, also known as router
         nodes, and the mobile nodes database. It will be used by the MAGs and the
-        LMA nodes. It uses the JSON format:
+        LMA nodes. It uses the JSON format: 
 </p>
 <pre class="programlisting">{
         "router-nodes" :
@@ -177,27 +176,26 @@
 </pre>
 <p>
       </p>
-<h4>
-<a name="manual.driver.icmp.h2"></a>
-        <span><a name="manual.driver.icmp.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.icmp.execution_commands">Execution
-        commands</a>
+<a name="manual.driver.icmp.execution_commands"></a><h4>
+<a name="manual.driver.icmp.execution_commands-heading"></a>
+        <a class="link" href="driver.html#manual.driver.icmp.execution_commands">Execution commands</a>
       </h4>
 <p>
-        <span class="bold"><strong>LMA:</strong></span>
+        <span class="bold"><strong>LMA:</strong></span> 
 </p>
 <pre class="programlisting">./opmip-lma -d node.db
 </pre>
 <p>
       </p>
 <p>
-        <span class="bold"><strong>MAG1:</strong></span>
+        <span class="bold"><strong>MAG1:</strong></span> 
 </p>
 <pre class="programlisting">./opmip-mag -d node.db -e icmp ath0
 </pre>
 <p>
       </p>
 <p>
-        <span class="bold"><strong>MAG2:</strong></span>
+        <span class="bold"><strong>MAG2:</strong></span> 
 </p>
 <pre class="programlisting">./opmip-mag -d node.db -e icmp ath0
 </pre>
@@ -221,7 +219,7 @@
         entities</a></span></dt>
 </dl></div>
 <p>
-        OPMIP-MAG IEEE 802.21 driver options usage:
+        OPMIP-MAG IEEE 802.21 driver options usage: 
 </p>
 <pre class="programlisting">"&lt;local MIHF&gt;" "&lt;local interface 1&gt; &lt;local interface N&gt;" ["&lt;remote MIHF 1&gt; &lt;interface&gt;, &lt;remote MIHF N&gt; &lt;interface&gt;"]
 </pre>
@@ -231,9 +229,10 @@
 <div class="titlepage"><div><div><h4 class="title">
 <a name="manual.driver.80221.80221MAG"></a><a class="link" href="driver.html#manual.driver.80221.80221MAG" title="MAG co-located with PoA">MAG co-located with PoA</a>
 </h4></div></div></div>
-<h4>
-<a name="manual.driver.80221.80221MAG.h0"></a>
-          <span><a name="manual.driver.80221.80221MAG.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.testbed_configuration">Testbed configuration</a>
+<a name="manual.driver.80221.80221MAG.testbed_configuration"></a><h4>
+<a name="manual.driver.80221.80221MAG.testbed_configuration-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAG.testbed_configuration">Testbed
+          configuration</a>
         </h4>
 <p>
           <span class="inlinemediaobject"><img src=".././images/80221MAG.png" alt="80221MAG"></span>
@@ -275,9 +274,9 @@
 <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
               <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
             </li></ul></div>
-<h4>
-<a name="manual.driver.80221.80221MAG.h1"></a>
-          <span><a name="manual.driver.80221.80221MAG.configuration_files"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.configuration_files">Configuration
+<a name="manual.driver.80221.80221MAG.configuration_files"></a><h4>
+<a name="manual.driver.80221.80221MAG.configuration_files-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAG.configuration_files">Configuration
           files</a>
         </h4>
 <p>
@@ -286,7 +285,7 @@
 <p>
           The node database contains the database of LMA/MAG nodes, also known as
           router nodes, and the mobile nodes database. It will be used by the MAGs
-          and the LMA nodes. It uses the JSON format:
+          and the LMA nodes. It uses the JSON format: 
 </p>
 <pre class="programlisting">{
         "router-nodes" :
@@ -328,7 +327,7 @@
 <p>
         </p>
 <p>
-          <span class="bold"><strong>Link SAP configuration file</strong></span>
+          <span class="bold"><strong>Link SAP configuration file</strong></span> 
 </p>
 <pre class="programlisting">[link]
 id=link1
@@ -345,7 +344,7 @@ local_port=1025
         </p>
 <p>
           <span class="bold"><strong>MAG 1 MIHF configuration file</strong></span> (for the
-          MAG 2 MIHF the configuration file is identical)
+          MAG 2 MIHF the configuration file is identical) 
 </p>
 <pre class="programlisting">[mihf]
 id = mihf1
@@ -355,20 +354,20 @@ transport = udp
 </pre>
 <p>
         </p>
-<h4>
-<a name="manual.driver.80221.80221MAG.h2"></a>
-          <span><a name="manual.driver.80221.80221MAG.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAG.execution_commands">Execution
+<a name="manual.driver.80221.80221MAG.execution_commands"></a><h4>
+<a name="manual.driver.80221.80221MAG.execution_commands-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAG.execution_commands">Execution
           commands</a>
         </h4>
 <p>
-          <span class="bold"><strong>LMA:</strong></span>
+          <span class="bold"><strong>LMA:</strong></span> 
 </p>
 <pre class="programlisting">./opmip-lma -d node.db
 </pre>
 <p>
         </p>
 <p>
-          <span class="bold"><strong>MAG 1:</strong></span>
+          <span class="bold"><strong>MAG 1:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp --conf.file=./link_sap_icmp.conf
@@ -377,7 +376,7 @@ transport = udp
 <p>
         </p>
 <p>
-          <span class="bold"><strong>MAG 2:</strong></span>
+          <span class="bold"><strong>MAG 2:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp &#8211;conf.file=./link_sap_icmp.conf
@@ -398,9 +397,9 @@ transport = udp
 <a name="manual.driver.80221.80221MAGPoA"></a><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA" title="MAG and PoA in different entities">MAG and PoA in different
         entities</a>
 </h4></div></div></div>
-<h4>
-<a name="manual.driver.80221.80221MAGPoA.h0"></a>
-          <span><a name="manual.driver.80221.80221MAGPoA.testbed_configuration"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.testbed_configuration">Testbed
+<a name="manual.driver.80221.80221MAGPoA.testbed_configuration"></a><h4>
+<a name="manual.driver.80221.80221MAGPoA.testbed_configuration-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.testbed_configuration">Testbed
           configuration</a>
         </h4>
 <p>
@@ -443,9 +442,9 @@ transport = udp
 <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
               <span class="bold"><strong>ath1:</strong></span> HWaddr: 00:80:48:5f:a2:8b
             </li></ul></div>
-<h4>
-<a name="manual.driver.80221.80221MAGPoA.h1"></a>
-          <span><a name="manual.driver.80221.80221MAGPoA.configuration_files"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.configuration_files">Configuration
+<a name="manual.driver.80221.80221MAGPoA.configuration_files"></a><h4>
+<a name="manual.driver.80221.80221MAGPoA.configuration_files-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.configuration_files">Configuration
           files</a>
         </h4>
 <p>
@@ -454,7 +453,7 @@ transport = udp
 <p>
           The node database contains the database of LMA/MAG nodes, also known as
           router nodes, and the mobile nodes database. It will be used by the MAGs
-          and the LMA nodes. It uses the JSON format:
+          and the LMA nodes. It uses the JSON format: 
 </p>
 <pre class="programlisting">{
         "router-nodes" :
@@ -496,7 +495,7 @@ transport = udp
 <p>
         </p>
 <p>
-          <span class="bold"><strong>Link SAP configuration file</strong></span>
+          <span class="bold"><strong>Link SAP configuration file</strong></span> 
 </p>
 <pre class="programlisting">[link]
 id=link1
@@ -513,7 +512,7 @@ local_port=1025
         </p>
 <p>
           <span class="bold"><strong>MAG 1 MIHF configuration file</strong></span> (for the
-          MAG 2 MIHF the configuration file is identical)
+          MAG 2 MIHF the configuration file is identical) 
 </p>
 <pre class="programlisting">[mihf]
 id = mihf1
@@ -526,7 +525,7 @@ transport = udp
         </p>
 <p>
           <span class="bold"><strong>PoA 1 MIHF configuration file</strong></span> (for the
-          MAG 2 MIHF the configuration file is identical)
+          MAG 2 MIHF the configuration file is identical) 
 </p>
 <pre class="programlisting">[mihf]
 id = poa1_mihf
@@ -537,20 +536,20 @@ transport = udp
 </pre>
 <p>
         </p>
-<h4>
-<a name="manual.driver.80221.80221MAGPoA.h2"></a>
-          <span><a name="manual.driver.80221.80221MAGPoA.execution_commands"></a></span><a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.execution_commands">Execution
+<a name="manual.driver.80221.80221MAGPoA.execution_commands"></a><h4>
+<a name="manual.driver.80221.80221MAGPoA.execution_commands-heading"></a>
+          <a class="link" href="driver.html#manual.driver.80221.80221MAGPoA.execution_commands">Execution
           commands</a>
         </h4>
 <p>
-          <span class="bold"><strong>LMA:</strong></span>
+          <span class="bold"><strong>LMA:</strong></span> 
 </p>
 <pre class="programlisting">./opmip-lma -d node.db
 </pre>
 <p>
         </p>
 <p>
-          <span class="bold"><strong>PoA 1:</strong></span>
+          <span class="bold"><strong>PoA 1:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp --conf.file=./link_sap_icmp.conf
@@ -558,7 +557,7 @@ transport = udp
 <p>
         </p>
 <p>
-          <span class="bold"><strong>PoA 2:</strong></span>
+          <span class="bold"><strong>PoA 2:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./link_sap_icmp --conf.file=./link_sap_icmp.conf
@@ -566,7 +565,7 @@ transport = udp
 <p>
         </p>
 <p>
-          <span class="bold"><strong>MAG 1:</strong></span>
+          <span class="bold"><strong>MAG 1:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" &#8220;poa1_mihf control&#8221;
@@ -574,7 +573,7 @@ transport = udp
 <p>
         </p>
 <p>
-          <span class="bold"><strong>MAG 2:</strong></span>
+          <span class="bold"><strong>MAG 2:</strong></span> 
 </p>
 <pre class="programlisting">./odtone-mihf --conf.file=./odtone.conf
 ./opmip-mag -d node.db -e ieee802.21 mihf1 "control ath0" &#8220;poa2_mihf control&#8221;
@@ -593,8 +592,9 @@ transport = udp
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>
-<td align="right"><div class="copyright-footer">Copyright &#169; 2010, 2011 Universidade Aveiro<br>Copyright &#169; 2010, 2011 Instituto de Telecomunica&#231;&#245;es
-      - P&#243;lo Aveiro</div></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010-2012 Universidade
+      Aveiro<br>Copyright &#169; 2010-2012 Instituto de
+      Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
 </tr></table>
 <hr>
 <div class="spirit-nav">
