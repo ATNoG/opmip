@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <title>Experiments</title>
 <link rel="stylesheet" href="../boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
 <link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="prev" href="driver.html" title="Write an opmip-mag event driver">
@@ -72,8 +72,54 @@
             <a href="http://sourceforge.net/projects/iperf/" target="_top">iperf</a> software
           </li>
 </ul></div>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
 <p>
-        In this experiments:
+          IPv6 Forwarding:
+        </p>
+<p>
+          In order to allow MN to obtain the assigned HoA (and not act like a router),
+          you need to disable IPv6 forwarding at the attaching MN interface:
+        </p>
+<p>
+          
+</p>
+<pre class="programlisting">sysctl net.ipv6.conf.ath1.forwarding=0
+</pre>
+<p>
+        </p>
+</td></tr>
+</table></div>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+<p>
+          Stateful Address Configuration:
+        </p>
+<p>
+          If you wish to obtain the HoA defined in the node.db, using the Routing
+          Advertisements from MAG, you need to run DHCP in the MN. Besides, you need
+          to disable autoconfiguration (i.e. configuration based on the interface
+          MAC address) using the following command at the MN:
+        </p>
+<p>
+          
+</p>
+<pre class="programlisting">sysctl -w net.ipv6.conf.eth1.autoconf=0
+</pre>
+<p>
+        </p>
+</td></tr>
+</table></div>
+<p>
+        In these experiments:
       </p>
 <div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
@@ -85,7 +131,7 @@
             that is the current working directory
           </li>
 <li class="listitem">
-            We use the following node database:
+            We use the following node database: 
 <pre class="programlisting">{
 	"router-nodes" :
 	[
@@ -114,6 +160,7 @@
 			[
 				"3001:aaaa:bbbb:cccc::/64",
 			],
+			"home-address" : "3001:aaaa:bbbb:cccc::1",
 			"link-address" :
 			[
 				"00:00:00:00:00:00",
@@ -407,8 +454,9 @@
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>
-<td align="right"><div class="copyright-footer">Copyright &#169; 2010, 2011 Universidade Aveiro<br>Copyright &#169; 2010, 2011 Instituto de Telecomunica&#231;&#245;es
-      - P&#243;lo Aveiro</div></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010-2012 Universidade
+      Aveiro<br>Copyright &#169; 2010-2012 Instituto de
+      Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
 </tr></table>
 <hr>
 <div class="spirit-nav">

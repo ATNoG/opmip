@@ -2,12 +2,10 @@
 	[quickbook 1.5]
 	[version 0.2]
 	[id manual]
-	[copyright 2010-2011 Universidade Aveiro]
-	[copyright 2010-2011 Instituto de Telecomunicações - Pólo Aveiro]
+	[copyright 2010-2012 Universidade Aveiro]
+	[copyright 2010-2012 Instituto de Telecomunicações - Pólo Aveiro]
 	[purpose How to use the OPMIP MAG and LMA applications]
-	[authors [Santos, Bruno]]
-	[authors [Manco, Filipe]]
-	[authors [Guimarães, Carlos]]
+	[authors [Santos, Bruno], [Manco, Filipe], [Guimarães, Carlos], [Figueiredo, Sérgio]]
 ]
 
 [def __usage__     [link manual.usage usage]]
@@ -810,7 +808,25 @@ To run the experiments you will need:
   * It also needs a DHCP client that supports IPv6
 * __iperf__ software
 
-In this experiments:
+[note IPv6 Forwarding: 
+
+In order to allow MN to obtain the assigned HoA (and not act like a router), you need to disable IPv6 forwarding at the attaching MN interface:
+
+[teletype]``
+sysctl net.ipv6.conf.ath1.forwarding=0
+``
+]
+
+[note Stateful Address Configuration: 
+
+If you wish to obtain the HoA defined in the node.db, using the Routing Advertisements from MAG, you need to run DHCP in the MN. Besides, you need to disable autoconfiguration (i.e. configuration based on the interface MAC address) using the following command at the MN:
+
+[teletype]``
+sysctl -w net.ipv6.conf.eth1.autoconf=0
+``
+]
+
+In these experiments:
 
 * We're working with root access on the machines
 * OPMIP applications are somewhere in [^PATH] and node database (named [^node.db])
@@ -845,6 +861,7 @@ are in the home directory that is the current working directory
 			[
 				"3001:aaaa:bbbb:cccc::/64",
 			],
+			"home-address" : "3001:aaaa:bbbb:cccc::1",
 			"link-address" :
 			[
 				"00:00:00:00:00:00",
