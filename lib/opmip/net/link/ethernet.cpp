@@ -39,11 +39,21 @@ ethernet::endpoint::endpoint(uint16 proto, uint ifindex)
 	std::fill(_addr, _addr + 8, 0);
 }
 
-ethernet::endpoint::endpoint(uint16 proto, uint ifindex, pk_type pktp, const address_mac& destination)
+ethernet::endpoint::endpoint(uint16 proto, uint ifindex, const address_mac& destination)
+	: _family(AF_PACKET), _protocol(htons(proto)), _ifindex(ifindex),
+	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(0), _halen(0)
+{
+	const address_mac::bytes_type& src = destination.to_bytes();
+
+	std::copy(src.begin(), src.end(), _addr);
+	_addr[6] = 0;
+	_addr[7] = 0;
+}
+
+ethernet::endpoint::endpoint(uint16 proto, uint ifindex, const address_mac& destination, pk_type pktp)
 	: _family(AF_PACKET), _protocol(htons(proto)), _ifindex(ifindex),
 	  _hatype(1/*ARPHRD_ETHER*/), _pkttype(pktp), _halen(0)
 {
-
 	const address_mac::bytes_type& src = destination.to_bytes();
 
 	std::copy(src.begin(), src.end(), _addr);

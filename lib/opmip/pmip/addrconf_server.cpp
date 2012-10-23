@@ -108,7 +108,6 @@ bool addrconf_server::add(const router_advertisement_info& ai)
 
 		net::link::ethernet::endpoint ep(net::link::ethernet::ipv6,
 		                                 ai.device_id,
-		                                 net::link::ethernet::endpoint::outgoing,
 		                                 ai.dst_link_address);
 		router_advertisement(boost::system::error_code(), ras, ep, c.ra_timer);
 	}

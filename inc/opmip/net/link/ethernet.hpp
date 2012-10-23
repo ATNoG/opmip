@@ -51,7 +51,8 @@ public:
 	public:
 		endpoint();
 		endpoint(uint16 proto, uint ifindex);
-		endpoint(uint16 proto, uint ifindex, pk_type pktp, const address_mac& destination);
+		endpoint(uint16 proto, uint ifindex, const address_mac& destination);
+		endpoint(uint16 proto, uint ifindex, const address_mac& destination, pk_type pktp);
 
 		protocol_type     protocol() const       { return protocol_type(_protocol); }
 		::sockaddr*       data()                 { return reinterpret_cast< ::sockaddr*>(this); }
