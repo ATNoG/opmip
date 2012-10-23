@@ -4,8 +4,8 @@
 # -----------------------------------------------------------------------------
 # OPMIP - Open Proxy Mobile IP
 #
-# Copyright (C) 2010-2011 Universidade de Aveiro
-# Copyright (C) 2010-2011 Instituto de Telecomunicações - Pólo de Aveiro
+# Copyright (C) 2010-2012 Universidade de Aveiro
+# Copyright (C) 2010-2012 Instituto de Telecomunicações - Pólo de Aveiro
 #
 # This software is distributed under a license. The full license
 # agreement can be found in the file LICENSE in this distribution.
@@ -21,6 +21,7 @@ opmip.runtime-lib librt : rt ;
 lib opmip
 	: debug_linux.cpp
 	  rbtree_hook.cpp
+	  fsutil.cpp
 	  linux/nl80211.cpp
 	  net/ip/prefix.cpp
 	  net/ip/dhcp_v6.cpp

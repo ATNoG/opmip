@@ -15,24 +15,37 @@
 // This software is distributed without any warranty.
 //==================================================================================================
 
-#ifndef OPMIP_FSUTIL__HPP_
-#define OPMIP_FSUTIL__HPP_
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-#include <opmip/base.hpp>
-#include <boost/logic/tribool.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include <opmip/fsutil.hpp>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace opmip {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-boost::tribool fs_read_bool(const boost::filesystem::path& pathname);
-bool           fs_write_bool(const boost::filesystem::path& pathname, bool value);
+boost::tribool fs_read_bool(const boost::filesystem::path& pathname)
+{
+	boost::filesystem::ifstream in(pathname);
+	uint tmp;
+
+	if (!in)
+		return boost::tribool();
+
+	in >> tmp;
+	return boost::tribool(tmp);
+}
+
+bool fs_write_bool(const boost::filesystem::path& pathname, bool value)
+{
+	boost::filesystem::ofstream out(pathname);
+
+	if (!out)
+		return false;
+
+	out << uint(value);
+	return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 } /* namespace opmip */
 
 // EOF /////////////////////////////////////////////////////////////////////////////////////////////
-#endif /* OPMIP_FSUTIL__HPP_ */
