@@ -36,7 +36,7 @@ project opmip
 path-constant TOP : . ;
 
 local boost-major = 1 ;
-local boost-minor = 47 ;
+local boost-minor = 49 ;
 local boost-patch = 0 ;
 local boost-root ;
 

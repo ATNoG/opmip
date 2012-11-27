@@ -34,3 +34,9 @@ exe chrono
 	: chrono.cpp
 	  ../../lib/opmip//opmip
 	;
+
+exe conf
+	: conf.cpp
+	  ../../lib/opmip//conf
+	  /boost//system
+	;
