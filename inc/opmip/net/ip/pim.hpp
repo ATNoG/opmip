@@ -96,8 +96,8 @@ inline address_v6 pim::endpoint::address() const
 {
 	address_v6::bytes_type tmp;
 
-	std::copy(_addr.sin6_addr.s6_addr, _addr.sin6_addr.s6_addr + address_v6::bytes_type::static_size,
-	          tmp.elems);
+	std::copy(_addr.sin6_addr.s6_addr, _addr.sin6_addr.s6_addr + tmp.size(),
+	          tmp.data());
 
 	return address_v6(tmp, _addr.sin6_scope_id);
 }
