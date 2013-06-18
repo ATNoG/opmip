@@ -227,7 +227,7 @@ void ieee802_21_driver::capability_discover_confirm(odtone::mih::message& msg, c
 
 	odtone::mih::status st;
 	boost::optional<odtone::mih::net_type_addr_list> ntal;
-	boost::optional<odtone::mih::event_list> evt;
+	boost::optional<odtone::mih::mih_evt_list> evt;
 
 	msg >> odtone::mih::confirm()
 		& odtone::mih::tlv_status(st)
@@ -407,9 +407,21 @@ void ieee802_21_driver::start(const std::vector<std::string>& options)
 
 	_user_sap.reset(new odtone::sap::user(_service, boost::bind(&ieee802_21_driver::event_handler, this, _1, _2)));
 
+	// Supports all the MIH_*_HO_* commands
+	odtone::mih::mih_cmd_list supp_cmd;
+	supp_cmd.set(odtone::mih::mih_cmd_net_ho_candidate_query);
+	supp_cmd.set(odtone::mih::mih_cmd_net_ho_commit);
+	supp_cmd.set(odtone::mih::mih_cmd_n2n_ho_query_resources);
+	supp_cmd.set(odtone::mih::mih_cmd_n2n_ho_commit);
+	supp_cmd.set(odtone::mih::mih_cmd_n2n_ho_complete);
+	supp_cmd.set(odtone::mih::mih_cmd_mn_ho_candidate_query);
+	supp_cmd.set(odtone::mih::mih_cmd_mn_ho_commit);
+	supp_cmd.set(odtone::mih::mih_cmd_mn_ho_complete);
+
 	odtone::mih::message msg;
 	msg << odtone::mih::indication(odtone::mih::indication::user_register, odtone::mih::id(_local_mihf))
-	    & odtone::mih::tlv_mbb_handover_support(true);
+	    & odtone::mih::tlv_command_list(supp_cmd);
+	msg.destination(odtone::mih::id("local-mihf"));
 
 	_user_sap->async_send(msg, boost::bind(&ieee802_21_driver::user_reg_handler, this, _1, _2));
 }
