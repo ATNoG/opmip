@@ -20,9 +20,7 @@ lib dl : : <name>dl <link>shared ;
 if [ opmip.has-odtone ] {
 	opmip.explicit-alias ieee802_11
 		: drivers/ieee802_21_driver.cpp
-		  /odtone//base
-		  /odtone//mih
-		  /odtone//sap
+		  /odtone//odtone
 		:
 		:
 		: <define>OPMIP_CFG_ODTONE
