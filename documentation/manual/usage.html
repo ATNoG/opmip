@@ -1,0 +1,341 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<title>Usage</title>
+<link rel="stylesheet" href="../boostbook.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="prev" href="build_opmip.html" title="Build OPMIP">
+<link rel="next" href="driver.html" title="Write an opmip-mag event driver">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table cellpadding="2" width="100%"><tr><td valign="top"><img alt="'OPMIP - Open PMIPv6'" width="100px" height="100px" src=".././images/logo.png"></td></tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="build_opmip.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="driver.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="manual.usage"></a><a class="link" href="usage.html" title="Usage">Usage</a>
+</h2></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="usage.html#manual.usage.mag">opmip-mag</a></span></dt>
+<dt><span class="section"><a href="usage.html#manual.usage.lma">opmip-lma</a></span></dt>
+</dl></div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.usage.mag"></a><a class="link" href="usage.html#manual.usage.mag" title="opmip-mag">opmip-mag</a>
+</h3></div></div></div>
+<p>
+        To get usage help, type at the command prompt: <code class="literal">opmip-mag --help</code>
+      </p>
+<div class="table">
+<a name="manual.usage.mag.command_line_options"></a><p class="title"><b>Table&#160;3.&#160;Command line options</b></p>
+<div class="table-contents"><table class="table" summary="Command line options">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                <p>
+                  Short Option
+                </p>
+              </th>
+<th>
+                <p>
+                  Long Option
+                </p>
+              </th>
+<th>
+                <p>
+                  Description
+                </p>
+              </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                <p>
+                  -h
+                </p>
+              </td>
+<td>
+                <p>
+                  --help
+                </p>
+              </td>
+<td>
+                <p>
+                  Display command line options
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -i <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --id <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  This node identifier on the node database. Defaults to the <code class="literal">hostname</code>
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -d <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --database <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Node database file. Defaults to <code class="literal">node.db</code>
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -l <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --log <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Optional log file. Defaults to the standard output
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -e <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --driver <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Event driver to be used, available: <code class="computeroutput">madwifi</code>, <code class="computeroutput">dummy</code>
+                  or a custom driver .so
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+              </td>
+<td>
+                <p>
+                  --link-local-ip <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Link local IP address for all access links. Defaults to <code class="literal">fe80::1</code>,
+                  see <a class="link" href="started.html#manual.started.setup.mag" title="MAG">MAG setup</a>
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+              </td>
+<td>
+                <p>
+                  --driver-options <em class="replaceable"><code>args</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Driver specific options passed to driver.
+                </p>
+              </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<br class="table-break"><p>
+        The built-in driver <a href="http://madwifi-project.org/" target="_top">MadWifi</a>
+        must receive a list of interfaces to listen for events. You can pass it with
+        <code class="literal">--driver-options</code> or after the driver name. For example:
+      </p>
+<p>
+        
+</p>
+<pre class="programlisting">opmip-mag -e madwifi ath0</pre>
+<p>
+      </p>
+<p>
+        The built-in dummy driver must receive the number of events to generate per
+        second. The frequency must be in the range [0.0001, 1000]. For example, to
+        generate 1 event/second:
+      </p>
+<p>
+        
+</p>
+<pre class="programlisting">opmip-mag -e dummy 1</pre>
+<p>
+      </p>
+<p>
+        You can also tell the dummy driver, after the frequency option, the mobile
+        node IDs from the database to impersonate. If you do not set this, the dummy
+        driver will impersonate all of them.
+      </p>
+<p>
+        To use your own driver (see <a class="link" href="driver.html" title="Write an opmip-mag event driver">Write an opmip-mag
+        event driver</a>) the argument must be the <code class="literal">.so</code> filename
+        or the path to the file. For example:
+      </p>
+<p>
+        
+</p>
+<pre class="programlisting">opmip-mag -e mydriver.so
+opmip-mag -e ./mydriver.so
+</pre>
+<p>
+      </p>
+<p>
+        In the first case <code class="literal">mydriver.so</code> must be placed in one of
+        the default locations. In the second case the file is search in the current
+        directory.
+      </p>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.usage.lma"></a><a class="link" href="usage.html#manual.usage.lma" title="opmip-lma">opmip-lma</a>
+</h3></div></div></div>
+<p>
+        To get usage help, type at the command prompt: <code class="literal">opmip-lma --help</code>
+      </p>
+<div class="table">
+<a name="manual.usage.lma.command_line_options"></a><p class="title"><b>Table&#160;4.&#160;Command line options</b></p>
+<div class="table-contents"><table class="table" summary="Command line options">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                <p>
+                  Short Option
+                </p>
+              </th>
+<th>
+                <p>
+                  Long Option
+                </p>
+              </th>
+<th>
+                <p>
+                  Description
+                </p>
+              </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                <p>
+                  -h
+                </p>
+              </td>
+<td>
+                <p>
+                  --help
+                </p>
+              </td>
+<td>
+                <p>
+                  Display command line options
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -i <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --id <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  This node identifier on the node database. Defaults to the <code class="literal">hostname</code>
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -d <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --database <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Node database file. Defaults to <code class="literal">node.db</code>
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  -l <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  --log <em class="replaceable"><code>arg</code></em>
+                </p>
+              </td>
+<td>
+                <p>
+                  Optional log file. Defaults to the standard output
+                </p>
+              </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<br class="table-break">
+</div>
+</div>
+<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
+<td align="left"></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010-2012 Universidade
+      Aveiro<br>Copyright &#169; 2010-2012 Instituto de
+      Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="build_opmip.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="driver.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+</body>
+</html>

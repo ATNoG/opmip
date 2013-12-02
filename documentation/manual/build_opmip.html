@@ -1,0 +1,279 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<title>Build OPMIP</title>
+<link rel="stylesheet" href="../boostbook.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
+<link rel="prev" href="started.html" title="Getting Started">
+<link rel="next" href="usage.html" title="Usage">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table cellpadding="2" width="100%"><tr><td valign="top"><img alt="'OPMIP - Open PMIPv6'" width="100px" height="100px" src=".././images/logo.png"></td></tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="started.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="usage.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="manual.build_opmip"></a><a class="link" href="build_opmip.html" title="Build OPMIP">Build OPMIP</a>
+</h2></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.buid_reqs">Build Requirements</a></span></dt>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.workingdir">Recomended Working Directory</a></span></dt>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.setup_boost">Setup BOOST</a></span></dt>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.opmip">OPMIP</a></span></dt>
+</dl></div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.build_opmip.buid_reqs"></a><a class="link" href="build_opmip.html#manual.build_opmip.buid_reqs" title="Build Requirements">Build Requirements</a>
+</h3></div></div></div>
+<p>
+        To build OPMIP you will need:
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            gcc version 4.5.2 or higer
+          </li>
+<li class="listitem">
+            <a href="http://www.boost.org/" target="_top">BOOST</a> libraries version 1.47
+          </li>
+</ul></div>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.build_opmip.workingdir"></a><a class="link" href="build_opmip.html#manual.build_opmip.workingdir" title="Recomended Working Directory">Recomended Working Directory</a>
+</h3></div></div></div>
+<p>
+        The following working directory is recommended:
+      </p>
+<p>
+        
+</p>
+<pre class="programlisting">~/
+|
++-- projects/
+|    |
+|    +-- boost_1_47_0/
+|    |
+|    `-- opmip/
+|
+`-- user-config.jam
+</pre>
+<p>
+      </p>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.build_opmip.setup_boost"></a><a class="link" href="build_opmip.html#manual.build_opmip.setup_boost" title="Setup BOOST">Setup BOOST</a>
+</h3></div></div></div>
+<p>
+        To properly setup <a href="http://www.boost.org/" target="_top">BOOST</a> on your
+        computer follow the next setps:
+      </p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+            Get <a href="http://www.boost.org/" target="_top">BOOST</a> libraries
+            <div class="orderedlist"><ol class="orderedlist" type="a">
+<li class="listitem">
+                  Download <a href="http://www.boost.org/" target="_top">BOOST</a> libraries
+                  from
+                  <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                        <a href="http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download" target="_top">http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download</a>
+                      </li></ul></div>
+                </li>
+<li class="listitem">
+                  Unpack to <code class="literal">~/projects/boost_1_47_0</code>
+                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                        <code class="literal">cd ~/projects</code>
+                      </li>
+<li class="listitem">
+                        <code class="literal">tar --bzip2 -xf &lt;path-to-downloaded-file&gt;/boost_1_47_0.tar.bz2</code>
+                      </li>
+</ul></div>
+                </li>
+</ol></div>
+          </li>
+<li class="listitem">
+            Set Environment variables
+            <div class="orderedlist"><ol class="orderedlist" type="a">
+<li class="listitem">
+                  Set <code class="literal">BOOST_ROOT</code> environment variable
+                  <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                        <code class="literal">export BOOST_ROOT=~/projects/boost_1_47_0/</code>
+                      </li></ul></div>
+                </li>
+<li class="listitem">
+                  Maybe you want to put this in your <code class="literal">.bashrc</code> file
+                </li>
+</ol></div>
+          </li>
+<li class="listitem">
+            Build and install Boost.Build
+            <div class="orderedlist"><ol class="orderedlist" type="a">
+<li class="listitem">
+                  First of all <span class="bold"><strong>DO NOT</strong></span> build boost
+                  libraries (you don't need it)
+                </li>
+<li class="listitem">
+                  Build Boost.Build
+                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                        <code class="literal">cd $BOOST_ROOT</code>
+                      </li>
+<li class="listitem">
+                        <code class="literal">./bootstrap.sh</code>
+                      </li>
+</ul></div>
+                </li>
+<li class="listitem">
+                  Install
+                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                        <code class="literal">cp b2 /usr/local/bin</code>
+                      </li>
+<li class="listitem">
+                        <code class="literal">mkdir /usr/share/boost-build</code>
+                      </li>
+<li class="listitem">
+                        <code class="literal">cp -r tools/build/v2/* /usr/share/boost-build/</code>
+                      </li>
+</ul></div>
+                </li>
+</ol></div>
+          </li>
+</ol></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+          Make sure BOOST_ROOT is defined. If BOOST_ROOT isn't defined <a href="http://www.boost.org/" target="_top">BOOST</a>
+          libraries must be in opmip sources parent directory. You can also pass
+          the location in command line with the option --boost-root=/path/to/boost
+          instead of setting the BOOST_ROOT environment variable.
+        </p></td></tr>
+</table></div>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual.build_opmip.opmip"></a><a class="link" href="build_opmip.html#manual.build_opmip.opmip" title="OPMIP">OPMIP</a>
+</h3></div></div></div>
+<div class="toc"><dl>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.opmip.debianized">Build from debianized
+        sources</a></span></dt>
+<dt><span class="section"><a href="build_opmip.html#manual.build_opmip.opmip.git">Build from git sources</a></span></dt>
+</dl></div>
+<p>
+        There are two ways of building OPMIP:
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+            From the debianized sources provided
+          </li>
+<li class="listitem">
+            From the sources got from the git repository
+          </li>
+</ul></div>
+<div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="../images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+          As <a href="http://www.boost.org/" target="_top">BOOST</a> doesn't have an updated
+          debian package you will have to install and configure <a href="http://www.boost.org/" target="_top">BOOST</a>
+          following the steps <a class="link" href="build_opmip.html#manual.build_opmip.setup_boost" title="Setup BOOST">above</a>
+          even if you choose to use the debianized sources.
+        </p></td></tr>
+</table></div>
+<div class="section">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="manual.build_opmip.opmip.debianized"></a><a class="link" href="build_opmip.html#manual.build_opmip.opmip.debianized" title="Build from debianized sources">Build from debianized
+        sources</a>
+</h4></div></div></div>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+              Unpack opmip.tar.gz
+              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                    <code class="literal">cd ~/projects</code>
+                  </li>
+<li class="listitem">
+                    <code class="literal">tar -xf &lt;path-to-opmip.tar.gz&gt;</code>
+                  </li>
+</ul></div>
+            </li>
+<li class="listitem">
+              Build debian package
+              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                    <code class="literal">cd opmip/opmip-0.2</code>
+                  </li>
+<li class="listitem">
+                    <code class="literal">dpkg-buildpackage</code>
+                  </li>
+</ul></div>
+            </li>
+<li class="listitem">
+              Install the debian
+              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                    <code class="literal">cd ..</code>
+                  </li>
+<li class="listitem">
+                    <code class="literal">dpkg -i opmip_0.2-1_&lt;arch&gt;.deb</code>
+                  </li>
+</ul></div>
+            </li>
+</ol></div>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="manual.build_opmip.opmip.git"></a><a class="link" href="build_opmip.html#manual.build_opmip.opmip.git" title="Build from git sources">Build from git sources</a>
+</h4></div></div></div>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+              Get OPMIP from the git repository
+              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                    <code class="literal">cd ~/projects</code>
+                  </li>
+<li class="listitem">
+                    <code class="literal">git clone https://helios.av.it.pt/git/opmip</code>
+                  </li>
+</ul></div>
+            </li>
+<li class="listitem">
+              Build OPMIP
+              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">
+                    <code class="literal">cd opmip</code>
+                  </li>
+<li class="listitem">
+                    <code class="literal">b2</code>
+                  </li>
+</ul></div>
+            </li>
+</ol></div>
+<p>
+          The generated binaries are now under <code class="literal">~/projects/opmip/dist/</code>.
+        </p>
+</div>
+</div>
+</div>
+<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
+<td align="left"></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010-2012 Universidade
+      Aveiro<br>Copyright &#169; 2010-2012 Instituto de
+      Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="started.html"><img src="../images/prev.png" alt="Prev"></a><a accesskey="u" href="../index.html"><img src="../images/up.png" alt="Up"></a><a accesskey="h" href="../index.html"><img src="../images/home.png" alt="Home"></a><a accesskey="n" href="usage.html"><img src="../images/next.png" alt="Next"></a>
+</div>
+</body>
+</html>
