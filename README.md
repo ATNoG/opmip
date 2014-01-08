@@ -1,5 +1,9 @@
-OPMIP - Open Proxy Mobile IPv6
-==============================
+Project : OPMIP - Open Proxy Mobile IPv6
+
+Version : 0.3 Beta
+
+URL     : http://atnog.av.it.pt/opmip/
+
 
 Description
 -----------

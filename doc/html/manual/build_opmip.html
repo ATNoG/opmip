@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <title>Build OPMIP</title>
 <link rel="stylesheet" href="../boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
 <link rel="home" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="up" href="../index.html" title="OPMIP User Manual 0.2">
 <link rel="prev" href="started.html" title="Getting Started">
@@ -74,76 +74,92 @@
       </p>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
+<p class="simpara">
             Get <a href="http://www.boost.org/" target="_top">BOOST</a> libraries
-            <div class="orderedlist"><ol class="orderedlist" type="a">
+          </p>
+<div class="orderedlist"><ol class="orderedlist" type="a">
 <li class="listitem">
-                  Download <a href="http://www.boost.org/" target="_top">BOOST</a> libraries
-                  from
-                  <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
-                        <a href="http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download" target="_top">http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download</a>
-                      </li></ul></div>
-                </li>
+<p class="simpara">
+                Download <a href="http://www.boost.org/" target="_top">BOOST</a> libraries
+                from
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                    <a href="http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download" target="_top">http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.bz2/download</a>
+                  </li></ul></div>
+</li>
 <li class="listitem">
-                  Unpack to <code class="literal">~/projects/boost_1_47_0</code>
-                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<p class="simpara">
+                Unpack to <code class="literal">~/projects/boost_1_47_0</code>
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                        <code class="literal">cd ~/projects</code>
-                      </li>
+                    <code class="literal">cd ~/projects</code>
+                  </li>
 <li class="listitem">
-                        <code class="literal">tar --bzip2 -xf &lt;path-to-downloaded-file&gt;/boost_1_47_0.tar.bz2</code>
-                      </li>
+                    <code class="literal">tar --bzip2 -xf &lt;path-to-downloaded-file&gt;/boost_1_47_0.tar.bz2</code>
+                  </li>
 </ul></div>
-                </li>
+</li>
 </ol></div>
-          </li>
+</li>
 <li class="listitem">
+<p class="simpara">
             Set Environment variables
-            <div class="orderedlist"><ol class="orderedlist" type="a">
+          </p>
+<div class="orderedlist"><ol class="orderedlist" type="a">
 <li class="listitem">
-                  Set <code class="literal">BOOST_ROOT</code> environment variable
-                  <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
-                        <code class="literal">export BOOST_ROOT=~/projects/boost_1_47_0/</code>
-                      </li></ul></div>
-                </li>
+<p class="simpara">
+                Set <code class="literal">BOOST_ROOT</code> environment variable
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                    <code class="literal">export BOOST_ROOT=~/projects<span class="emphasis"><em>boost_1_47_0</em></span></code>
+                  </li></ul></div>
+</li>
 <li class="listitem">
-                  Maybe you want to put this in your <code class="literal">.bashrc</code> file
-                </li>
+                Maybe you want to put this in your <code class="literal">.bashrc</code> file
+              </li>
 </ol></div>
-          </li>
+</li>
 <li class="listitem">
+<p class="simpara">
             Build and install Boost.Build
-            <div class="orderedlist"><ol class="orderedlist" type="a">
+          </p>
+<div class="orderedlist"><ol class="orderedlist" type="a">
 <li class="listitem">
-                  First of all <span class="bold"><strong>DO NOT</strong></span> build boost
-                  libraries (you don't need it)
-                </li>
+                First of all <span class="bold"><strong>DO NOT</strong></span> build boost
+                libraries (you don't need it)
+              </li>
 <li class="listitem">
-                  Build Boost.Build
-                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<p class="simpara">
+                Build Boost.Build
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                        <code class="literal">cd $BOOST_ROOT</code>
-                      </li>
+                    <code class="literal">cd $BOOST_ROOT</code>
+                  </li>
 <li class="listitem">
-                        <code class="literal">./bootstrap.sh</code>
-                      </li>
+                    <code class="literal">./bootstrap.sh</code>
+                  </li>
 </ul></div>
-                </li>
+</li>
 <li class="listitem">
-                  Install
-                  <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<p class="simpara">
+                Install
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                        <code class="literal">cp b2 /usr/local/bin</code>
-                      </li>
+                    <code class="literal">cp b2 /usr/local/bin</code>
+                  </li>
 <li class="listitem">
-                        <code class="literal">mkdir /usr/share/boost-build</code>
-                      </li>
+                    <code class="literal">mkdir /usr/share/boost-build</code>
+                  </li>
 <li class="listitem">
-                        <code class="literal">cp -r tools/build/v2/* /usr/share/boost-build/</code>
-                      </li>
+                    <code class="literal">cp -r tools/build<span class="emphasis"><em>v2</em></span>* /usr/share<span class="emphasis"><em>boost-build</em></span></code>
+                  </li>
 </ul></div>
-                </li>
+</li>
 </ol></div>
-          </li>
+</li>
 </ol></div>
 <div class="important"><table border="0" summary="Important">
 <tr>
@@ -197,38 +213,44 @@
 </h4></div></div></div>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
+<p class="simpara">
               Unpack opmip.tar.gz
-              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                    <code class="literal">cd ~/projects</code>
-                  </li>
+                  <code class="literal">cd ~/projects</code>
+                </li>
 <li class="listitem">
-                    <code class="literal">tar -xf &lt;path-to-opmip.tar.gz&gt;</code>
-                  </li>
+                  <code class="literal">tar -xf &lt;path-to-opmip.tar.gz&gt;</code>
+                </li>
 </ul></div>
-            </li>
+</li>
 <li class="listitem">
+<p class="simpara">
               Build debian package
-              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                    <code class="literal">cd opmip/opmip-0.2</code>
-                  </li>
+                  <code class="literal">cd opmip/opmip-0.2</code>
+                </li>
 <li class="listitem">
-                    <code class="literal">dpkg-buildpackage</code>
-                  </li>
+                  <code class="literal">dpkg-buildpackage</code>
+                </li>
 </ul></div>
-            </li>
+</li>
 <li class="listitem">
+<p class="simpara">
               Install the debian
-              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                    <code class="literal">cd ..</code>
-                  </li>
+                  <code class="literal">cd ..</code>
+                </li>
 <li class="listitem">
-                    <code class="literal">dpkg -i opmip_0.2-1_&lt;arch&gt;.deb</code>
-                  </li>
+                  <code class="literal">dpkg -i opmip<span class="underline">0.2-1</span>&lt;arch&gt;.deb</code>
+                </li>
 </ul></div>
-            </li>
+</li>
 </ol></div>
 </div>
 <div class="section">
@@ -237,39 +259,41 @@
 </h4></div></div></div>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
+<p class="simpara">
               Get OPMIP from the git repository
-              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                    <code class="literal">cd ~/projects</code>
-                  </li>
+                  <code class="literal">cd ~/projects</code>
+                </li>
 <li class="listitem">
-                    <code class="literal">git clone https://helios.av.it.pt/git/opmip</code>
-                  </li>
+                  <code class="literal">git clone https://helios.av.it.pt/git/opmip</code>
+                </li>
 </ul></div>
-            </li>
+</li>
 <li class="listitem">
+<p class="simpara">
               Build OPMIP
-              <div class="itemizedlist"><ul class="itemizedlist" type="disc">
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem">
-                    <code class="literal">cd opmip</code>
-                  </li>
+                  <code class="literal">cd opmip</code>
+                </li>
 <li class="listitem">
-                    <code class="literal">b2</code>
-                  </li>
+                  <code class="literal">b2</code>
+                </li>
 </ul></div>
-            </li>
+</li>
 </ol></div>
 <p>
-          The generated binaries are now under <code class="literal">~/projects/opmip/dist/</code>.
+          The generated binaries are now under <code class="literal">~/projects/opmip<span class="emphasis"><em>dist</em></span></code>.
         </p>
 </div>
 </div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>
-<td align="right"><div class="copyright-footer">Copyright &#169; 2010-2012 Universidade
-      Aveiro<br>Copyright &#169; 2010-2012 Instituto de
-      Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
+<td align="right"><div class="copyright-footer">Copyright &#169; 2010 -2012 Universidade Aveiro<br>Copyright &#169; 2010 -2012 Instituto de Telecomunica&#231;&#245;es - P&#243;lo Aveiro</div></td>
 </tr></table>
 <hr>
 <div class="spirit-nav">

@@ -972,3 +972,16 @@ the mobile node. If you need use [^-B] modifier to force the bind.]
 [endsect]
 
 [endsect]
+
+[section:changelog Changelog]
+
+[*OPMIP 0.3 - Open Proxy Mobile IPv6]
+
+* Add MAG support for IEEE 802.21 driver
+* Support tunnel global address
+* Improve robustness of OPMIP code
+* Several bug fixes
+* Update and improve documentation
+* New OPMIP website (http://atnog.av.it.pt/opmip)
+
+[endsect]
