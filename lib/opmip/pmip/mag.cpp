@@ -56,7 +56,7 @@ inline void report_completion(boost::asio::io_service::strand& srv,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const char* error_category::name() const
+const char* error_category::name() const noexcept
 {
 	return "PMIP status codes";
 }
@@ -94,7 +94,7 @@ std::string error_category::message(int ev) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const char* mag::error_category::name() const
+const char* mag::error_category::name() const noexcept
 {
 	return "opmip::pmip::mag error codes";
 }
