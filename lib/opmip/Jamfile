@@ -18,12 +18,6 @@
 opmip.runtime-lib pthread ;
 opmip.runtime-lib librt : rt ;
 
-lib conf
-	: conf.cpp
-	  /boost//headers
-	: <c++-template-depth>1024
-	;
-
 lib opmip
 	: debug_linux.cpp
 	  rbtree_hook.cpp
